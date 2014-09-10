@@ -29,7 +29,7 @@ mkdir Datafiles #put your SRA files in the
 
 cd scripts/TreeToReads
 
-## Edit config file to fit your data!
+## Edit config file, seqsim.cfg, to fit your data!
 
 
 python simulations.py ## by default looks for seqsim.cfg, or first argument can be a control file
