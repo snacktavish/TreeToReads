@@ -12,18 +12,22 @@ python packages
 
 Requirements
 
-mkdir TreeToReads
+
 sudo apt-get install seq-gen
+
 wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
 tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
-
-git clone git@github.com:snacktavish/outbreaks.git # this requires permissions!
-
+## So, then you need to add artbinvanillaicecream031114linux64tgz to your path. A bit annoying.
 
 easy_install dendropy
 
+-----------------------------------------------------------
+Running the simulations:
+
+git clone git@github.com:snacktavish/outbreaks.git # this requires permissions!
 
 mkdir Datafiles #put your SRA files in the 
+
 ##create error model files
 
 
