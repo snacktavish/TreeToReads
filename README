@@ -7,8 +7,10 @@ Installed globally
 python packages
    Dendropy
 
-INstallation:
 
+-------------------------
+
+Requirements
 
 mkdir TreeToReads
 sudo apt-get install seq-gen
