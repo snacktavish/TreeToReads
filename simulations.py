@@ -33,7 +33,7 @@ ratmat='rate_matrix'
 freqmat='freq_matrix'
 shape='shape'
 
-argslist=['treefile_path', 'number_of_snps', 'anchor_name', 'anchor_genome_path', 'rate_matrix', 'freq_matrix', 'shape', 'error_model1']
+argslist=['treefile_path', 'number_of_snps', 'anchor_name', 'anchor_genome_path', 'rate_matrix', 'freq_matrix', 'shape', 'error_model1', 'coverage']
 for item in argslist:
   if item not in args:
     print("{} is missing from the config file".format(item))
@@ -71,7 +71,7 @@ except:
   print("could not open anchor genome {}".format(args[genome]))
   sys.exit() 
 
-
+'''
 #import tree from path
 taxa=dendropy.TaxonSet()
 tree=dendropy.Tree.get_from_path(args[treepath],'newick',taxon_set=taxa)
@@ -81,17 +81,17 @@ tree.resolve_polytomies()
 tree.write(open("simtree.tre",'w'),'newick',suppress_internal_node_labels=True)
 os.system("sed -i -e's/\[&U\]//' simtree.tre")
 
-
+'''
 genfas=open(args[genome]).readlines()
 crop=[lin[:-1] for lin in genfas[1:]]
 gen="".join(crop)
 genlen=len(gen)
 print args[shape]
-
+'''
 ## TODO make model variable
 seqcall=" ".join(['seq-gen', '-l1000', '-n1', '-mGTR', '-a{}'.format(args[shape]), '-r{}'.format(args[ratmat]), '-f{}'.format(args[freqmat]), '<', 'simtree.tre', '>', 'seqs_sim.txt'])
 os.system(seqcall)
-
+'''
 sims=open("seqs_sim.txt").readlines()[1:]
 
 bases=sims[0][10:]
@@ -131,6 +131,8 @@ for lin in sims:
 
  
 ref=genos[args[anchor_name]]
+print("Checkpoint 1")
+print(len(ref))
 
 sitepatts={}
 for nuc in ['A','G','T','C']:
@@ -164,6 +166,7 @@ fi.close()
 # generate mutated genomes:
 
 for seq in genos:
+    print(seq)
     genout=open("sim_{}.fasta".format(seq),'w')
     patnuc={}
     patnuc['A']=0
@@ -172,8 +175,9 @@ for seq in genos:
     patnuc['C']=0
     ii=0
     genout.write(">SIM_{}\n".format(seq))
-    for lin in genome[1:]:
-        for nuc in lin[:-1]:
+    for nuc in gen:
+            if ii%80==0:
+               genout.write('\n')
             ii+=1
             if ii in rands:
                patnuc[nuc]+=1
@@ -184,10 +188,10 @@ for seq in genos:
 #               print('MUT')
             else:
                 genout.write(nuc)
-        genout.write('\n')
+        
     genout.close()    
  #   print(' '.join(['art_illumina', '-1', '../simB/fullprofR1.txt', '-2', '../simB/fullprofR2.txt', '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', '20', '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)]))
-    call(['art_illumina', '-1', '../simA/fullprofR1.txt', '-2', '../simA/fullprofR2.txt', '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', '45', '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)])
+    call(['art_illumina', '-1', args['error_model1'], '-2', args['error_model2'], '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', args['coverage'], '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)])
 '''
 #'-l', '150', <- average read length
 # '-f', '20', <-need to get fold coverage
