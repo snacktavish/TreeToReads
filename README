@@ -6,3 +6,28 @@ Installed globally
 
 python packages
    Dendropy
+
+INstallation:
+
+
+mkdir TreeToReads
+sudo apt-get install seq-gen
+wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
+tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
+
+git clone git@github.com:snacktavish/outbreaks.git # this requires permissions!
+
+
+easy_install dendropy
+
+
+mkdir Datafiles #put your SRA files in the 
+##create error model files
+
+
+cd scripts/TreeToReads
+
+## Edit config file to fit your data!
+
+
+python simulations.py ## by default looks for seqsim.cfg, or first argument can be a control file
