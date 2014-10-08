@@ -34,7 +34,8 @@ ratmat='rate_matrix'
 freqmat='freq_matrix'
 shape='shape'
 
-argslist=['treefile_path', 'number_of_snps', 'anchor_name', 'anchor_genome_path', 'rate_matrix', 'freq_matrix', 'shape', 'error_model1', 'coverage']
+
+argslist=['treefile_path', 'number_of_snps', 'anchor_name', 'anchor_genome_path', 'rate_matrix', 'freq_matrix', 'shape', 'error_model1', 'error_model2', 'coverage']
 for item in argslist:
   if item not in args:
     print("{} is missing from the config file".format(item))
@@ -192,7 +193,9 @@ for seq in genos:
         
     genout.close()    
  #   print(' '.join(['art_illumina', '-1', '../simB/fullprofR1.txt', '-2', '../simB/fullprofR2.txt', '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', '20', '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)]))
-    call(['art_illumina', '-1', args['error_model1'], '-2', args['error_model2'], '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', args['coverage'], '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)])
+ #   call(['art_illumina', '-1', args['error_model1'], '-2', args['error_model2'], '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', args['coverage'], '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)])
+    artparam=' '.join(['art_illumina', '-1', args['error_model1'], '-2', args['error_model2'], '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', args['coverage'], '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)])
+    os.system(artparam)   
 '''
 #'-l', '150', <- average read length
 # '-f', '20', <-need to get fold coverage
