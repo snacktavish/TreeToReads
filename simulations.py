@@ -71,7 +71,7 @@ except:
   print("could not open anchor genome {}".format(args[genome]))
   sys.exit() 
 
-'''
+
 #import tree from path
 taxa=dendropy.TaxonSet()
 tree=dendropy.Tree.get_from_path(args[treepath],'newick',taxon_set=taxa)
@@ -81,17 +81,17 @@ tree.resolve_polytomies()
 tree.write(open("simtree.tre",'w'),'newick',suppress_internal_node_labels=True)
 os.system("sed -i -e's/\[&U\]//' simtree.tre")
 
-'''
+
 genfas=open(args[genome]).readlines()
 crop=[lin[:-1] for lin in genfas[1:]]
 gen="".join(crop)
 genlen=len(gen)
 print args[shape]
-'''
+
 ## TODO make model variable
 seqcall=" ".join(['seq-gen', '-l1000', '-n1', '-mGTR', '-a{}'.format(args[shape]), '-r{}'.format(args[ratmat]), '-f{}'.format(args[freqmat]), '<', 'simtree.tre', '>', 'seqs_sim.txt'])
 os.system(seqcall)
-'''
+
 sims=open("seqs_sim.txt").readlines()[1:]
 
 bases=sims[0][10:]
