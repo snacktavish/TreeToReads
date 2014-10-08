@@ -24,7 +24,7 @@ easy_install dendropy
 -----------------------------------------------------------
 Running the simulations:
 
-git clone git@github.com:snacktavish/outbreaks.git # this requires permissions!
+git clone https://github.com/snacktavish/TreeToReads.git
 
 mkdir Datafiles #put your SRA files in the 
 
