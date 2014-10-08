@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import dendropy
 from subprocess import call
 import random
