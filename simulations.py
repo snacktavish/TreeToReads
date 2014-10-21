@@ -6,72 +6,75 @@ import os
 import sys
 
 import argparse
-if len(sys.argv) > 1:
+
+
+def ReadArgs():
+  if len(sys.argv) > 1:
     conf=sys.argv[1]
     try:
       config=open(conf).readlines()
     except:
       print("couldn't open config file")
       sys.exit()
-else:
-  try:
-    config=open("seqsim.cfg").readlines()
-  except:
+  else:
+    try:
+      config=open("seqsim.cfg").readlines()
+    except:
       print("config file seqsim.cfg not found")
       sys.exit()
+      args={}
+  for lin in config:
+    lii=lin.split('=')
+    args[lii[0].strip()]=lii[-1].split('#')[0].strip()
+  treepath='treefile_path'
+  nsnp='number_of_snps'
+  anchor_name='anchor_name'
+  genome='anchor_genome_path'
+  ratmat='rate_matrix'
+  freqmat='freq_matrix'
+  shape='shape'
+  argslist=['treefile_path', 'number_of_snps', 'anchor_name', 'anchor_genome_path', 
+  'rate_matrix', 'freq_matrix', 'shape', 'error_model1', 'error_model2', 'coverage',]
+  for item in argslist:
+    if item not in args:
+      print("{} is missing from the config file".format(item))
+      sys.exit()
+  try:
+    int(args[nsnp])
+  except:
+      print("number of SNPs {} could not be coerced to an integer".format(args[nsnp]))
+      sys.exit()
+  if not len(args[ratmat].split(','))==6:
+      print("{} values in rate matrix, should be 6".format(len(args[ratmat].split(','))))
+      sys.exit()
+  if not len(args[freqmat].split(','))==4:
+      print("{} values in freq matrix, should be 4".format(len(args[freqmat].split(','))))
+      sys.exit()  
+  try:
+      float(args[shape])
+  except:
+      print("shape parameter {} could not be coerced to a float".format(args[shape]))
+      sys.exit() 
+  try:
+      open(args[treepath])
+  except:
+    print("could not open treefile {}".format(args[treepath]))
+    sys.exit() 
+  try:
+      open(args[genome])
+  except:
+      print("could not open anchor genome {}".format(args[genome]))
+      sys.exit() 
+  return(args)
 
 
-args={}
-for lin in config:
-  lii=lin.split('=')
-  args[lii[0].strip()]=lii[-1].split('#')[0].strip()
-
-treepath='treefile_path'
-nsnp='number_of_snps'
-anchor_name='anchor_name'
-genome='anchor_genome_path'
-ratmat='rate_matrix'
-freqmat='freq_matrix'
-shape='shape'
 
 
-argslist=['treefile_path', 'number_of_snps', 'anchor_name', 'anchor_genome_path', 'rate_matrix', 'freq_matrix', 'shape', 'error_model1', 'error_model2', 'coverage']
-for item in argslist:
-  if item not in args:
-    print("{} is missing from the config file".format(item))
-    sys.exit()
 
-try:
-  int(args[nsnp])
-except:
-  print("number of SNPs {} could not be coerced to an integer".format(args[nsnp]))
-  sys.exit()
 
-if not len(args[ratmat].split(','))==6:
-  print("{} values in rate matrix, should be 6".format(len(args[ratmat].split(','))))
-  sys.exit()
 
-if not len(args[freqmat].split(','))==4:
-  print("{} values in freq matrix, should be 4".format(len(args[freqmat].split(','))))
-  sys.exit()  
 
-try:
-  float(args[shape])
-except:
-  print("shape parameter {} could not be coerced to a float".format(args[shape]))
-  sys.exit() 
 
-try:
-  open(args[treepath])
-except:
-  print("could not open treefile {}".format(args[treepath]))
-  sys.exit() 
-
-try:
-  open(args[genome])
-except:
-  print("could not open anchor genome {}".format(args[genome]))
-  sys.exit() 
 
 
 #import tree from path
