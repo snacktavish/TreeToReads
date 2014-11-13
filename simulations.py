@@ -11,7 +11,6 @@ class TreeToReads:
   def __init__(self):
         """Method docstring."""
         self.bashout = open('analysis.sh','w')
-        os.mkdir('output')
         self.readArgs()
         self.checkArgs()
         self.readTree()
@@ -22,6 +21,7 @@ class TreeToReads:
         self.mutGenomes()
         self.bashout.close()
 
+          
   def readArgs(self):
     if len(sys.argv) > 1:
       conf=sys.argv[1]
@@ -40,12 +40,17 @@ class TreeToReads:
     for lin in config:
       lii=lin.split('=')
       self.config[lii[0].strip()]=lii[-1].split('#')[0].strip()
- 
+
+  def makeOut(self):
+      try: 
+          os.mkdir('output')
+      except:
+          pass
   def getArg(self,nam):
     return(self.config[self.argdict[nam]])
 
   def checkArgs(self):
-    self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage'}
+    self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage', 'outd':'output_directory'}
     for arg in self.argdict:
       if self.argdict[arg] not in self.config:
         print("{} is missing from the config file".format(item))
