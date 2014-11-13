@@ -8,18 +8,19 @@ import sys
 import argparse
 
 class TreeToReads:
-  def __init__(self):
+  def __init__(self, run=1):
         """Method docstring."""
-        self.bashout = open('analysis.sh','w')
-        self.readArgs()
-        self.checkArgs()
-        self.readTree()
-        self.readGenome()
-        self.generateVarsites()
-        self.readVarsites()
-        self.selectMutsites()
-        self.mutGenomes()
-        self.bashout.close()
+        if run:
+            self.bashout = open('analysis.sh','w')
+            self.readArgs()
+            self.checkArgs()
+            self.readTree()
+            self.readGenome()
+            self.generateVarsites()
+            self.readVarsites()
+            self.selectMutsites()
+            self.mutGenomes()
+            self.bashout.close()
 
           
   def readArgs(self):
