@@ -4,8 +4,8 @@ from subprocess import call
 import random
 import os
 import sys
-
 import argparse
+
 
 class TreeToReads:
   def __init__(self, run=1):
@@ -20,9 +20,7 @@ class TreeToReads:
             self.readVarsites()
             self.selectMutsites()
             self.mutGenomes()
-            self.bashout.close()
-
-          
+            self.bashout.close()          
   def readArgs(self):
     if len(sys.argv) > 1:
       conf=sys.argv[1]
