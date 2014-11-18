@@ -14,6 +14,7 @@ class TreeToReads:
             self.bashout = open('analysis.sh','w')
             self.readArgs()
             self.checkArgs()
+            self.makeOut()
             self.readTree()
             self.readGenome()
             self.generateVarsites()
@@ -39,20 +40,16 @@ class TreeToReads:
     for lin in config:
       lii=lin.split('=')
       self.config[lii[0].strip()]=lii[-1].split('#')[0].strip()
-
   def makeOut(self):
-      try: 
-          os.mkdir('output')
-      except:
-          pass
+      if not os.path.isdir(self.getArg('outd')):
+          os.mkdir(self.getArg('outd'))
   def getArg(self,nam):
     return(self.config[self.argdict[nam]])
-
   def checkArgs(self):
-    self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage', 'outd':'output_directory'}
+    self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage', 'outd':'output_dir'}
     for arg in self.argdict:
       if self.argdict[arg] not in self.config:
-        print("{} is missing from the config file".format(item))
+        print("{} is missing from the config file".format(self.argdict[arg]))
         sys.exit()
     try:
       int(self.getArg('nsnp'))
@@ -87,9 +84,10 @@ class TreeToReads:
     tree=dendropy.Tree.get_from_path(self.getArg('treepath'),'newick',taxon_set=taxa)
     #fix polytomies
     tree.resolve_polytomies()
-    tree.write(open("output/simtree.tre",'w'),'newick',suppress_internal_node_labels=True)
-    linrun="sed -i -e's/\[&U\]//' output/simtree.tre"
-    self.bashout.write(linrun)
+    self.outtree="{}/simtree.tre".format(self.getArg('outd'))
+    tree.write(open(self.outtree,'w'),'newick',suppress_internal_node_labels=True)
+    linrun="sed -i -e's/\[&U\]//' {}".format(self.outtree)
+    self.bashout.write(linrun+'\n')
     os.system(linrun)
 
   def readGenome(self):
@@ -100,12 +98,13 @@ class TreeToReads:
 
   def generateVarsites(self):
 ## TODO make model variable
-    seqcall=" ".join(['seq-gen', '-l1000', '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', 'output/simtree.tre', '>', 'output/seqs_sim.txt'])
+    self.simloc="{}/seqs_sim.txt".format(self.getArg('outd'))
+    seqcall=" ".join(['seq-gen', '-l1000', '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', '{}'.format(self.outtree), '>', '{}'.format(self.simloc)])
     os.system(seqcall)
-    self.bashout.write(seqcall)
+    self.bashout.write(seqcall +'\n')
 
   def readVarsites(self):
-    sims=open("output/seqs_sim.txt").readlines()[1:]
+    sims=open(self.simloc).readlines()[1:]
     bases=sims[0][10:]
     nucsets={}
     for i in range(len(bases)):
@@ -152,7 +151,8 @@ class TreeToReads:
       self.sitepatts[nuc].append(site)
 
   def selectMutsites(self):
-    fi=open("output/mutlocs.txt","w")
+    self.mutsite="{}/mutsites.txt".format(self.getArg('outd'))
+    fi=open(self.mutsite,"w")
     rands=set()
     i=0
     while i < int(self.getArg('nsnp')): #This is the number of SNPs
@@ -171,7 +171,7 @@ class TreeToReads:
     for seq in self.seqnames:
         self.mut_genos[seq]=[]      
         print(seq)
-        genout=open("output/sim_{}.fasta".format(seq),'w')
+        genout=open("{}/sim_{}.fasta".format(self.getArg('outd'),seq),'w')
         patnuc={}
         patnuc['A']=0
         patnuc['G']=0
@@ -198,7 +198,7 @@ class TreeToReads:
     def runART(self):
      #   print(' '.join(['art_illumina', '-1', '../simB/fullprofR1.txt', '-2', '../simB/fullprofR2.txt', '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', '20', '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)]))
      #   call(['art_illumina', '-1', args['error_model1'], '-2', args['error_model2'], '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', args['coverage'], '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)])
-        artparam=' '.join(['art_illumina', '-1', self.config[self.argdict[errmod2]], '-2', self.config[self.argdict[errmod2]], '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', self.config[self.argdict[cov]], '-m', '350', '-s', '130', '-o', 'output/sim_{}_'.format(seq)])
+        artparam=' '.join(['art_illumina', '-1', self.config[self.argdict[errmod2]], '-2', self.config[self.argdict[errmod2]], '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', self.config[self.argdict[cov]], '-m', '350', '-s', '130', '-o', '{}/sim_{}_'.format(self.getArg('outd'),seq)])
         os.system(artparam)   
     '''
     #'-l', '150', <- average read length
