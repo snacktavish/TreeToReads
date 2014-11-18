@@ -8,9 +8,12 @@ import argparse
 
 
 class TreeToReads:
-  def __init__(self, run=1):
-        """Method docstring."""
+  def __init__(self, configfi='seqsim.cfg', run=0):
+        """A method to read a tree, resolve polytomes, generate mutations and simulate reads."""
+        self.configfi=configfi
         if run:
+          self.runSims()
+  def runSims:
             self.bashout = open('analysis.sh','w')
             self.readArgs()
             self.checkArgs()
@@ -32,9 +35,9 @@ class TreeToReads:
         sys.exit()
     else:
       try:
-        config=open("seqsim.cfg").readlines()
+        config=open(self.configfi)
       except:
-        print("config file seqsim.cfg not found")
+        print("config file '{}' not found".format(self.configfi))
         sys.exit()
     self.config={}
     for lin in config:
@@ -214,4 +217,4 @@ class TreeToReads:
     '''
 
 
-ttr=TreeToReads()
+#ttr=TreeToReads(configfi=other)
