@@ -13,7 +13,7 @@ class TreeToReads:
         self.configfi=configfi
         if run:
           self.runSims()
-  def runSims:
+  def runSims(self):
             self.bashout = open('analysis.sh','w')
             self.readArgs()
             self.checkArgs()
