@@ -8,7 +8,7 @@ import argparse
 
 
 class TreeToReads:
-  def __init__(self, configfi='seqsim.cfg', run=0):
+  def __init__(self, configfi='seqsim.cfg', run=1):
         """A method to read a tree, resolve polytomes, generate mutations and simulate reads."""
         self.configfi=configfi
         if run:
@@ -217,4 +217,4 @@ class TreeToReads:
     '''
 
 
-#ttr=TreeToReads(configfi=other)
+ttr=TreeToReads(configfi=other)
