@@ -217,4 +217,4 @@ class TreeToReads:
     '''
 
 
-ttr=TreeToReads(configfi=other)
+ttr=TreeToReads()
