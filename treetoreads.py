@@ -5,6 +5,7 @@ import random
 import os
 import sys
 import argparse
+import numpy
 
 
 class TreeToReads:
@@ -16,6 +17,7 @@ class TreeToReads:
   def runSims(self):
             self.bashout = open('analysis.sh','w')
             self.readArgs()
+            self.setDefaults()
             self.checkArgs()
             self.makeOut()
             self.readTree()
@@ -23,7 +25,7 @@ class TreeToReads:
             self.generateVarsites()
             self.readVarsites()
             self.selectMutsites()
-            self.mutGenomes()
+#            self.mutGenomes()
             self.bashout.close()          
   def readArgs(self):
     if len(sys.argv) > 1:
@@ -48,6 +50,13 @@ class TreeToReads:
           os.mkdir(self.getArg('outd'))
   def getArg(self,nam):
     return(self.config[self.argdict[nam]])
+  def setDefaults(self): #TEMPORARY
+            self.clustering=1
+            self.clustPerc=0.25
+            self.clustVar=50
+            self.clustLoc=75
+            self.alpha=2
+            self.beta=2
   def checkArgs(self):
     self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage', 'outd':'output_dir'}
     for arg in self.argdict:
@@ -153,16 +162,33 @@ class TreeToReads:
       assert(len(nucs)>1)
       self.sitepatts[nuc].append(site)
 
+
   def selectMutsites(self):
     self.mutsite="{}/mutsites.txt".format(self.getArg('outd'))
     fi=open(self.mutsite,"w")
     rands=set()
     i=0
     while i < int(self.getArg('nsnp')): #This is the number of SNPs
-      i+=1
-      ran=random.choice(range(self.genlen))
-      rands.add(ran)
-      fi.write(str(ran)+'\n')
+      if i%100==0:
+        print('.')
+      if self.clustering and i < (self.genlen*self.clustPerc):
+            i+=2
+            ran=random.choice(range(self.genlen))
+            rands.add(ran)
+            fi.write(str(ran)+'\n')
+            diff=int(random.gammavariate(self.alpha, self.beta)*20)
+            if (random.choice([0, 1]) or (ran-diff < 0)) and (ran+diff < self.genlen):
+              ranpair=ran+diff
+            else:
+              ranpair=ran-diff #Can run off of the end of the genome...
+            rands.add(ranpair)
+            fi.write(str(ranpair)+'\n')
+
+      else:
+            i+=1
+            ran=random.choice(range(self.genlen))
+            rands.add(ran)
+            fi.write(str(ran)+'\n')
     self.mutlocs=rands
     # set of random numbers determining where the SNPs really fall. can be drawn from SNPlist or just random.
     fi.close()
