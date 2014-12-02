@@ -242,5 +242,5 @@ class TreeToReads:
     # simulate reads for each of those genomes.
     '''
 
-
-ttr=TreeToReads()
+if __name__ == "__main__":
+  ttr=TreeToReads()
