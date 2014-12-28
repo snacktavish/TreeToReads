@@ -3,3 +3,6 @@ Tests needed:
 correct config params
 
 fastas actaully being made
+
+count simulated SNPs in mutlocs - make sure don't exceed length of genome
+
