@@ -6,3 +6,9 @@ fastas actaully being made
 
 count simulated SNPs in mutlocs - make sure don't exceed length of genome
 
+count number of SNPs
+
+test for empty simseqs
+
+
+Make sure you sim enough sites in seggen!!! <- how to address
