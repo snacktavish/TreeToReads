@@ -73,7 +73,7 @@ class TreeToReads:
             self.clustLoc=75
             self.alpha=2
             self.beta=2
-            self.lambd = 145
+            self.lambd = 0.008
   def _checkArgs(self):
     print("checking args")
     self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage', 'outd':'output_dir'}
@@ -136,7 +136,7 @@ class TreeToReads:
     if not self._treeread:
       self.readTree()
     self.simloc="{}/seqs_sim.txt".format(self.getArg('outd'))
-    seqcall=" ".join(['seq-gen', '-l1000', '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', '{}'.format(self.outtree), '>', '{}'.format(self.simloc)])
+    seqcall=" ".join(['seq-gen', '-l100000', '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', '{}'.format(self.outtree), '>', '{}'.format(self.simloc)])
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
   def readVarsites(self):
@@ -207,7 +207,9 @@ class TreeToReads:
             ran=random.choice(range(self.genlen))
             rands.add(ran)
             fi.write(str(ran)+'\n')
-            diff=int(random.expovariate(self.lambd)*20)
+            diff = 0
+            while diff==0: #RISKY at HIGH LAMBDA!
+                diff=int(random.expovariate(self.lambd))
             if (random.choice([0, 1]) or (ran-diff < 0)) and (ran+diff < self.genlen):
               ranpair=ran+diff
             else:
@@ -219,6 +221,7 @@ class TreeToReads:
             ran=random.choice(range(self.genlen))
             rands.add(ran)
             fi.write(str(ran)+'\n')
+    print("realized number of mutations is {}".format(len(rands)))
     self.mutlocs=rands
     # set of random numbers determining where the SNPs really fall. can be drawn from SNPlist or just random.
     fi.close()
