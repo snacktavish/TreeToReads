@@ -136,7 +136,7 @@ class TreeToReads:
     if not self._treeread:
       self.readTree()
     self.simloc="{}/seqs_sim.txt".format(self.getArg('outd'))
-    seqcall=" ".join(['seq-gen', '-l{}'.format(6*self.getArg('nsnp')), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', '{}'.format(self.outtree), '>', '{}'.format(self.simloc)])
+    seqcall=" ".join(['seq-gen', '-l{}'.format(6*int(self.getArg('nsnp'))), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', '{}'.format(self.outtree), '>', '{}'.format(self.simloc)])
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
   def readVarsites(self):
@@ -250,13 +250,9 @@ class TreeToReads:
                    genout.write('\n')
                 ii+=1
                 if ii in self.mutlocs:
-                   patnuc[nuc]+=1
-    #               print(nuc,patnuc[nuc])
-                   patt=self.sitepatts[nuc][patnuc[nuc]]
+                   patt=random.choice(self.sitepatts[nuc]) # risky at nigh num taxa? or too few varsites - all will have sam epattern...
                    genout.write(patt[seq])
                    self.mut_genos[seq].append(patt[seq])
-    #               genout.write('X')
-    #               print('MUT')
                 else:
                     genout.write(nuc)
         genout.close()
