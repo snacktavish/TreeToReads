@@ -136,7 +136,7 @@ class TreeToReads:
     if not self._treeread:
       self.readTree()
     self.simloc="{}/seqs_sim.txt".format(self.getArg('outd'))
-    seqcall=" ".join(['seq-gen', '-l100000', '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', '{}'.format(self.outtree), '>', '{}'.format(self.simloc)])
+    seqcall=" ".join(['seq-gen', '-l{}'.format(6*self.getArg('nsnp')), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', '{}'.format(self.outtree), '>', '{}'.format(self.simloc)])
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
   def readVarsites(self):
