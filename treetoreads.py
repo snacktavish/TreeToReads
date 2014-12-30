@@ -116,6 +116,9 @@ class TreeToReads:
     taxa=dendropy.TaxonSet()
     tree=dendropy.Tree.get_from_path(self.getArg('treepath'),'newick',taxon_set=taxa)
     self.seqnames = taxa.labels()
+    if not self.getArg('anchor_name') in self.seqnames:
+      print("anchor genome name {} is not in tree!!".format(self.getArg('anchor_name')))
+      sys.exit()
     tree.resolve_polytomies()
     self.outtree="{}/simtree.tre".format(self.getArg('outd'))
     tree.write(open(self.outtree,'w'),'newick',suppress_internal_node_labels=True)
@@ -136,7 +139,7 @@ class TreeToReads:
     if not self._treeread:
       self.readTree()
     self.simloc="{}/seqs_sim.txt".format(self.getArg('outd'))
-    seqcall=" ".join(['seq-gen', '-l{}'.format(6*int(self.getArg('nsnp'))), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '<', '{}'.format(self.outtree), '>', '{}'.format(self.simloc)])
+    seqcall=" ".join(['seq-gen', '-l{}'.format(6*int(self.getArg('nsnp'))), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or','<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc)])
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
   def readVarsites(self):
@@ -145,13 +148,13 @@ class TreeToReads:
     if not self._vargen:
       self.generateVarsites()
     sims=open(self.simloc).readlines()[1:]
-    bases=sims[0][10:]
-    nucsets={}
+    bases=sims[0].split()[1]
+    nucsets={}  # This section runs through one to determin if sites are variable
     for i in range(len(bases)):
         nucsets[i]=set()
     for lin in sims:
-      seq=lin[:10]
-      bases=lin[10:-1]
+      seq=lin.split()[0]
+      bases=lin.split()[1][:-1]
       for i, nuc in enumerate(bases):
         nucsets[i].add(nuc)
     varsites=[]
@@ -168,9 +171,9 @@ class TreeToReads:
         print vi
     simseqs={} #What is happening here again?!
     for lin in sims:
-      seq=lin[:10].strip()
+      seq=lin.split()[0]
       simseqs[seq]=[]
-      bases=lin[10:-1]
+      bases=lin.split()[1][:-1]
       for i, nuc in  enumerate(bases):
         if i in varsites:
             simseqs[seq].append(nuc)
