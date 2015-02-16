@@ -1,7 +1,7 @@
 import unittest
 from treetoreads import TreeToReads
 
-class PrimesTestCase(unittest.TestCase):
+class IntegrationTestCase(unittest.TestCase):
     """Tests that it run`."""
 
     def can_run(self):
@@ -12,7 +12,6 @@ class PrimesTestCase(unittest.TestCase):
     	"""Is the expected number of snps getting created?"""
     	ttr=TreeToReads(configfi='tests/input/test1.cfg',run=0)
     	ttr.runSims()
-
 
 
 if __name__ == '__main__':
