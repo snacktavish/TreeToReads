@@ -18,22 +18,14 @@ class TreeToReads:
   _genmut=0
   _genread=0
   _vargen=0
-  def __init__(self, configfi='seqsim.cfg', run=1):
+  def __init__(self, configfi='seqsim.cfg', run=1, clustering=0):
         """A method to read a tree, resolve polytomes, generate mutations and simulate reads."""
         self.configfi=configfi
         self.run=run
+        self.clustering=clustering
         if self.run:
           self.runSims()
   def runSims(self):
-#            self.readArgs()
-#            self.setDefaults()
-#            self.makeOut()
-#            self.readTree()
-#            self.readGenome()
-#            self.generateVarsites()
-#            self.readVarsites()
-#            self.selectMutsites()
-#            self.mutGenomes()
             self.runART()      
   def readArgs(self):
     print("reading arguments")
@@ -65,15 +57,13 @@ class TreeToReads:
           os.mkdir(self.getArg('outd'))
       self.bashout = open('{}/analysis.sh'.format(self.getArg('outd')),'w')
   def getArg(self,nam):
-    return(self.config[self.argdict[nam]])
-  def _setDefaults(self): #TEMPORARY
-            self.clustering=1
-            self.clustPerc=0.25
-            self.clustVar=50
-            self.clustLoc=75
-            self.alpha=2
-            self.beta=2
-            self.lambd = 0.008
+    if nam in self.argdict:
+        return(self.config[self.argdict[nam]])
+    else:
+      try:
+        return(self.config[nam])
+      except:
+        return(None)
   def _checkArgs(self):
     print("checking args")
     self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage', 'outd':'output_dir'}
@@ -107,7 +97,14 @@ class TreeToReads:
     except:
         print("could not open anchor genome {}".format(self.getArg('genome')))
         sys.exit() 
-  def readTree(self):
+    if self.getArg('mutation_clustering') is not None:
+      if self.getArg('mutation_clustering')=='ON':
+        try:
+            self.clustPerc = float(self.getArg('percent_clustered'))
+            self.lambd = float(self.getArg('exponential_lambda'))
+        except:
+            print("Problem reading clustering parameters, requires number for 'percent_clustered' and 'exponential_lambda'")
+            sys.exit()
     print("read tree")
     self._treeread=1
     if not self._madeout:
@@ -169,7 +166,7 @@ class TreeToReads:
         nucs.add(nuc)
     if len(nucs) == 0:
         print vi
-    simseqs={} #What is happening here again?!
+    simseqs={} #Is reading in the whole goddamn Thing into memory neccessary? ALSO this is almost certainly a case for numpy. Read in column by column.
     for lin in sims:
       seq=lin.split()[0]
       simseqs[seq]=[]
@@ -253,7 +250,7 @@ class TreeToReads:
                    genout.write('\n')
                 ii+=1
                 if ii in self.mutlocs:
-                   patt=random.choice(self.sitepatts[nuc]) # risky at nigh num taxa? or too few varsites - all will have sam epattern...
+                   patt=random.choice(self.sitepatts[nuc]) # risky at nigh num taxa? or too few varsites - all will have same pattern...
                    genout.write(patt[seq])
                    self.mut_genos[seq].append(patt[seq])
                 else:
