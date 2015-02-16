@@ -10,5 +10,6 @@ count number of SNPs
 
 test for empty simseqs
 
+What about mutiple hits at same site?
 
-Make sure you sim enough sites in seggen!!! <- how to address
+Make sure you sim enough sites in seggen!!! <- how to address Memory hoggy approahc...

@@ -11,7 +11,8 @@ class IntegrationTestCase(unittest.TestCase):
     def correct_snp_num(self):
     	"""Is the expected number of snps getting created?"""
     	ttr=TreeToReads(configfi='tests/input/test1.cfg',run=0)
-    	ttr.runSims()
+    	ttr.selectMutsites()
+        assert(len(ttr.rands)
 
 
 if __name__ == '__main__':
