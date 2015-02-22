@@ -48,7 +48,6 @@ class TreeToReads:
       lii=lin.split('=')
       self.config[lii[0].strip()]=lii[-1].split('#')[0].strip()
     self._checkArgs()
-    self._setDefaults()
   def makeOut(self):
       if not self._argread:
         self.readArgs()
@@ -105,6 +104,7 @@ class TreeToReads:
         except:
             print("Problem reading clustering parameters, requires number for 'percent_clustered' and 'exponential_lambda'")
             sys.exit()
+  def readTree(self):
     print("read tree")
     self._treeread=1
     if not self._madeout:
@@ -132,11 +132,11 @@ class TreeToReads:
   def generateVarsites(self):
     print("gen varsites")
     self._vargen=1
-## TODO make model variable
+    ## TODO make model variable
     if not self._treeread:
       self.readTree()
     self.simloc="{}/seqs_sim.txt".format(self.getArg('outd'))
-    seqcall=" ".join(['seq-gen', '-l{}'.format(6*int(self.getArg('nsnp'))), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or','<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc)])
+    seqcall=" ".join(['seq-gen', '-l{}'.format(10*int(self.getArg('nsnp'))), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or','<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc)])
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
   def readVarsites(self):
@@ -144,43 +144,35 @@ class TreeToReads:
     self._siteread=1
     if not self._vargen:
       self.generateVarsites()
-    sims=open(self.simloc).readlines()[1:]
-    bases=sims[0].split()[1]
-    nucsets={}  # This section runs through one to determin if sites are variable
-    for i in range(len(bases)):
-        nucsets[i]=set()
-    for lin in sims:
-      seq=lin.split()[0]
-      bases=lin.split()[1][:-1]
-      for i, nuc in enumerate(bases):
-        nucsets[i].add(nuc)
+    nucsets={} 
+    with open(self.simloc) as f:
+        next(f)
+        for lin in f:
+            bases=lin.split()[1][:-1]
+            for i, nuc in enumerate(bases):
+              if i not in nucsets:
+                nucsets[i]=set()
+              nucsets[i].add(nuc)
     varsites=[]
     for i in nucsets:
       if len(nucsets[i]) == 2: #THIS LIMITS TO NO MULT HITS!! DO I want that?
         varsites.append(i)
-    for vi in varsites:
-        nucs=set()
-    for lin in sims:
-        bases=lin[10:]
-        nuc=bases[vi]
-        nucs.add(nuc)
-    if len(nucs) == 0:
-        print vi
-    simseqs={} #Is reading in the whole goddamn Thing into memory neccessary? ALSO this is almost certainly a case for numpy. Read in column by column.
-    for lin in sims:
-      seq=lin.split()[0]
-      simseqs[seq]=[]
-      bases=lin.split()[1][:-1]
-      for i, nuc in  enumerate(bases):
-        if i in varsites:
-            simseqs[seq].append(nuc)
+    simseqs={}
+    with open(self.simloc) as f:
+        next(f)
+        for lin in f:
+          seq=lin.split()[0]
+          simseqs[seq]=[]
+          bases=lin.split()[1][:-1]
+          for i in varsites:
+                simseqs[seq].append(bases[i])
     assert(set(self.seqnames)==set(simseqs.keys()))
     ref=simseqs[self.getArg('anchor_name')]
     print("Checkpoint 1")
     print(len(ref))
     self.sitepatts={}
     for nuc in ['A','G','T','C']:
-	     self.sitepatts[nuc]=[]
+       self.sitepatts[nuc]=[]
     for i, nuc in enumerate(ref[:-1]):
       site={}
       nucs=set()
@@ -207,7 +199,7 @@ class TreeToReads:
             ran=random.choice(range(self.genlen))
             rands.add(ran)
             fi.write(str(ran)+'\n')
-            diff = 0
+            diff = 0 #1+exponential ... 
             while diff==0: #RISKY at HIGH LAMBDA!
                 diff=int(random.expovariate(self.lambd))
             if (random.choice([0, 1]) or (ran-diff < 0)) and (ran+diff < self.genlen):
@@ -235,7 +227,7 @@ class TreeToReads:
       self.readVarsites()
     self.mut_genos={}
     for seq in self.seqnames:
-        self.mut_genos[seq]=[]      
+        self.mut_genos[seq]=[]
         print(seq)
         genout=open("{}/sim_{}.fasta".format(self.getArg('outd'),seq),'w')
         patnuc={}
