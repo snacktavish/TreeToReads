@@ -119,7 +119,7 @@ class TreeToReads:
     tree.resolve_polytomies()
     self.outtree="{}/simtree.tre".format(self.getArg('outd'))
     tree.write(open(self.outtree,'w'),'newick',suppress_internal_node_labels=True)
-    linrun="sed -i -e's/\[&U\]//' {}".format(self.outtree)
+    linrun="sed -i.bu -e's/\[&U\]//' {}".format(self.outtree)
     self.bashout.write(linrun+'\n')
     os.system(linrun)
   def readGenome(self):
