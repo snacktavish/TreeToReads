@@ -6,6 +6,7 @@ Installed globally
 
 python packages
    Dendropy
+   Numpy
 
 
 -------------------------
@@ -19,7 +20,7 @@ wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecre
 tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
 ## So, then you need to add artbinvanillaicecream031114linux64tgz to your path. A bit annoying.
 
-easy_install dendropy
+easy_install dendropy numpy
 
 -----------------------------------------------------------
 Running the simulations:
