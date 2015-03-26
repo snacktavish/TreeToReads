@@ -207,6 +207,7 @@ class TreeToReads:
           nucs.add(simseqs[srr][i])
       assert(len(nucs)>1)
       self.sitepatts[nuc].append(site)  #PICKLE THIS SOMEHOW?!?!
+
   def selectMutsites(self):
     print("select mutsites")
     if not self._madeout: 
@@ -262,7 +263,7 @@ class TreeToReads:
         ii=0
         genout.write(">SIM_{}\n".format(seq))
         for nuc in self.gen:
-                if ii%80==0:
+                if ii%70==0:
                    genout.write('\n')
                 ii+=1
                 if ii in self.mutlocs:
