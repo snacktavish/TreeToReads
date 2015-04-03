@@ -174,7 +174,8 @@ class TreeToReads:
     with open(self.simloc) as f:
         next(f)
         for lin in f:
-            bases=lin.split()[1][:-1]
+            bases=lin.split()[1].strip()
+       #     print("seq {} has bases {}".format(lin.split()[0],bases))
             for i, nuc in enumerate(bases):
               if i not in nucsets:
                 nucsets[i]=set()
@@ -183,23 +184,29 @@ class TreeToReads:
     for i in nucsets:
       if len(nucsets[i]) == 2: #THIS LIMITS TO NO MULT HITS!! DO I want that?
         varsites.append(i)
+   # print(varsites)
     simseqs={}
     with open(self.simloc) as f:
         next(f)
         for lin in f:
           seq=lin.split()[0]
+ #         print("seq name is {}".format(seq))
           simseqs[seq]=[]
-          bases=lin.split()[1][:-1]
+          bases=lin.split()[1].strip()
           for i in varsites:
                 simseqs[seq].append(bases[i])
-    assert(set(self.seqnames)==set(simseqs.keys()))
+    try:
+      assert(set(self.seqnames)==set(simseqs.keys()))
+    except:
+      print(self.seqnames)
+      print(simseqs.keys())
+      sys.exit()
     ref=simseqs[self.getArg('anchor_name')]
-    print("Checkpoint 1")
     print(len(ref))
     self.sitepatts={}
     for nuc in ['A','G','T','C']:
        self.sitepatts[nuc]=[]
-    for i, nuc in enumerate(ref[:-1]):
+    for i, nuc in enumerate(ref):
       site={}
       nucs=set()
       for srr in simseqs:
@@ -207,7 +214,6 @@ class TreeToReads:
           nucs.add(simseqs[srr][i])
       assert(len(nucs)>1)
       self.sitepatts[nuc].append(site)  #PICKLE THIS SOMEHOW?!?!
-
   def selectMutsites(self):
     print("select mutsites")
     if not self._madeout: 
@@ -251,6 +257,7 @@ class TreeToReads:
     if not self._siteread:
       self.readVarsites()
     self.mut_genos={}
+    matout=open("{}/SNPmatrix".format(self.getArg('outd')),'w')
     for seq in self.seqnames:
         self.mut_genos[seq]=[]
         print(seq)
@@ -262,18 +269,26 @@ class TreeToReads:
         patnuc['C']=0
         ii=0
         genout.write(">SIM_{}\n".format(seq))
+#        print("current seq is {}".format(seq))
         for nuc in self.gen:
                 if ii%70==0:
                    genout.write('\n')
                 ii+=1
                 if ii in self.mutlocs:
+#                   print("ref nuc is {}".format(nuc))
                    patt=random.choice(self.sitepatts[nuc]) # risky at nigh num taxa? or too few varsites - all will have same pattern... But won't run out of sites...
+#                   print("selected patt with correct ref nuc is")
+#                   print(patt)
                    genout.write(patt[seq])
+#                   print("and the base for seq {} with reference base {} at site {} is {}\n".format(seq,nuc,ii,patt[seq]))
                    self.mut_genos[seq].append(patt[seq])
+                   matout.write("{} {} {}\n".format(seq, patt[seq], ii))
                 else:
                     genout.write(nuc)
+        genout.write('\n')
         genout.close()
-        self._genmut=1
+    matout.close()
+    self._genmut=1
   def runART(self):
       print("runART")
       if not self._genmut:
