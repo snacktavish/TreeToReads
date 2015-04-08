@@ -8,6 +8,8 @@ import argparse
 import numpy
 import sys
 
+#FIX LOOPING BACK THROUGH PATTRENS AND NO TRIPLE HITS!!!
+
 
 class TreeToReads:
   _argread=0
@@ -161,7 +163,7 @@ class TreeToReads:
     if not self._treeread:
       self.readTree()
     self.simloc="{}/seqs_sim.txt".format(self.getArg('outd'))
-    lenseqgen=10*int(self.getArg('nsnp'))
+    lenseqgen=100*int(self.getArg('nsnp'))
     seqcall=" ".join(['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or','<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc)])
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
@@ -182,7 +184,8 @@ class TreeToReads:
               nucsets[i].add(nuc)
     varsites=[]
     for i in nucsets:
-      if len(nucsets[i]) == 2: #THIS LIMITS TO NO MULT HITS!! DO I want that?
+#      if len(nucsets[i]) == 2: #THIS LIMITS TO NO MULT HITS!! DO I want that?
+      if len(nucsets[i]) >= 2: 
         varsites.append(i)
    # print(varsites)
     simseqs={}
@@ -258,15 +261,24 @@ class TreeToReads:
       self.readVarsites()
     self.mut_genos={}
     matout=open("{}/SNPmatrix".format(self.getArg('outd')),'w')
+    patnuc={}
+    ri=0
+    patnuc['A']=0
+    patnuc['G']=0
+    patnuc['T']=0
+    patnuc['C']=0
+    snpdic={}
+    for nuc in self.gen:
+                ri+=1
+                if ri in self.mutlocs:
+                  patnuc[nuc]+=1
+                  snpdic[ri]=patnuc[nuc]
+    print(snpdic)
     for seq in self.seqnames:
         self.mut_genos[seq]=[]
         print(seq)
         genout=open("{}/sim_{}.fasta".format(self.getArg('outd'),seq),'w')
-        patnuc={}
-        patnuc['A']=0
-        patnuc['G']=0
-        patnuc['T']=0
-        patnuc['C']=0
+
         ii=0
         genout.write(">SIM_{}\n".format(seq))
 #        print("current seq is {}".format(seq))
@@ -274,9 +286,9 @@ class TreeToReads:
                 if ii%70==0:
                    genout.write('\n')
                 ii+=1
-                if ii in self.mutlocs:
+                if ii in self.mutlocs:             
 #                   print("ref nuc is {}".format(nuc))
-                   patt=random.choice(self.sitepatts[nuc]) # risky at nigh num taxa? or too few varsites - all will have same pattern... But won't run out of sites...
+                   patt=self.sitepatts[nuc][snpdic[ii]] # risky at nigh num taxa? or too few varsites - all will have same pattern... But won't run out of sites...
 #                   print("selected patt with correct ref nuc is")
 #                   print(patt)
                    genout.write(patt[seq])
