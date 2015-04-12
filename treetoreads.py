@@ -131,7 +131,7 @@ class TreeToReads:
         sys.stdout.write('Mutation clustering is OFF\n')
         self.clustering=0
   def readTree(self):
-    sys.stdout.write("read tree")
+    sys.stdout.write("read tree\n")
     self._treeread=1
     if not self._madeout:
       self.makeOut()
