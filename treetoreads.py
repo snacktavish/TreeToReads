@@ -31,20 +31,20 @@ class TreeToReads:
   def runSims(self):
             self.runART()      
   def readArgs(self):
-    print("reading arguments")
+    sys.stdout.write("reading arguments\n")
     self._argread=1
     if len(sys.argv) > 1:
       self.configfi=sys.argv[1]
       try:
         config=open(self.configfi).readlines()
       except:
-        print("couldn't open config file {}".conf)
+        sys.stderr.write("couldn't open config file {}\n".conf)
         sys.exit()
     else:
       try:
         config=open(self.configfi)
       except:
-        print("config file '{}' not found".format(self.configfi))
+        sys.stderr.write("config file '{}' not found".format(self.configfi))
         sys.exit()
     self.config={}
     for lin in config:
@@ -55,7 +55,7 @@ class TreeToReads:
       if not self._argread:
         self.readArgs()
       self._madeout=1
-      print('output directory is {}'.format(self.outd))
+      sys.stdout.write('output directory is {}\n'.format(self.outd))
       if not os.path.isdir(self.getArg('outd')):
           os.mkdir(self.getArg('outd'))
       self.bashout = open('{}/analysis.sh'.format(self.getArg('outd')),'w')
@@ -76,40 +76,40 @@ class TreeToReads:
       except:
         return(None)
   def _checkArgs(self):
-    print("checking args")
+    sys.stdout.write("checking args\n")
     if self._argread!=1:
       self.readArgs()
     self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage', 'outd':'output_dir'}
     for arg in self.argdict:
       if self.argdict[arg] not in self.config:
-        print("{} is missing from the config file".format(self.argdict[arg]))
+        sys.err.write("{} is missing from the config file".format(self.argdict[arg]))
         sys.exit()
     try:
         self.nsnp=int(self.getArg('nsnp'))
-        print('Number of SNPS is {}'.format(self.nsnp))
+        sys.stdout.write('Number of SNPS is {}\n'.format(self.nsnp))
     except:
-        print("number of SNPs {} could not be coerced to an integer".format(self.getArg('nsnp')))
+        sys.stderr.write("number of SNPs {} could not be coerced to an integer\n".format(self.getArg('nsnp')))
         sys.exit()
     if not len(self.getArg('ratmat').split(','))==6:
-        print("{} values in rate matrix, there should be 6".format(len(self.getArg('ratmat').split(','))))
+        sys.stderr.write("{} values in rate matrix, there should be 6\n".format(len(self.getArg('ratmat').split(','))))
         sys.exit()
     if not len(self.getArg('freqmat').split(','))==4:
-        print("{} values in freq matrix, there should be 4".format(len(self.getArg('freqmat').split(','))))
+        sys.stderr.write("{} values in freq matrix, there should be 4\n".format(len(self.getArg('freqmat').split(','))))
         sys.exit()  
     try:
         float(self.getArg('shape'))
     except:
-        print("shape parameter {} could not be coerced to a float".format(self.getArg('shape')))
+        sys.stderr.write("shape parameter {} could not be coerced to a float\n".format(self.getArg('shape')))
         sys.exit() 
     try:
         open(self.getArg('treepath'))
     except:
-      print("could not open treefile {}".format(self.getArg('treepath')))
+      sys.stderr.write("could not open treefile {}\n".format(self.getArg('treepath')))
       sys.exit() 
     try:
         open(self.getArg('genome'))
     except:
-        print("could not open anchor genome {}".format(self.getArg('genome')))
+        sys.stderr.write("could not open anchor genome {}\n".format(self.getArg('genome')))
         sys.exit() 
     try:
         self.outd=self.getArg('outd')
@@ -122,16 +122,16 @@ class TreeToReads:
             self.clustPerc = float(self.getArg('percent_clustered'))
             self.lambd = float(self.getArg('exponential_lambda'))
         except:
-            print("Problem reading clustering parameters, requires number for 'percent_clustered' and 'exponential_lambda'")
+            sys.sterr.write("Problem reading clustering parameters, requires number for 'percent_clustered' and 'exponential_lambda'\n")
             sys.exit()
       else: 
-        print('Mutation clustering is OFF, to use set mutation_clustering = ON and values for "percent_clustered" and "exponential_lambda"')
+        sys.stdout.write('Mutation clustering is OFF, to use set mutation_clustering = ON and values for "percent_clustered" and "exponential_lambda"\n')
         self.clustering=0
     else: 
-        print('Mutation clustering is OFF')
+        sys.stdout.write('Mutation clustering is OFF\n')
         self.clustering=0
   def readTree(self):
-    print("read tree")
+    sys.stdout.write("read tree")
     self._treeread=1
     if not self._madeout:
       self.makeOut()
@@ -140,14 +140,17 @@ class TreeToReads:
     tree=dendropy.Tree.get_from_path(self.getArg('treepath'),'newick',taxon_set=taxa)
     self.seqnames = taxa.labels()
     if not self.getArg('anchor_name') in self.seqnames:
-      print("anchor genome name {} is not in tree!!".format(self.getArg('anchor_name')))
+      sys.sterr.write("anchor genome name {} is not in tree\n".format(self.getArg('anchor_name')))
       sys.exit()
     tree.resolve_polytomies()
+    if tree.length >= 1:
+      sys.stderr.write("Tree length is high - scale down tree or expect high multiple hits/homoplasy\n")
     self.outtree="{}/simtree.tre".format(self.getArg('outd'))
     tree.write(open(self.outtree,'w'),'newick',suppress_internal_node_labels=True)
     linrun="sed -i.bu -e's/\[&U\]//' {}".format(self.outtree)
     self.bashout.write(linrun+'\n')
     os.system(linrun)
+    treefi=open(self.outtree).readlines()
   def readGenome(self):
     self._genread=1
     if not self._argread: self.readArgs()
@@ -155,9 +158,9 @@ class TreeToReads:
     crop=[lin[:-1] for lin in genfas[1:]]
     self.gen="".join(crop)
     self.genlen=len(self.gen)
-    print("Genome has {} bases".format(self.genlen))
+    sys.stdout.write("Genome has {} bases\n".format(self.genlen))
   def generateVarsites(self):
-    print("gen varsites")
+    sys.stdout.write("generating varsites\n")
     self._vargen=1
     ## TODO make model variable
     if not self._treeread:
@@ -168,7 +171,7 @@ class TreeToReads:
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
   def readVarsites(self):
-    print("read varsite")
+    sys.stdout.write("read variable sites\n")
     self._siteread=1
     if not self._vargen:
       self.generateVarsites()
@@ -177,23 +180,25 @@ class TreeToReads:
         next(f)
         for lin in f:
             bases=lin.split()[1].strip()
-       #     print("seq {} has bases {}".format(lin.split()[0],bases))
             for i, nuc in enumerate(bases):
               if i not in nucsets:
                 nucsets[i]=set()
               nucsets[i].add(nuc)
     varsites=[]
+    tb=0
+    vs=0
     for i in nucsets:
-#      if len(nucsets[i]) == 2: #THIS LIMITS TO NO MULT HITS!! DO I want that?
       if len(nucsets[i]) >= 2: 
         varsites.append(i)
-   # print(varsites)
+        vs+=1
+      if len(nucsets[i]) > 2: 
+        tb+=1
+    sys.stdout.write('{} SNP sites with more than 2 bases out of {} sites. Scale down tree length if this is too high.\n'.format(tb,vs))
     simseqs={}
     with open(self.simloc) as f:
         next(f)
         for lin in f:
           seq=lin.split()[0]
- #         print("seq name is {}".format(seq))
           simseqs[seq]=[]
           bases=lin.split()[1].strip()
           for i in varsites:
@@ -201,11 +206,10 @@ class TreeToReads:
     try:
       assert(set(self.seqnames)==set(simseqs.keys()))
     except:
-      print(self.seqnames)
-      print(simseqs.keys())
+      sys.sterr.write(self.seqnames)
+      sys.sterr.write(simseqs.keys())
       sys.exit()
     ref=simseqs[self.getArg('anchor_name')]
-    print(len(ref))
     self.sitepatts={}
     for nuc in ['A','G','T','C']:
        self.sitepatts[nuc]=[]
@@ -218,7 +222,7 @@ class TreeToReads:
       assert(len(nucs)>1)
       self.sitepatts[nuc].append(site)  #PICKLE THIS SOMEHOW?!?!
   def selectMutsites(self):
-    print("select mutsites")
+    sys.stdout.write("select mutsites\n")
     if not self._madeout: 
       self.makeOut()
     if not self._genread: 
@@ -247,13 +251,13 @@ class TreeToReads:
             rands=set(ran)
             for site in rands:
                 fi.write(str(site)+'\n')
-    print("realized number of mutations is {}".format(len(rands)))
+    sys.stdout.write("realized number of mutations is {}\n".format(len(rands)))
     self.mutlocs=rands
     # set of random numbers determining where the SNPs really fall. can be drawn from SNPlist or just random.
     fi.close()
     self._mutlocs=1
   def mutGenomes(self):
-    print("run mut genomes")
+    sys.stdout.write("mutating genomes\n")
 #    if not self._siteread: self.readVarsites()
     if not self._mutlocs: 
       self.selectMutsites()
@@ -273,40 +277,32 @@ class TreeToReads:
                 if ri in self.mutlocs:
                   patnuc[nuc]+=1
                   snpdic[ri]=patnuc[nuc]
-    print(snpdic)
     for seq in self.seqnames:
         self.mut_genos[seq]=[]
-        print(seq)
+        sys.stdout.write("writng genome for {}\n".format(seq))
         genout=open("{}/sim_{}.fasta".format(self.getArg('outd'),seq),'w')
-
         ii=0
-        genout.write(">SIM_{}\n".format(seq))
-#        print("current seq is {}".format(seq))
+        genout.write(">SIM_{}".format(seq))
         for nuc in self.gen:
                 if ii%70==0:
                    genout.write('\n')
                 ii+=1
                 if ii in self.mutlocs:             
-#                   print("ref nuc is {}".format(nuc))
-                   patt=self.sitepatts[nuc][snpdic[ii]] # risky at nigh num taxa? or too few varsites - all will have same pattern... But won't run out of sites...
-#                   print("selected patt with correct ref nuc is")
-#                   print(patt)
+                   patt=self.sitepatts[nuc][snpdic[ii]]
                    genout.write(patt[seq])
-#                   print("and the base for seq {} with reference base {} at site {} is {}\n".format(seq,nuc,ii,patt[seq]))
                    self.mut_genos[seq].append(patt[seq])
                    matout.write("{} {} {}\n".format(seq, patt[seq], ii))
                 else:
                     genout.write(nuc)
         genout.write('\n')
+        genout.write('\n')
         genout.close()
     matout.close()
     self._genmut=1
   def runART(self):
-      print("runART")
+      sys.stdout.write("runART\n")
       if not self._genmut:
             self.mutGenomes()
-       #   print(' '.join(['art_illumina', '-1', '../simB/fullprofR1.txt', '-2', '../simB/fullprofR2.txt', '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', '20', '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)]))
-       #   call(['art_illumina', '-1', args['error_model1'], '-2', args['error_model2'], '-p', '-sam', '-i', 'sim_{}.fasta'.format(seq), '-l', '150', '-f', args['coverage'], '-m', '350', '-s', '130', '-o', 'sim_{}_'.format(seq)])
       for seq in self.seqnames:
         artparam=' '.join(['art_illumina', '-1', self.getArg('errmod2'), '-2', self.getArg('errmod2'), '-p', '-sam', '-i', '{}/sim_{}.fasta'.format(self.getArg('outd'),seq), '-l', '150', 
                       '-f', self.getArg('cov'), '-m', '350', '-s', '130', '-o', '{}/sim_{}_'.format(self.getArg('outd'),seq)])
