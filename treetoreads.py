@@ -121,6 +121,8 @@ class TreeToReads:
         try:
             self.clustPerc = float(self.getArg('percent_clustered'))
             self.lambd = float(self.getArg('exponential_lambda'))
+            print("clustering proprotion is {}".format(self.clustPerc))
+            print("lambda is {}".format(self.lambd))
         except:
             sys.sterr.write("Problem reading clustering parameters, requires number for 'percent_clustered' and 'exponential_lambda'\n")
             sys.exit()
@@ -231,9 +233,10 @@ class TreeToReads:
     fi=open(self.mutsite,"w")
     rands=set()
     if self.clustering:
-        ranpairA=random.sample(range(self.genlen),(self.nsnp*self.clustPerc)/2)
-        rands.add(set(ranpairA))
+        nclust=int((self.nsnp*self.clustPerc)/2)
+        ranpairA=random.sample(range(self.genlen),nclust)
         for site in ranpairA:
+            rands.add(site)
             diff = 0 #1+exponential ... 
             while diff==0: #RISKY at HIGH LAMBDA!
                 diff=int(random.expovariate(self.lambd))
@@ -242,8 +245,8 @@ class TreeToReads:
             else:
               ranpairB=site-diff
             rands.add(ranpairB)
-        ransingle=random.sample(range(self.genlen),self.nsnp*(1-self.clustPerc))
-        rands.add(set(ransingle))# TODO check this is legal
+        ransingle=random.sample(range(self.genlen),int(self.nsnp*(1-self.clustPerc)))
+        rands.update(ransingle)
         for site in rands:
                 fi.write(str(site)+'\n')
     else:
