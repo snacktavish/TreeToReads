@@ -56,10 +56,10 @@ class TreeToReads:
         self.readArgs()
       self._madeout=1
       sys.stdout.write('output directory is {}\n'.format(self.outd))
-      if not os.path.isdir(self.getArg('outd')):
-          os.mkdir(self.getArg('outd'))
-      self.bashout = open('{}/analysis.sh'.format(self.getArg('outd')),'w')
-      configout = open('{}/analysis_configuration.cfg'.format(self.getArg('outd')),'w')
+      if not os.path.isdir(self.outd):
+          os.mkdir(self.outd)
+      self.bashout = open('{}/analysis.sh'.format(self.outd),'w')
+      configout = open('{}/analysis_configuration.cfg'.format(self.outd),'w')
       for lin in open(self.configfi).readlines():
           configout.write('lin')
       configout.close()
@@ -145,7 +145,7 @@ class TreeToReads:
     tree.resolve_polytomies()
     if tree.length >= 1:
       sys.stderr.write("Tree length is high - scale down tree or expect high multiple hits/homoplasy\n")
-    self.outtree="{}/simtree.tre".format(self.getArg('outd'))
+    self.outtree="{}/simtree.tre".format(self.outd)
     tree.write(open(self.outtree,'w'),'newick',suppress_internal_node_labels=True)
     linrun="sed -i.bu -e's/\[&U\]//' {}".format(self.outtree)
     self.bashout.write(linrun+'\n')
@@ -165,8 +165,8 @@ class TreeToReads:
     ## TODO make model variable
     if not self._treeread:
       self.readTree()
-    self.simloc="{}/seqs_sim.txt".format(self.getArg('outd'))
-    lenseqgen=100*int(self.getArg('nsnp'))
+    self.simloc="{}/seqs_sim.txt".format(self.outd)
+    lenseqgen=100*self.nsnp
     seqcall=" ".join(['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or','<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc)])
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
@@ -227,7 +227,7 @@ class TreeToReads:
       self.makeOut()
     if not self._genread: 
       self.readGenome()
-    self.mutsite="{}/mutsites.txt".format(self.getArg('outd'))
+    self.mutsite="{}/mutsites.txt".format(self.outd)
     fi=open(self.mutsite,"w")
     rands=set()
     if self.clustering:
@@ -264,7 +264,7 @@ class TreeToReads:
     if not self._siteread:
       self.readVarsites()
     self.mut_genos={}
-    matout=open("{}/SNPmatrix".format(self.getArg('outd')),'w')
+    matout=open("{}/SNPmatrix".format(self.outd),'w')
     patnuc={}
     ri=0
     patnuc['A']=0
@@ -280,7 +280,7 @@ class TreeToReads:
     for seq in self.seqnames:
         self.mut_genos[seq]=[]
         sys.stdout.write("writng genome for {}\n".format(seq))
-        genout=open("{}/sim_{}.fasta".format(self.getArg('outd'),seq),'w')
+        genout=open("{}/sim_{}.fasta".format(self.outd,seq),'w')
         ii=0
         genout.write(">SIM_{}".format(seq))
         for nuc in self.gen:
@@ -304,7 +304,7 @@ class TreeToReads:
       if not self._genmut:
             self.mutGenomes()
       for seq in self.seqnames:
-        artparam=' '.join(['art_illumina', '-1', self.getArg('errmod2'), '-2', self.getArg('errmod2'), '-p', '-sam', '-i', '{}/sim_{}.fasta'.format(self.getArg('outd'),seq), '-l', '150', 
+        artparam=' '.join(['art_illumina', '-1', self.getArg('errmod2'), '-2', self.getArg('errmod2'), '-p', '-sam', '-i', '{}/sim_{}.fasta'.format(self.outd,seq), '-l', '150', 
                       '-f', self.getArg('cov'), '-m', '350', '-s', '130', '-o', '{}/sim_{}_'.format(self.getArg('outd'),seq)])
         self.bashout.write(artparam+'\n')
         os.system(artparam)   
