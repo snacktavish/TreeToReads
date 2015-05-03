@@ -32,6 +32,4 @@ if __name__ == '__main__':
     assert(compare_trees('tests/input/simple_expected.tre','tests/tree_from_fasta/tff.best.tre')==0)
     assert(compare_trees('tests/input/alt.tre','tests/tree_from_fasta/tff.best.tre')!=0)
     print('Topology is correct')
-
-
-
+    os.system("rm -r /home/ejmctavish/Documents/FDA/TreetoReads/tests/tree_from_fasta")

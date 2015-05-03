@@ -8,8 +8,8 @@ def runSNPpipe(ttr):
 
 
 if __name__ == '__main__':
-    ttr=TreeToReads(configfi='tests/input/test2.cfg',run=0)
-   # ttr.runART()
+    ttr=TreeToReads(configfi='tests/input/simple.cfg',run=0)
+    ttr.runART()
     print("outd is {}".format(ttr.outd))
     print(ttr.getArg('genome'))
     runSNPpipe(ttr)
