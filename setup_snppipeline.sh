@@ -21,7 +21,7 @@ for fi in `ls *_1.fq | cut -d"," -f2`
     done
 
     
-run_snp_pipeline.sh -s $DATA -o nee ../$REF
+run_snp_pipeline.sh -s $DATA -o nee $REF
 
 cp ../example/garli.conf $DATA
 
