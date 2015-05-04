@@ -8,8 +8,6 @@ import argparse
 import numpy
 import sys
 
-#FIX LOOPING BACK THROUGH PATTRENS AND NO TRIPLE HITS!!!
-
 
 class TreeToReads:
   _argread=0
