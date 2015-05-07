@@ -8,8 +8,6 @@ import argparse
 import numpy
 import sys
 
-#FIX LOOPING BACK THROUGH PATTRENS AND NO TRIPLE HITS!!!
-
 
 class TreeToReads:
   _argread=0
@@ -168,7 +166,7 @@ class TreeToReads:
     if not self._treeread:
       self.readTree()
     self.simloc="{}/seqs_sim.txt".format(self.outd)
-    lenseqgen=100*self.nsnp
+    lenseqgen=10*self.nsnp
     seqcall=" ".join(['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or','<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc)])
     os.system(seqcall)
     self.bashout.write(seqcall +'\n')
