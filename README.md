@@ -7,7 +7,7 @@ on SNP calling and evolutionary inference.
 
 Still in draft format - but testing welcome, and will be supported via email ejmctavish, gmail.  
 
-Requirements:
+##Requirements:
 
 Installed globally
    Art
@@ -20,7 +20,7 @@ python packages
 
 -------------------------
 
-Requirements
+## To install requirements
 
 
 sudo apt-get install seq-gen
