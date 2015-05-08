@@ -1,6 +1,6 @@
 #TreeToReads
 
-Simulation pipeline to generate next genertaion sequencing reads from realistic phylogenies.  
+Simulation pipeline to generate next generation sequencing reads from realistic phylogenies.  
 Can be used to test effects of model of evolution, rates of evolution, 
 genomic distribution of mutations, and phylogenetic relatedness of samples and of reference genome 
 on SNP calling and evolutionary inference.  
