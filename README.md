@@ -10,12 +10,12 @@ Still in draft format - but testing welcome, and will be supported via email ejm
 ##Requirements:
 
 Installed globally
-   Art
-   Seq-Gen
+-   Art
+-   Seq-Gen
 
 python packages
-   Dendropy
-   Numpy
+-   Dendropy
+-   Numpy
 
 
 -------------------------
@@ -23,13 +23,12 @@ python packages
 ##To install requirements
 
 
-sudo apt-get install seq-gen
-
-wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
-tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
+    sudo apt-get install seq-gen
+    wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
+    tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
 So, then you need to add artbinvanillaicecream031114linux64tgz to your path. A bit annoying.
 
-easy_install dendropy numpy
+    easy_install dendropy numpy
 
 -----------------------------------------------------------
 ##Running the simulations:
