@@ -20,27 +20,23 @@ python packages
 
 -------------------------
 
-## To install requirements
+##To install requirements
 
 
 sudo apt-get install seq-gen
 
 wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
 tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
-## So, then you need to add artbinvanillaicecream031114linux64tgz to your path. A bit annoying.
+So, then you need to add artbinvanillaicecream031114linux64tgz to your path. A bit annoying.
 
 easy_install dendropy numpy
 
 -----------------------------------------------------------
-Running the simulations:
+##Running the simulations:
 
 git clone https://github.com/snacktavish/TreeToReads.git
-
-python simulations.py
-
-cd scripts/TreeToReads
+cd TreeToReads
 
 ## Edit config file, seqsim.cfg, to fit your data!
-
 
 python simulations.py ## by default looks for seqsim.cfg, or first argument can be a control file
