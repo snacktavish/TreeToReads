@@ -33,9 +33,11 @@ So, then you need to add artbinvanillaicecream031114linux64tgz to your path. A b
 -----------------------------------------------------------
 ##Running the simulations:
 
-git clone https://github.com/snacktavish/TreeToReads.git
-cd TreeToReads
+    git clone https://github.com/snacktavish/TreeToReads.git
+    cd TreeToReads
 
-## Edit config file, seqsim.cfg, to fit your data!
+Edit config file, seqsim.cfg, to fit your data!
 
-python simulations.py ## by default looks for seqsim.cfg, or first argument can be a control file
+    python simulations.py mysims.cfg
+
+by default looks for seqsim.cfg, or first argument can be a control file
