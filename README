@@ -1,3 +1,12 @@
+#TreeToReads
+
+Simulation pipeline to generate next genertaion sequencing reads from realistic phylogenies.  
+Con abe used to test effects of model of evolution, rates of evolution, 
+genomic distribution of mutations, and phylogenetic relatedness of samples and of reference genome 
+on SNP calling and evolutionary inference.  
+
+Still in draft format - but testing welcome, and will be supported via email ejmctavish, gmail.  
+
 Requirements:
 
 Installed globally
