@@ -9,6 +9,7 @@ import numpy
 import sys
 
 
+
 class TreeToReads:
   _argread=0
   _treeread=0
@@ -22,7 +23,11 @@ class TreeToReads:
   def __init__(self, configfi='seqsim.cfg', run=1):
         """A method to read a tree, resolve polytomes, generate mutations and simulate reads."""
         self.configfi=configfi
-        sys.stdout.write("Running TreetoReads using configuration file {}\n".format(self.configfi))     
+        if os.path.isfile(self.configfi):
+          sys.stdout.write("Running TreetoReads using configuration file {}\n".format(self.configfi))
+        else:
+          sys.stderr.write("Config file '{}' not found. Exiting.\n".format(self.configfi))
+          sys.exit()
         self.run=run
         if self.run:
           self.runSims()
@@ -39,13 +44,13 @@ class TreeToReads:
       try:
         config=open(self.configfi).readlines()
       except:
-        sys.stderr.write("couldn't open config file {}\n".conf)
+        sys.stderr.write("Couldn't open config file {}. Exiting.\n".format(self.configfi))
         sys.exit()
     else:
       try:
         config=open(self.configfi)
       except:
-        sys.stderr.write("config file '{}' not found".format(self.configfi))
+        sys.stderr.write("Config file '{}' not found. Exiting.".format(self.configfi))
         sys.exit()
     self.config={}
     for lin in config:
@@ -89,28 +94,28 @@ class TreeToReads:
         self.nsnp=int(self.getArg('nsnp'))
         sys.stdout.write('Number of SNPS is {}\n'.format(self.nsnp))
     except:
-        sys.stderr.write("number of SNPs {} could not be coerced to an integer\n".format(self.getArg('nsnp')))
+        sys.stderr.write("number of SNPs {} could not be coerced to an integer. Exiting.\n".format(self.getArg('nsnp')))
         sys.exit()
     if not len(self.getArg('ratmat').split(','))==6:
-        sys.stderr.write("{} values in rate matrix, there should be 6\n".format(len(self.getArg('ratmat').split(','))))
+        sys.stderr.write("{} values in rate matrix, there should be 6. Exiting.\n".format(len(self.getArg('ratmat').split(','))))
         sys.exit()
     if not len(self.getArg('freqmat').split(','))==4:
-        sys.stderr.write("{} values in freq matrix, there should be 4\n".format(len(self.getArg('freqmat').split(','))))
+        sys.stderr.write("{} values in freq matrix, there should be 4. Exiting.\n".format(len(self.getArg('freqmat').split(','))))
         sys.exit()  
     try:
         float(self.getArg('shape'))
     except:
-        sys.stderr.write("shape parameter {} could not be coerced to a float\n".format(self.getArg('shape')))
+        sys.stderr.write("shape parameter {} could not be coerced to a float. Exiting.\n".format(self.getArg('shape')))
         sys.exit() 
     try:
         open(self.getArg('treepath'))
     except:
-      sys.stderr.write("could not open treefile {}\n".format(self.getArg('treepath')))
+      sys.stderr.write("cCuld not open treefile {}. Exiting.\n".format(self.getArg('treepath')))
       sys.exit() 
     try:
         open(self.getArg('genome'))
     except:
-        sys.stderr.write("could not open anchor genome {}\n".format(self.getArg('genome')))
+        sys.stderr.write("Could not open anchor genome {}. Exiting.\n".format(self.getArg('genome')))
         sys.exit() 
     try:
         self.outd=self.getArg('outd')
@@ -125,7 +130,7 @@ class TreeToReads:
             print("clustering proprotion is {}".format(self.clustPerc))
             print("lambda is {}".format(self.lambd))
         except:
-            sys.sterr.write("Problem reading clustering parameters, requires number for 'percent_clustered' and 'exponential_lambda'\n")
+            sys.sterr.write("Problem reading clustering parameters, requires number for 'percent_clustered' and 'exponential_lambda. Exiting.'\n")
             sys.exit()
       else: 
         sys.stdout.write('Mutation clustering is OFF, to use set mutation_clustering = ON and values for "percent_clustered" and "exponential_lambda"\n')
@@ -142,11 +147,11 @@ class TreeToReads:
     tree=dendropy.Tree.get_from_path(self.getArg('treepath'),'newick',taxon_set=taxa)
     self.seqnames = taxa.labels()
     if not self.getArg('anchor_name') in self.seqnames:
-      sys.sterr.write("anchor genome name {} is not in tree\n".format(self.getArg('anchor_name')))
+      sys.sterr.write("anchor genome name {} is not in tree. Exiting.\n".format(self.getArg('anchor_name')))
       sys.exit()
     tree.resolve_polytomies()
     if tree.length >= 1:
-      sys.stderr.write("Tree length is high - scale down tree or expect high multiple hits/homoplasy\n")
+      sys.stderr.write("WARNING: Tree length is high - scale down tree or expect high multiple hits/homoplasy!\n")
     self.outtree="{}/simtree.tre".format(self.outd)
     tree.write(open(self.outtree,'w'),'newick',suppress_internal_node_labels=True)
     linrun="sed -i.bu -e's/\[&U\]//' {}".format(self.outtree)
@@ -195,7 +200,7 @@ class TreeToReads:
         vs+=1
       if len(nucsets[i]) > 2: 
         tb+=1
-    sys.stderr.write('IMPORTANT: {} SNP sites with more than 2 bases out of {} sites. Scale down tree length if this is too high.\n'.format(tb,vs))
+    sys.stderr.write('WARNING: {} SNP sites with more than 2 bases out of {} sites. Scale down tree length if this is too high.\n'.format(tb,vs))
     simseqs={}
     with open(self.simloc) as f:
         next(f)
@@ -323,5 +328,13 @@ class TreeToReads:
       # simulate reads for each of those genomes.
       """
 
+
+parser=argparse.ArgumentParser(
+    description='''Tree to Reads - A python script to to read a tree, resolve polytomes, generate mutations and simulate reads.''',
+    epilog="""Still in development - email ejmctavish@gmail.com with questions, suggestions, issues etc.""")
+parser.add_argument("configfi",  nargs='?', default="seqsim.cfg", type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
+args = parser.parse_args()
+
+
 if __name__ == "__main__":
-  ttr=TreeToReads()
+  ttr=TreeToReads(configfi=args.configfi)
