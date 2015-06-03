@@ -8,7 +8,7 @@ import argparse
 import numpy
 import sys
 
-
+VERSION="0.0.1"
 
 class TreeToReads:
   _argread=0
@@ -311,10 +311,10 @@ class TreeToReads:
       if not self._genmut:
             self.mutGenomes()
       for seq in self.seqnames:
-        artparam=' '.join(['art_illumina', '-1', self.getArg('errmod2'), '-2', self.getArg('errmod2'), '-p', '-sam', '-i', '{}/sim_{}.fasta'.format(self.outd,seq), '-l', '150', 
-                      '-f', self.getArg('cov'), '-m', '350', '-s', '130', '-o', '{}/sim_{}_'.format(self.getArg('outd'),seq)])
-        self.bashout.write(artparam+'\n')
-        os.system(artparam)   
+        artparam=['art_illumina', '-1', self.getArg('errmod2'), '-2', self.getArg('errmod2'), '-p', '-sam', '-i', '{}/sim_{}.fasta'.format(self.outd,seq), '-l', '150', 
+                      '-f', self.getArg('cov'), '-m', '350', '-s', '130', '-o', '{}/sim_{}_'.format(self.getArg('outd'),seq)]
+        self.bashout.write(' '.join(artparam)+'\n')
+        call(artparam)   
       sys.stdout.write("ART generated reads\n")
       """
       #'-l', '150', <- average read length
@@ -333,7 +333,11 @@ parser=argparse.ArgumentParser(
     description='''Tree to Reads - A python script to to read a tree, resolve polytomes, generate mutations and simulate reads.''',
     epilog="""Still in development - email ejmctavish@gmail.com with questions, suggestions, issues etc.""")
 parser.add_argument("configfi",  nargs='?', default="seqsim.cfg", type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
+parser.add_argument('-V', '--version', 
+                    action='version',                    
+                    version='Tree to reads version {}'.format(VERSION))
 args = parser.parse_args()
+
 
 
 if __name__ == "__main__":
