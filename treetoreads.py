@@ -32,7 +32,7 @@ class TreeToReads:
         if self.run:
           self.runSims()
         self._checkArgs()
-        test_deps()
+#        test_deps()
   def test_deps(self):
     t=1
   def runSims(self):
@@ -175,8 +175,8 @@ class TreeToReads:
     self.simloc="{}/seqs_sim.txt".format(self.outd)
     lenseqgen=40*self.nsnp ##TODO - scale to branch lengths?
     seqgenpar=['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or']
-    seqcall = call(seqgenpar, stdout=open('{}'.format(self.simloc)), stderr=open('{}/seqgen.out'.format(self.outd)), stdin=open('{}'.format(self.outtree)))
-    self.bashout.write(" ".join(seqgenpar + ['<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc), '2>', '{}/seqgen.out'.format(self.outd)])+'\n')
+    seqcall = call(seqgenpar, stdout=open('{}'.format(self.simloc),'w'), stderr=open('{}/seqgen.out'.format(self.outd),'w'), stdin=open('{}'.format(self.outtree)))
+    self.bashout.write(" ".join(seqgenpar + ['<', '{}'.format(self.outtree),'>', '{}/{}'.format(self.outd,self.simloc), '2>', '{}/seqgen.out'.format(self.outd)])+'\n')
     sys.stdout.write("Variable sites generated using seq-gen\n")
   def readVarsites(self):
     self._siteread=1
