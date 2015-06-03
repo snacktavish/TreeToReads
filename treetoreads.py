@@ -22,14 +22,17 @@ class TreeToReads:
   def __init__(self, configfi='seqsim.cfg', run=1):
         """A method to read a tree, resolve polytomes, generate mutations and simulate reads."""
         self.configfi=configfi
+        sys.stdout.write("Running TreetoReads using configuration file {}\n".format(self.configfi))     
         self.run=run
         if self.run:
           self.runSims()
         self._checkArgs()
+        test_deps()
+  def test_deps(self):
+    t=1
   def runSims(self):
             self.runART()      
   def readArgs(self):
-    sys.stdout.write("reading arguments\n")
     self._argread=1
     if len(sys.argv) > 1:
       self.configfi=sys.argv[1]
@@ -49,6 +52,7 @@ class TreeToReads:
       lii=lin.split('=')
       self.config[lii[0].strip()]=lii[-1].split('#')[0].strip()
     self._checkArgs()
+    sys.stdout.write("Arguments read\n")
   def makeOut(self):
       if not self._argread:
         self.readArgs()
@@ -74,7 +78,6 @@ class TreeToReads:
       except:
         return(None)
   def _checkArgs(self):
-    sys.stdout.write("checking args\n")
     if self._argread!=1:
       self.readArgs()
     self.argdict={'treepath':'treefile_path', 'nsnp':'number_of_snps', 'anchor_name':'anchor_name', 'genome':'anchor_genome_path', 'ratmat':'rate_matrix', 'freqmat':'freq_matrix', 'shape':'shape', 'errmod1':'error_model1', 'errmod2':'error_model2', 'cov':'coverage', 'outd':'output_dir'}
@@ -131,7 +134,6 @@ class TreeToReads:
         sys.stdout.write('Mutation clustering is OFF\n')
         self.clustering=0
   def readTree(self):
-    sys.stdout.write("read tree\n")
     self._treeread=1
     if not self._madeout:
       self.makeOut()
@@ -151,6 +153,7 @@ class TreeToReads:
     self.bashout.write(linrun+'\n')
     os.system(linrun)
     treefi=open(self.outtree).readlines()
+    sys.stdout.write("Tree read\n")
   def readGenome(self):
     self._genread=1
     if not self._argread: self.readArgs()
@@ -160,18 +163,17 @@ class TreeToReads:
     self.genlen=len(self.gen)
     sys.stdout.write("Genome has {} bases\n".format(self.genlen))
   def generateVarsites(self):
-    sys.stdout.write("generating varsites\n")
     self._vargen=1
-    ## TODO make model variable
+    ## TODO make model variable, currently only GTR is possible
     if not self._treeread:
       self.readTree()
     self.simloc="{}/seqs_sim.txt".format(self.outd)
-    lenseqgen=40*self.nsnp
-    seqcall=" ".join(['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or','<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc)])
-    os.system(seqcall)
-    self.bashout.write(seqcall +'\n')
+    lenseqgen=40*self.nsnp ##TODO - scale to branch lengths?
+    seqgenpar=['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR', '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')), '-f{}'.format(self.getArg('freqmat')), '-or']
+    seqcall = call(seqgenpar, stdout=open('{}'.format(self.simloc)), stderr=open('{}/seqgen.out'.format(self.outd)), stdin=open('{}'.format(self.outtree)))
+    self.bashout.write(" ".join(seqgenpar + ['<', '{}'.format(self.outtree),'>', '{}'.format(self.simloc), '2>', '{}/seqgen.out'.format(self.outd)])+'\n')
+    sys.stdout.write("Variable sites generated using seq-gen\n")
   def readVarsites(self):
-    sys.stdout.write("read variable sites\n")
     self._siteread=1
     if not self._vargen:
       self.generateVarsites()
@@ -193,7 +195,7 @@ class TreeToReads:
         vs+=1
       if len(nucsets[i]) > 2: 
         tb+=1
-    sys.stdout.write('{} SNP sites with more than 2 bases out of {} sites. Scale down tree length if this is too high.\n'.format(tb,vs))
+    sys.stderr.write('IMPORTANT: {} SNP sites with more than 2 bases out of {} sites. Scale down tree length if this is too high.\n'.format(tb,vs))
     simseqs={}
     with open(self.simloc) as f:
         next(f)
@@ -221,8 +223,8 @@ class TreeToReads:
           nucs.add(simseqs[srr][i])
       assert(len(nucs)>1)
       self.sitepatts[nuc].append(site)  #PICKLE THIS SOMEHOW?!?!
+    sys.stdout.write("Variable sites read\n")
   def selectMutsites(self):
-    sys.stdout.write("select mutsites\n")
     if not self._madeout: 
       self.makeOut()
     if not self._genread: 
@@ -258,7 +260,6 @@ class TreeToReads:
     fi.close()
     self._mutlocs=1
   def mutGenomes(self):
-    sys.stdout.write("mutating genomes\n")
 #    if not self._siteread: self.readVarsites()
     if not self._mutlocs: 
       self.selectMutsites()
@@ -300,8 +301,8 @@ class TreeToReads:
         genout.close()
     matout.close()
     self._genmut=1
+    sys.stdout.write("Mutated genomes\n")
   def runART(self):
-      sys.stdout.write("runART\n")
       if not self._genmut:
             self.mutGenomes()
       for seq in self.seqnames:
@@ -309,6 +310,7 @@ class TreeToReads:
                       '-f', self.getArg('cov'), '-m', '350', '-s', '130', '-o', '{}/sim_{}_'.format(self.getArg('outd'),seq)])
         self.bashout.write(artparam+'\n')
         os.system(artparam)   
+      sys.stdout.write("ART generated reads\n")
       """
       #'-l', '150', <- average read length
       # '-f', '20', <-need to get fold coverage
