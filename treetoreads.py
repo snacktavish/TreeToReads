@@ -10,14 +10,7 @@ import argparse
 
 
 VERSION = "0.0.1"
-def _test_deps():
-    "Check that seq-gen and ART are installed," # this will not work on non-*nix, but neither will anything else I think.
-    if call(['which', 'seq-gen']) == 1:
-        sys.stderr.write("seq-gen needs to be installed and in your path for TreeToReads to run. It was not found.  Exiting\n")
-        sys.exit()
-    if call(['which', 'art_illumina']) == 1:
-        sys.stderr.write("art_illumina needs to be installed and in your path for TreeToReads to run. It was not found. Exiting\n")
-        sys.exit()
+
 
 
 class TreeToReads:
@@ -39,14 +32,27 @@ class TreeToReads:
         else:
             sys.stderr.write("Config file '{}' not found. Exiting.\n".format(self.configfi))
             sys.exit()
+        self.test_deps()
         self.run = run
         if self.run:
-            self.runART()
+            if self.noART != 1:
+                self.runART()
+            else:
+                self.mutGenomes()
         self._checkArgs()
-        _test_deps()
+    def test_deps(self):
+        "Check that seq-gen and ART are installed," # this will not work on non-*nix, but neither will anything else I think.
+        if call(['which', 'seq-gen']) == 1:
+            sys.stderr.write("seq-gen needs to be installed and in your path for TreeToReads to run. It was not found.  Exiting\n")
+            sys.exit()
+        if call(['which', 'art_illumina']) == 1:
+            sys.stderr.write("art_illumina needs to be installed and in your path for TreeToReads to generate reads.\
+            It was not found. TTR will just generate mutated genomes, but not reads. \n")
+            self.noART = 1
+        else:
+            self.noART = 0
     def readArgs(self):
         """reads arguments from config file"""
-        self._argread = 1
         try:
             config = open(self.configfi)
         except:
@@ -58,6 +64,7 @@ class TreeToReads:
             self.config[lii[0].strip()] = lii[-1].split('#')[0].strip()
         self._checkArgs()
         sys.stdout.write("Arguments read\n")
+        self._argread = 1
     def makeOut(self):
         """Creates output directory"""
         if not self._argread:
@@ -73,9 +80,7 @@ class TreeToReads:
         configout.close()
     def getArg(self, nam):
         """Returns arugments from the argument dictionary"""#TODO Is this really needed?
-        try:
-            len(self.argdict)
-        except:
+        if not self._argread: 
             self.readArgs()
         if nam in self.argdict:
             return self.config[self.argdict[nam]]
@@ -193,7 +198,7 @@ class TreeToReads:
         seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
                       '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')),
                       '-f{}'.format(self.getArg('freqmat')), '-or']
-        seqcall = call(seqgenpar, stdout=open('{}'.format(self.simloc), 'w'), stderr=open('{}/seqgen.out'.format(self.outd), 'w'), stdin=open('{}'.format(self.outtree)))
+        call(seqgenpar, stdout=open('{}'.format(self.simloc), 'w'), stderr=open('{}/seqgen.out'.format(self.outd), 'w'), stdin=open('{}'.format(self.outtree)))
         self.bashout.write(" ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>', '{}/{}'.format(self.outd, self.simloc), '2>', '{}/seqgen.out'.format(self.outd)])+'\n')
         sys.stdout.write("Variable sites generated using seq-gen\n")
     def readVarsites(self):
@@ -212,14 +217,14 @@ class TreeToReads:
                         nucsets[i] = set()
                     nucsets[i].add(nuc)
         varsites = []
-        tb = 0
-        vs = 0
+        trip_hit = 0
+        var_site = 0
         for i in nucsets:
             if len(nucsets[i]) >= 2:
                 varsites.append(i)
-                vs += 1
+                var_site += 1
             if len(nucsets[i]) > 2:
-                tb += 1
+                trip_hit += 1
         sys.stderr.write('WARNING: {} SNP sites with more than 2 bases out of {} sites. Scale down tree length if this is too high.\n'.format(tb, vs))
         simseqs = {}
         with open(self.simloc) as f:
@@ -357,7 +362,7 @@ parser = argparse.ArgumentParser(
     epilog="""Still in development - email ejmctavish@gmail.com with questions, suggestions, issues etc.""")
 parser.add_argument("configfi", nargs='?', default="seqsim.cfg", type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
 parser.add_argument('-V', '--version',
-                    action='version',                  
+                    action='version',
                     version='Tree to reads version {}'.format(VERSION))
 args = parser.parse_args()
 
