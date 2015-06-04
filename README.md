@@ -28,7 +28,7 @@ python packages
     tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
 So, then you need to add artbinvanillaicecream031114linux64tgz to your path. A bit annoying.
 
-    easy_install dendropy numpy
+    easy_install dendropy
 
 -----------------------------------------------------------
 ##Running the simulations:
