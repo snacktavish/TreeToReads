@@ -40,6 +40,7 @@ class TreeToReads:
             else:
                 self.mutGenomes()
         self._checkArgs()
+        self.prefix = 'sim_'
     def test_deps(self):
         "Check that seq-gen and ART are installed," # this will not work on non-*nix, but neither will anything else I think.
         if call(['which', 'seq-gen']) == 1:
@@ -62,7 +63,6 @@ class TreeToReads:
         for lin in config:
             lii = lin.split('=')
             self.config[lii[0].strip()] = lii[-1].split('#')[0].strip()
-        self._checkArgs()
         sys.stdout.write("Arguments read\n")
         self._argread = 1
     def makeOut(self):
@@ -199,10 +199,11 @@ class TreeToReads:
                       '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')),
                       '-f{}'.format(self.getArg('freqmat')), '-or']
         call(seqgenpar, stdout=open('{}'.format(self.simloc), 'w'), stderr=open('{}/seqgen.out'.format(self.outd), 'w'), stdin=open('{}'.format(self.outtree)))
-        self.bashout.write(" ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>', '{}/{}'.format(self.outd, self.simloc), '2>', '{}/seqgen.out'.format(self.outd)])+'\n')
+        self.bashout.write(" ".join(seqgenpar + 
+            ['<', '{}'.format(self.outtree), '>', '{}/{}'.format(self.outd, self.simloc), '2>', '{}/seqgen.out'.format(self.outd)])+'\n')
         sys.stdout.write("Variable sites generated using seq-gen\n")
     def readVarsites(self):
-        """Reads in only the viarble sites from the seqgen output file
+        """Reads in only the variable sites from the seqgen output file
         Stores as ditionary."""
         self._siteread = 1
         if not self._vargen:
@@ -225,7 +226,8 @@ class TreeToReads:
                 var_site += 1
             if len(nucsets[i]) > 2:
                 trip_hit += 1
-        sys.stderr.write('WARNING: {} SNP sites with more than 2 bases out of {} sites. Scale down tree length if this is too high.\n'.format(tb, vs))
+        sys.stderr.write('WARNING: {} SNP sites with more than 2 bases out of {} sites.\
+                         Scale down tree length if this is too high.\n'.format(trip_hit, var_site))
         simseqs = {}
         with open(self.simloc) as f:
             next(f)
@@ -268,8 +270,8 @@ class TreeToReads:
             ranpairA = random.sample(range(self.genlen), nclust)
             for site in ranpairA:
                 rands.add(site)
-                diff = 0 #1+exponential ...
-                while diff == 0: #RISKY at HIGH LAMBDA!
+                diff = 0
+                while diff == 0: #RISKY at HIGH LAMBDA!, could be v. slow
                     diff = int(random.expovariate(self.lambd))
                 if (random.choice([0, 1]) or (site-diff < 0)) and (site+diff < self.genlen):
                     ranpairB = site+diff
@@ -313,9 +315,11 @@ class TreeToReads:
         for seq in self.seqnames:
             self.mut_genos[seq] = []
             sys.stdout.write("writng genome for {}\n".format(seq))
-            genout = open("{}/sim_{}.fasta".format(self.outd, seq), 'w')
+            if not os.path.isdir("{}/fasta_files".format(self.outd)):
+                os.mkdir("{}/fasta_files".format(self.outd))
+            genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             ii = 0
-            genout.write(">SIM_{}".format(seq))
+            genout.write(">{}{}".format(self.prefix, seq))
             for nuc in self.gen:
                 if ii%70 == 0:
                     genout.write('\n')
@@ -335,26 +339,30 @@ class TreeToReads:
         sys.stdout.write("Mutated genomes\n")
     def runART(self):
         """Runs ART to simulate reads from the simulated genomes"""
+        if not os.path.isdir("{}/fastq".format(self.outd)):
+            os.mkdir("{}/fastq".format(self.outd))
         if not self._genmut:
             self.mutGenomes()
-        for seq in self.seqnames:#TODO currently only illuminsa data...
-            artparam = ['art_illumina', '-1', self.getArg('errmod2'), '-2', self.getArg('errmod2'),
-                        '-p', '-sam', '-i', '{}/sim_{}.fasta'.format(self.outd, seq), '-l', '150',
-                        '-f', self.getArg('cov'), '-m', '350', '-s', '130', '-o', '{}/sim_{}_'.format(self.getArg('outd'), seq)] #TODO Make more of these options?
+        read_length = 150 #TODO add these to config
+        fragment_size = 350
+        stdev_frag_size = 130
+        for seq in self.seqnames:#TODO currently only illumina data...
+            if not os.path.isdir("{}/fastq/{}".format(self.outd, seq)):
+                os.mkdir("{}/fastq/{}".format(self.outd, seq))
+            artparam = ['art_illumina', 
+                        '-1', self.getArg('errmod2'), 
+                        '-2', self.getArg('errmod2'),
+                        '-p', #for paired end reads
+                        '-i', '{}/{}{}.fasta'.format(self.prefix, self.outd, seq), 
+                        '-l', '{}'.format(read_length),
+                        '-f', self.getArg('cov'), 
+                        '-m', '{}'.format(fragment_size), 
+                        '-s', '{}'.format(st), 
+                        '-o', '{}/fastq/{}/{}{}_'.format(seq, self.getArg('outd'), self.prefix, seq)] 
             self.bashout.write(' '.join(artparam)+'\n')
             call(artparam)
         sys.stdout.write("ART generated reads\n")
-        """
-        #'-l', '150', <- average read length
-        # '-f', '20', <-need to get fold coverage
-        #'-m', '350', <- fragment size?? need to check
-        #'-s', '130', <- stdev fragment size...
-        # pull a random number fromt the length of the genome,
-        #art_illumina -1 fullprof.txt -2 fullprof.txt -p -sam -i SIM_.fasta -l 150 -f 20 -m 2050 -s 50 -o sim_test
-        #Map those mutations back onto the genomes....
-        #Get distributaion of SNP locations from real data?!!
-        # simulate reads for each of those genomes.
-        """
+
 
 
 parser = argparse.ArgumentParser(
