@@ -10,8 +10,9 @@ Still in draft format - but testing welcome, and will be supported via email ejm
 ##Requirements:
 
 Installed globally
--   Art
 -   Seq-Gen
+-   Art
+(can be run with out Art if you want to generate mutated genomes, but not reads)
 
 python packages
 -   Dendropy
