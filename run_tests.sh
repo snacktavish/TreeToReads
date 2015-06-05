@@ -1,4 +1,4 @@
-echo "running basic tests"
+echo "Running basic tests"
 
 echo "tree reconstruction from fasta"
 python tests/tree_from_fasta.py
