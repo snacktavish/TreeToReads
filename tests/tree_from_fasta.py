@@ -27,7 +27,7 @@ if __name__ == '__main__':
     ttr.mutGenomes()
     print(ttr.getArg('genome'))
     # enter the directory like this:
-    os.system("cat {}/*.fasta > {}/mini.aln".format(ttr.outd, ttr.outd))
+    os.system("cat {}/fasta_files/*.fasta > {}/mini.aln".format(ttr.outd, ttr.outd))
     os.system("Garli tests/garli_mini.conf > {}/garliout".format(ttr.outd))
     assert(compare_trees('tests/input/simple_expected.tre','tests/tree_from_fasta/tff.best.tre')==0)
     assert(compare_trees('tests/input/alt.tre','tests/tree_from_fasta/tff.best.tre')!=0)

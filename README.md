@@ -10,8 +10,9 @@ Still in draft format - but testing welcome, and will be supported via email ejm
 ##Requirements:
 
 Installed globally
--   Art
 -   Seq-Gen
+-   Art
+(can be run with out Art if you want to generate mutated genomes, but not reads)
 
 python packages
 -   Dendropy
@@ -28,7 +29,7 @@ python packages
     tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
 So, then you need to add artbinvanillaicecream031114linux64tgz to your path. A bit annoying.
 
-    easy_install dendropy numpy
+    easy_install dendropy
 
 -----------------------------------------------------------
 ##Running the simulations:
