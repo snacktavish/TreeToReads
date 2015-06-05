@@ -339,6 +339,8 @@ class TreeToReads:
         sys.stdout.write("Mutated genomes\n")
     def runART(self):
         """Runs ART to simulate reads from the simulated genomes"""
+        if not self._genmut:
+            self.mutGenomes()
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
         if not self._genmut:
@@ -353,12 +355,12 @@ class TreeToReads:
                         '-1', self.getArg('errmod2'), 
                         '-2', self.getArg('errmod2'),
                         '-p', #for paired end reads
-                        '-i', '{}/{}{}.fasta'.format(self.prefix, self.outd, seq), 
+                        '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq), 
                         '-l', '{}'.format(read_length),
                         '-f', self.getArg('cov'), 
                         '-m', '{}'.format(fragment_size), 
-                        '-s', '{}'.format(st), 
-                        '-o', '{}/fastq/{}/{}{}_'.format(seq, self.getArg('outd'), self.prefix, seq)] 
+                        '-s', '{}'.format(stdev_frag_size), 
+                        '-o', '{}/fastq/{}/{}{}_'.format(self.getArg('outd'), seq, self.prefix, seq)] 
             self.bashout.write(' '.join(artparam)+'\n')
             call(artparam)
         sys.stdout.write("ART generated reads\n")
