@@ -14,7 +14,8 @@ VERSION = "0.0.1"
 
 
 class TreeToReads:
-    """A tree to reads object that holds the input tree and base genome, and has methods to create different outputs"""
+    """A tree to reads object that holds the input tree and base genome,
+    and has methods to create different outputs"""
     _argread = 0
     _treeread = 0
     _simran = 0
@@ -32,23 +33,30 @@ class TreeToReads:
         else:
             sys.stderr.write("Config file '{}' not found. Exiting.\n".format(self.configfi))
             sys.exit()
+        self._checkArgs()
         self.test_deps()
         self.run = run
+        if 'prefix' in self.config:
+            self.prefix = self.config['prefix']
+        else:
+            self.prefix = ''
         if self.run:
             if self.noART != 1:
                 self.runART()
             else:
                 self.mutGenomes()
-        self._checkArgs()
-        self.prefix = 'sim_'
     def test_deps(self):
-        "Check that seq-gen and ART are installed," # this will not work on non-*nix, but neither will anything else I think.
-        if call(['which', 'seq-gen']) == 1:
-            sys.stderr.write("seq-gen needs to be installed and in your path for TreeToReads to run. It was not found.  Exiting\n")
+        "Check that seq-gen and ART are installed,"
+        if call(['which', 'seq-gen'], stdout=open('/dev/null', 'w')) == 1:
+            sys.stderr.write("seq-gen needs to be installed \
+                              and in your path for TreeToReads to run.\
+                              It was not found.  Exiting\n")
             sys.exit()
-        if call(['which', 'art_illumina']) == 1:
-            sys.stderr.write("art_illumina needs to be installed and in your path for TreeToReads to generate reads.\
-            It was not found. TTR will just generate mutated genomes, but not reads. \n")
+        if call(['which', 'art_illumina'], stdout=open('/dev/null', 'w')) == 1:
+            sys.stderr.write("art_illumina needs to be installed \
+                             and in your path for TreeToReads to \
+                             generate reads. Art not found. \
+                             TTR will only generate mutated genomes. \n")
             self.noART = 1
         else:
             self.noART = 0
@@ -57,7 +65,8 @@ class TreeToReads:
         try:
             config = open(self.configfi)
         except:
-            sys.stderr.write("Config file '{}' not found. Exiting.".format(self.configfi))
+            sys.stderr.write("Config file '{}' not found. \
+                              Exiting.".format(self.configfi))
             sys.exit()
         self.config = {}
         for lin in config:
@@ -80,7 +89,7 @@ class TreeToReads:
         configout.close()
     def getArg(self, nam):
         """Returns arugments from the argument dictionary"""#TODO Is this really needed?
-        if not self._argread: 
+        if not self._argread:
             self.readArgs()
         if nam in self.argdict:
             return self.config[self.argdict[nam]]
@@ -90,7 +99,8 @@ class TreeToReads:
             except:
                 return None
     def _checkArgs(self):
-        """Checks that arguments are of the appropriate types, and all required args are present."""
+        """Checks that arguments are of the appropriate types,
+        and all required args are present."""
         if self._argread != 1:
             self.readArgs()
         self.argdict = {'treepath':'treefile_path',
@@ -103,7 +113,8 @@ class TreeToReads:
                         'errmod1':'error_model1',
                         'errmod2':'error_model2',
                         'cov':'coverage',
-                        'outd':'output_dir'}
+                        'outd':'output_dir'
+                        }
         for arg in self.argdict:
             if self.argdict[arg] not in self.config:
                 sys.stderr.write("{} is missing from the config file".format(self.argdict[arg]))
@@ -112,28 +123,34 @@ class TreeToReads:
             self.nsnp = int(self.getArg('nsnp'))
             sys.stdout.write('Number of SNPS is {}\n'.format(self.nsnp))
         except:
-            sys.stderr.write("number of SNPs {} could not be coerced to an integer. Exiting.\n".format(self.getArg('nsnp')))
+            sys.stderr.write("number of SNPs {} could not be coerced to an integer. \
+                              Exiting.\n".format(self.getArg('nsnp')))
             sys.exit()
         if not len(self.getArg('ratmat').split(',')) == 6:
-            sys.stderr.write("{} values in rate matrix, there should be 6. Exiting.\n".format(len(self.getArg('ratmat').split(','))))
+            sys.stderr.write("{} values in rate matrix, there should be 6. \
+                              Exiting.\n".format(len(self.getArg('ratmat').split(','))))
             sys.exit()
         if not len(self.getArg('freqmat').split(',')) == 4:
-            sys.stderr.write("{} values in freq matrix, there should be 4. Exiting.\n".format(len(self.getArg('freqmat').split(','))))
+            sys.stderr.write("{} values in freq matrix, there should be 4. \
+                              Exiting.\n".format(len(self.getArg('freqmat').split(','))))
             sys.exit()
         try:
             float(self.getArg('shape'))
         except:
-            sys.stderr.write("shape parameter {} could not be coerced to a float. Exiting.\n".format(self.getArg('shape')))
+            sys.stderr.write("shape parameter {} could not be coerced to a float. \
+                              Exiting.\n".format(self.getArg('shape')))
             sys.exit()
         try:
             open(self.getArg('treepath'))
         except:
-            sys.stderr.write("cCuld not open treefile {}. Exiting.\n".format(self.getArg('treepath')))
+            sys.stderr.write("Could not open treefile {}. \
+                              Exiting.\n".format(self.getArg('treepath')))
             sys.exit()
         try:
             open(self.getArg('genome'))
         except:
-            sys.stderr.write("Could not open base genome {}. Exiting.\n".format(self.getArg('genome')))
+            sys.stderr.write("Could not open base genome {}. \
+                              Exiting.\n".format(self.getArg('genome')))
             sys.exit()
         try:
             self.outd = self.getArg('outd')
@@ -148,16 +165,20 @@ class TreeToReads:
                     print("clustering proprotion is {}".format(self.clustPerc))
                     print("lambda is {}".format(self.lambd))
                 except:
-                    sys.stderr.write("Problem reading clustering parameters, requires number for 'percent_clustered' and 'exponential_lambda. Exiting.'\n")
+                    sys.stderr.write("Problem reading clustering parameters, \
+                                     requires float for 'percent_clustered' \
+                                     and 'exponential_lambda. Exiting.'\n")
                     sys.exit()
             else:
-                sys.stdout.write('Mutation clustering is OFF, to use set mutation_clustering = ON and values for "percent_clustered" and "exponential_lambda"\n')
+                sys.stdout.write('Mutation clustering is OFF, \
+                                  to use set mutation_clustering = ON \
+                                  and values for "percent_clustered" and "exponential_lambda"\n')
                 self.clustering = 0
         else:
             sys.stdout.write('Mutation clustering is OFF\n')
             self.clustering = 0
     def readTree(self):
-        """Reads in a tree from a file, arbitrarilt resolves poltomies if present, 
+        """Reads in a tree from a file, arbitrarilt resolves poltomies if present,
         strips leading [&U] and writes out to outputdir/simtree.tre"""
         self._treeread = 1
         if not self._madeout:
@@ -167,11 +188,13 @@ class TreeToReads:
         tree = dendropy.Tree.get_from_path(self.getArg('treepath'), 'newick', taxon_set=taxa)
         self.seqnames = taxa.labels()
         if not self.getArg('base_name') in self.seqnames:
-            sys.stderr.write("base genome name {} is not in tree. Exiting.\n".format(self.getArg('base_name')))
+            sys.stderr.write("base genome name {} is not in tree. \
+                              Exiting.\n".format(self.getArg('base_name')))
             sys.exit()
         tree.resolve_polytomies()
         if tree.length >= 1:
-            sys.stderr.write("WARNING: Tree length is high - scale down tree or expect high multiple hits/homoplasy!\n")
+            sys.stderr.write("WARNING: Tree length is high \
+                              - scale down tree or expect high multiple hits/homoplasy!\n")
         self.outtree = "{}/simtree.tre".format(self.outd)
         tree.write(open(self.outtree, 'w'), 'newick', suppress_internal_node_labels=True)
         linrun = r"sed -i.bu -e's/\[&U\]//' {}".format(self.outtree)
@@ -198,9 +221,14 @@ class TreeToReads:
         seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
                       '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')),
                       '-f{}'.format(self.getArg('freqmat')), '-or']
-        call(seqgenpar, stdout=open('{}'.format(self.simloc), 'w'), stderr=open('{}/seqgen.out'.format(self.outd), 'w'), stdin=open('{}'.format(self.outtree)))
+        call(seqgenpar, 
+            stdout=open('{}'.format(self.simloc), 'w'), 
+            stderr=open('{}/seqgen.out'.format(self.outd), 'w'), 
+            stdin=open('{}'.format(self.outtree)))
         self.bashout.write(" ".join(seqgenpar + 
-            ['<', '{}'.format(self.outtree), '>', '{}/{}'.format(self.outd, self.simloc), '2>', '{}/seqgen.out'.format(self.outd)])+'\n')
+            ['<', '{}'.format(self.outtree), '>',
+            '{}/{}'.format(self.outd, self.simloc), '2>',
+            '{}/seqgen.out'.format(self.outd)])+'\n')
         sys.stdout.write("Variable sites generated using seq-gen\n")
     def readVarsites(self):
         """Reads in only the variable sites from the seqgen output file
@@ -283,14 +311,12 @@ class TreeToReads:
             for site in rands:
                 fi.write(str(site)+'\n')
         else:
-            ran = random.sample(range(self.genlen), self.nsnp) # Makes sure this works..., test if is sampling with replacement or no. Prefer W/O replacement.
+            ran = random.sample(range(self.genlen), self.nsnp) 
             rands = set(ran)
             for site in rands:
                 fi.write(str(site)+'\n')
         sys.stdout.write("realized number of mutations is {}\n".format(len(rands)))
         self.mutlocs = rands
-        # set of random numbers determining where the SNPs really fall. can be drawn from SNPlist or just random.
-        fi.close()
         self._mutlocs = 1
     def mutGenomes(self):
         """Writes out the simulated genomes with mutations"""
@@ -314,7 +340,7 @@ class TreeToReads:
                 snpdic[ri] = patnuc[nuc]
         for seq in self.seqnames:
             self.mut_genos[seq] = []
-            sys.stdout.write("writng genome for {}\n".format(seq))
+            sys.stdout.write("writing genome for {}\n".format(seq))
             if not os.path.isdir("{}/fasta_files".format(self.outd)):
                 os.mkdir("{}/fasta_files".format(self.outd))
             genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
@@ -345,12 +371,24 @@ class TreeToReads:
             os.mkdir("{}/fastq".format(self.outd))
         if not self._genmut:
             self.mutGenomes()
-        read_length = 150 #TODO add these to config
-        fragment_size = 350
-        stdev_frag_size = 130
+        if 'read_length' in self.config:
+            read_length = self.config['read_length'] #TODO Hmmm this feels a bit sloppy
+        else:
+            read_length = 150
+        sys.stdout.write("read length is {}\n".format(read_length))
+        if 'fragment_size' in self.config:
+            fragment_size = self.config['fragment_size']
+        else:
+            fragment_size = 350
+        sys.stdout.write("read length is {}\n".format(fragment_size))
+        if 'stdev_frag_size' in self.config:
+            stdev_frag_size = self.config['stdev_frag_size']
+        else:
+            stdev_frag_size = 130
+        sys.stdout.write("stdev of frag size is {}\n".format(stdev_frag_size))
         for seq in self.seqnames:#TODO currently only illumina data...
-            if not os.path.isdir("{}/fastq/{}".format(self.outd, seq)):
-                os.mkdir("{}/fastq/{}".format(self.outd, seq))
+            if not os.path.isdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq)):
+                os.mkdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq))
             artparam = ['art_illumina', 
                         '-1', self.getArg('errmod2'), 
                         '-2', self.getArg('errmod2'),
@@ -360,15 +398,17 @@ class TreeToReads:
                         '-f', self.getArg('cov'), 
                         '-m', '{}'.format(fragment_size), 
                         '-s', '{}'.format(stdev_frag_size), 
-                        '-o', '{}/fastq/{}/{}{}_'.format(self.getArg('outd'), seq, self.prefix, seq)] 
+                        '-o', '{}/fastq/{}{}/{}{}_'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)] 
             self.bashout.write(' '.join(artparam)+'\n')
-            call(artparam)
+            call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
+            assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq))
         sys.stdout.write("ART generated reads\n")
 
 
 
 parser = argparse.ArgumentParser(
-    description='''Tree to Reads - A python script to to read a tree, resolve polytomes, generate mutations and simulate reads.''',
+    description='''Tree to Reads - A python script to to read a tree, 
+                    resolve polytomes, generate mutations and simulate reads.''',
     epilog="""Still in development - email ejmctavish@gmail.com with questions, suggestions, issues etc.""")
 parser.add_argument("configfi", nargs='?', default="seqsim.cfg", type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
 parser.add_argument('-V', '--version',
