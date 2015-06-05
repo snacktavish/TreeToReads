@@ -42,3 +42,6 @@ Edit config file, seqsim.cfg, to fit your data!
     python simulations.py mysims.cfg
 
 by default looks for seqsim.cfg, or first argument can be a control file
+
+Currently only runs art_illumina and generates paired end illumina data.
+Alternatively, genomes can be generated, and ART run seperately using any chosen parameters.
