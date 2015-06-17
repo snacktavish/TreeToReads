@@ -403,7 +403,7 @@ class TreeToReads:
             call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq))
         sys.stdout.write("ART generated reads\n")
-
+        sys.stdout.write("TreeToReads completed successfully!\n")
 
 
 parser = argparse.ArgumentParser(
