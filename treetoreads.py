@@ -184,8 +184,13 @@ class TreeToReads:
         if not self._madeout:
             self.makeOut()
         #import tree from path
-        taxa = dendropy.TaxonSet()
-        tree = dendropy.Tree.get_from_path(self.getArg('treepath'), 'newick', taxon_set=taxa)
+        if dendropy.__version__.startswith('4'):
+            taxa = dendropy.TaxonNamespace()
+            tree = dendropy.Tree.get_from_path(self.getArg('treepath'), 'newick', taxon_namespace=taxa)
+        else:
+            sys.stderr.write("You're using Dendropy version 3, I recommend upgrading to 4.0\n")
+            taxa = dendropy.TaxonSet()
+            tree = dendropy.Tree.get_from_path(self.getArg('treepath'), 'newick', taxon_set=taxa)
         self.seqnames = taxa.labels()
         if not self.getArg('base_name') in self.seqnames:
             sys.stderr.write("base genome name {} is not in tree. \
@@ -196,7 +201,7 @@ class TreeToReads:
             sys.stderr.write("WARNING: Tree length is high \
                               - scale down tree or expect high multiple hits/homoplasy!\n")
         self.outtree = "{}/simtree.tre".format(self.outd)
-        tree.write(open(self.outtree, 'w'), 'newick', suppress_internal_node_labels=True)
+        tree.write_to_path(self.outtree, schema='newick', suppress_internal_node_labels=True)
         linrun = r"sed -i.bu -e's/\[&U\]//' {}".format(self.outtree)
         self.bashout.write(linrun+'\n')
         os.system(linrun) #TODO stop using system
