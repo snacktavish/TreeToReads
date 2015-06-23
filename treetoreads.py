@@ -121,9 +121,9 @@ class TreeToReads:
                 sys.exit()
         try:
             self.nsnp = int(self.getArg('nsnp'))
-            sys.stdout.write('Number of SNPS is {}\n'.format(self.nsnp))
+            sys.stdout.write('Number of variable sites is {}\n'.format(self.nsnp))
         except:
-            sys.stderr.write("number of SNPs {} could not be coerced to an integer. \
+            sys.stderr.write("number of variable {} could not be coerced to an integer. \
                               Exiting.\n".format(self.getArg('nsnp')))
             sys.exit()
         if not len(self.getArg('ratmat').split(',')) == 6:
@@ -141,7 +141,12 @@ class TreeToReads:
                               Exiting.\n".format(self.getArg('shape')))
             sys.exit()
         try:
-            open(self.getArg('treepath'))
+            tf=open(self.getArg('treepath'))
+            if tf.readline().startswith('#NEXUS'):
+                self.treetype="nexus"
+            else:
+                self.treetype="newick"
+            tf.close()
         except:
             sys.stderr.write("Could not open treefile {}. \
                               Exiting.\n".format(self.getArg('treepath')))
@@ -162,7 +167,7 @@ class TreeToReads:
                 try:
                     self.clustPerc = float(self.getArg('percent_clustered'))
                     self.lambd = float(self.getArg('exponential_lambda'))
-                    print("clustering proprotion is {}".format(self.clustPerc))
+                    print("clustering proportion is {}".format(self.clustPerc))
                     print("lambda is {}".format(self.lambd))
                 except:
                     sys.stderr.write("Problem reading clustering parameters, \
@@ -178,7 +183,7 @@ class TreeToReads:
             sys.stdout.write('Mutation clustering is OFF\n')
             self.clustering = 0
     def readTree(self):
-        """Reads in a tree from a file, arbitrarilt resolves poltomies if present,
+        """Reads in a tree from a file, arbitrarily resolves poltomies if present,
         strips leading [&U] and writes out to outputdir/simtree.tre"""
         self._treeread = 1
         if not self._madeout:
@@ -186,11 +191,16 @@ class TreeToReads:
         #import tree from path
         if dendropy.__version__.startswith('4'):
             taxa = dendropy.TaxonNamespace()
-            tree = dendropy.Tree.get_from_path(self.getArg('treepath'), 'newick', taxon_namespace=taxa)
+            try:
+                tree = dendropy.Tree.get_from_path(self.getArg('treepath'), self.treetype, taxon_namespace=taxa)
+            except:
+                sys.stderr.write("Problems reading the tree - is it in proper newick or nexus format?\n")
         else:
-            sys.stderr.write("You're using Dendropy version 3, I recommend upgrading to 4.0\n")
             taxa = dendropy.TaxonSet()
-            tree = dendropy.Tree.get_from_path(self.getArg('treepath'), 'newick', taxon_set=taxa)
+            try:
+                tree = dendropy.Tree.get_from_path(self.getArg('treepath'), self.treetype, taxon_set=taxa)
+            except:
+                sys.stderr.write("Problems reading the tree - is it in proper newick or nexus format?\n")
         self.seqnames = taxa.labels()
         if not self.getArg('base_name') in self.seqnames:
             sys.stderr.write("base genome name {} is not in tree. \
@@ -201,18 +211,22 @@ class TreeToReads:
             sys.stderr.write("WARNING: Tree length is high \
                               - scale down tree or expect high multiple hits/homoplasy!\n")
         self.outtree = "{}/simtree.tre".format(self.outd)
-        tree.write_to_path(self.outtree, schema='newick', suppress_internal_node_labels=True)
-        linrun = r"sed -i.bu -e's/\[&U\]//' {}".format(self.outtree)
+        tree.write_to_path(self.outtree, schema='newick', suppress_internal_node_labels=True, )
+        linrun = r"sed -i.bu -e's/\[&\w\]//' {}".format(self.outtree)
         self.bashout.write(linrun+'\n')
         os.system(linrun) #TODO stop using system
         sys.stdout.write("Tree read\n")
     def readGenome(self):
-        """Reads in base geneome to use for simulations from file"""
+        """Reads in base genome to use for simulations from file"""
         self._genread = 1
         if not self._argread: self.readArgs()
         genfas = open(self.getArg('genome')).readlines()
         crop = [lin[:-1] for lin in genfas[1:]]
         self.gen = "".join(crop)
+        if '>' in self.gen[1:]:
+            sys.stderr.write("Your genome appears to have multiple contigs,\
+                                TTR can only handle single contigs currently.\n")
+            sys.exit()
         self.genlen = len(self.gen)
         sys.stdout.write("Genome has {} bases\n".format(self.genlen))
     def generateVarsites(self):
@@ -234,6 +248,7 @@ class TreeToReads:
             ['<', '{}'.format(self.outtree), '>',
             '{}/{}'.format(self.outd, self.simloc), '2>',
             '{}/seqgen.out'.format(self.outd)])+'\n')
+        assert  open('{}/seqgen.out'.format(self.outd)).readlines()[-1].startswith("Time taken")
         sys.stdout.write("Variable sites generated using seq-gen\n")
     def readVarsites(self):
         """Reads in only the variable sites from the seqgen output file
@@ -259,7 +274,7 @@ class TreeToReads:
                 var_site += 1
             if len(nucsets[i]) > 2:
                 trip_hit += 1
-        sys.stderr.write('WARNING: {} SNP sites with more than 2 bases out of {} sites.\
+        sys.stderr.write('WARNING: {} variable sites with more than 2 bases out of {} sites.\
                          Scale down tree length if this is too high.\n'.format(trip_hit, var_site))
         simseqs = {}
         with open(self.simloc) as f:
@@ -330,7 +345,7 @@ class TreeToReads:
         if not self._siteread:
             self.readVarsites()
         self.mut_genos = {}
-        matout = open("{}/SNPmatrix".format(self.outd), 'w')
+        matout = open("{}/var_site_matrix".format(self.outd), 'w')
         patnuc = {}
         ri = 0
         patnuc['A'] = 0
@@ -385,7 +400,7 @@ class TreeToReads:
             fragment_size = self.config['fragment_size']
         else:
             fragment_size = 350
-        sys.stdout.write("read length is {}\n".format(fragment_size))
+        sys.stdout.write("fragment size is {}\n".format(fragment_size))
         if 'stdev_frag_size' in self.config:
             stdev_frag_size = self.config['stdev_frag_size']
         else:
