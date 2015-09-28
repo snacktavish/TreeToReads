@@ -25,6 +25,7 @@ class TreeToReads:
     _genmut = 0
     _genread = 0
     _vargen = 0
+
     def __init__(self, configfi='seqsim.cfg', run=1):
         """initialized object, most attributes generated through self._checkArgs using config file."""
         self.configfi = configfi
@@ -45,6 +46,7 @@ class TreeToReads:
                 self.runART()
             else:
                 self.mutGenomes()
+
     def test_deps(self):
         "Check that seq-gen and ART are installed,"
         if call(['which', 'seq-gen'], stdout=open('/dev/null', 'w')) == 1:
@@ -60,6 +62,7 @@ class TreeToReads:
             self.noART = 1
         else:
             self.noART = 0
+
     def readArgs(self):
         """reads arguments from config file"""
         try:
@@ -74,6 +77,7 @@ class TreeToReads:
             self.config[lii[0].strip()] = lii[-1].split('#')[0].strip()
         sys.stdout.write("Arguments read\n")
         self._argread = 1
+
     def makeOut(self):
         """Creates output directory"""
         if not self._argread:
@@ -87,6 +91,7 @@ class TreeToReads:
         for lin in open(self.configfi).readlines():
             configout.write(lin)
         configout.close()
+
     def getArg(self, nam):
         """Returns arugments from the argument dictionary"""#TODO Is this really needed?
         if not self._argread:
@@ -98,6 +103,7 @@ class TreeToReads:
                 return self.config[nam]
             except:
                 return None
+
     def _checkArgs(self):
         """Checks that arguments are of the appropriate types,
         and all required args are present."""
@@ -182,6 +188,7 @@ class TreeToReads:
         else:
             sys.stdout.write('Mutation clustering is OFF\n')
             self.clustering = 0
+
     def readTree(self):
         """Reads in a tree from a file, arbitrarily resolves poltomies if present,
         strips leading [&U] and writes out to outputdir/simtree.tre"""
@@ -201,6 +208,9 @@ class TreeToReads:
                 tree = dendropy.Tree.get_from_path(self.getArg('treepath'), self.treetype, taxon_set=taxa)
             except:
                 sys.stderr.write("Problems reading the tree - is it in proper newick or nexus format?\n")
+        if tree.length() == 0:
+                sys.stderr.write("TTR requires branch lengths. Branch lengths appear to be missing (treelength = 0). Exiting.\n")
+                sys.exit()
         self.seqnames = taxa.labels()
         if not self.getArg('base_name') in self.seqnames:
             sys.stderr.write("base genome name {} is not in tree. \
@@ -216,6 +226,7 @@ class TreeToReads:
         self.bashout.write(linrun+'\n')
         os.system(linrun) #TODO stop using system
         sys.stdout.write("Tree read\n")
+
     def readGenome(self):
         """Reads in base genome to use for simulations from file"""
         self._genread = 1
@@ -229,6 +240,7 @@ class TreeToReads:
             sys.exit()
         self.genlen = len(self.gen)
         sys.stdout.write("Genome has {} bases\n".format(self.genlen))
+
     def generateVarsites(self):
         """Runs seqgen to generate variable sites on tree"""
         self._vargen = 1
@@ -250,6 +262,7 @@ class TreeToReads:
             '{}/seqgen.out'.format(self.outd)])+'\n')
         assert  open('{}/seqgen.out'.format(self.outd)).readlines()[-1].startswith("Time taken")
         sys.stdout.write("Variable sites generated using seq-gen\n")
+
     def readVarsites(self):
         """Reads in only the variable sites from the seqgen output file
         Stores as ditionary."""
@@ -304,6 +317,7 @@ class TreeToReads:
             assert len(nucs) > 1
             self.sitepatts[nuc].append(site)  #PICKLE THIS SOMEHOW?!?!
         sys.stdout.write("Variable sites read\n")
+
     def selectMutsites(self):
         """Selects which positions in the base genome will be variable sites."""
         if not self._madeout:
@@ -338,6 +352,7 @@ class TreeToReads:
         sys.stdout.write("realized number of mutations is {}\n".format(len(rands)))
         self.mutlocs = rands
         self._mutlocs = 1
+
     def mutGenomes(self):
         """Writes out the simulated genomes with mutations"""
         if not self._mutlocs:
@@ -407,6 +422,7 @@ class TreeToReads:
             stdev_frag_size = 130
         sys.stdout.write("stdev of frag size is {}\n".format(stdev_frag_size))
         for seq in self.seqnames:#TODO currently only illumina data...
+            sys.stdout.write("Generating reads for {}\n".format(seq))
             if not os.path.isdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq)):
                 os.mkdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq))
             artparam = ['art_illumina', 
