@@ -342,14 +342,16 @@ class TreeToReads:
                 rands.add(ranpairB)
             ransingle = random.sample(range(self.genlen), int(self.nsnp*(1-self.clustPerc)))
             rands.update(ransingle)
-            for site in rands:
-                fi.write(str(site)+'\n')
         else:
             ran = random.sample(range(self.genlen), self.nsnp) 
             rands = set(ran)
-            for site in rands:
+        while len(rands) < self.nsnp: #deals inelegantly with multiple hits
+            print len(rands)
+            print self.nsnp
+            ran = random.sample(range(self.genlen), self.nsnp-len(rands)) 
+            rands.union(set(ran))
+        for site in rands:
                 fi.write(str(site)+'\n')
-        sys.stdout.write("realized number of mutations is {}\n".format(len(rands)))
         self.mutlocs = rands
         self._mutlocs = 1
 

@@ -1,0 +1,71 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+
+%opening
+\title{TreeToReads - a pipeline for simulating raw reads from phylogenies}
+\author{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+There has been much recent development of computationall approaches to calling variants from short read data.
+Phylogenetic signal can affect the efficiency and accuracy of these approaches, for example, reference genome based approaches often exhibit
+reduced read mapping from samples which are more evolutionarily distant from the refence taxon.
+This can in turn afftect the ability of researchers to infer patterns of interest, such as the phylogeny.
+We present an apporach to generate realistic raw read data, directly from phylogenetic estimates, 
+so that the effect of evolutionary models and phylogenetic parameters many be tested.
+
+\end{abstract}
+
+\section{Introduction}
+Next generation sequencing has much to offer evolutionary biologists.
+Genomics has revolutionized understanding of patterns and processes of evolution across a wide range of taxa.
+For many biological questions the big data provided by whole genome sequencing is often over-powered for the question at hand.
+However, in-depth investigation of very recent evolutionary radiations, in which only one or a handful of single nucleotide polymorphisms (SNPs) may differentiate lineages, is only possible in the light of genomic data, where the attempt is made to collect every single nucleotide.
+In these examples where estimates of ancestry rely on a handful of data points, it is particularly important to ensure that our analysis methods are validated and free from bias. 
+Unlike the current methods of identifying pathogens through serotyping and pulse field gel electrophoresis (PFGE) SNPs are homologous, which means they are descended from a common ancestral DNA sequence.
+This detail is extremely powerful, opening up new, more robust analytical methods.
+Instead of being limited to similarity-based clustering methods for describing PFGE patterns, we can draw from the large academic field of evolutionary theory, which is rich with models of nucleotide evolution and statistically consistent phylogenetic inference methods (REFS).
+
+SNP-based analyses are quickly becoming the standard method for tracking disease through the human population, both in delineating disease outbreaks (Parkhill and Wren, 2011; Bakker et al., 2014; Hasman et al., 2014) as well as identifying the contamination sources of those outbreaks (Lienau et al., 2011; Snitkin et al., 2012; Allard et al., 2013; Underwood et al., 2013).
+Most of these recent manuscripts use standard phylogenic methods, which have been well validated for single-gene, or multi-gene phylogenies, but when the application of these methods to SNP data has not been validated.
+Standard phylogenetic methods, such as maximum likelihood, made a few assumptions: 1) that the data are gathered in an unbiased manor and 2) that the alignments are composed of orthologous characters.
+The collection and analysis of SNP data clearly violates the first assumption in two ways There can be ascertainment bias in the collection of SNPs depending on the method of SNP identification. 
+Bertels et al. used simulated data to show that systematic error can result from mapping to a single reference that is more than 5 percent divergent (Bertels et al., 2014).
+Pightling et al. dug deeper finding different error rates amongst individual mapping algorithms (Pightling et al., 2014). 
+
+
+\section{Methods}
+The TreeToReads pipeline requires an input phylogeny and an ``anchor genome''. 
+The anchor genome provides the genomic structure and base content that will be used for the simulations.
+The user selects a number variable sites to be simulated on the genome.
+The pipeline then uses seq-gen to simulate variable sites along the phylogeny, which are then placed into the genome.
+The locations of mutations on the genome can be either drawn from a uniform distibution across the genome, or clustered accorrding to parameters of a gamma distribution.
+
+
+#REQUIRED PARAMETERS
+treefile_path = example/simtree.tre #Should be newick
+number_of_variable_sites = 20 #
+base_genome_name = gi
+base_genome_path = example/mini_ref.fasta
+output_dir = example_out
+
+
+#parameters of evolutionary model
+rate_matrix = 1,1,1,1,1,1
+freq_matrix =  0.19,0.31,0.29,0.22
+gamma_shape = 5
+
+#parameters for read simulation
+error_model1 = example/ErrprofR1.txt  # If you haven't generated have one of your own, using ART, you can use one supplied by ART
+error_model2 = example/ErrprofR2.txt 
+coverage = 20
+
+
+\section{Case Study}
+
+\section{Conclusions}
+
+\end{document}
