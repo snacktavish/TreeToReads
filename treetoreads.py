@@ -42,9 +42,10 @@ class TreeToReads:
         else:
             self.prefix = ''
         if self.run:
-            if self.noART != 1:
+            if (self.noART == 0) and (int(self.config['coverage']) != 0):
                 self.runART()
             else:
+                sys.stdout.write("simulating genomes but not reads\n")
                 self.mutGenomes()
 
     def test_deps(self):
@@ -86,7 +87,7 @@ class TreeToReads:
         sys.stdout.write('output directory is {}\n'.format(self.outd))
         if not os.path.isdir(self.outd):
             os.mkdir(self.outd)
-        self.bashout = open('{}/analysis.sh'.format(self.outd), 'w')
+#        self.bashout = open('{}/analysis.sh'.format(self.outd), 'w')
         configout = open('{}/analysis_configuration.cfg'.format(self.outd), 'w')
         for lin in open(self.configfi).readlines():
             configout.write(lin)
@@ -116,8 +117,6 @@ class TreeToReads:
                         'ratmat':'rate_matrix',
                         'freqmat':'freq_matrix',
                         'shape':'gamma_shape',
-                        'errmod1':'error_model1',
-                        'errmod2':'error_model2',
                         'cov':'coverage',
                         'outd':'output_dir'
                         }
@@ -167,6 +166,7 @@ class TreeToReads:
             self.outd = self.getArg('outd')
         except:
             self.outd = ('ttr_out')
+        #optional parameters
         if self.getArg('mutation_clustering') is not None:
             if self.getArg('mutation_clustering') == 'ON':
                 self.clustering = 1
@@ -188,6 +188,8 @@ class TreeToReads:
         else:
             sys.stdout.write('Mutation clustering is OFF\n')
             self.clustering = 0
+
+
 
     def readTree(self):
         """Reads in a tree from a file, arbitrarily resolves poltomies if present,
@@ -213,17 +215,15 @@ class TreeToReads:
                 sys.exit()
         self.seqnames = taxa.labels()
         if not self.getArg('base_name') in self.seqnames:
-            sys.stderr.write("base genome name {} is not in tree. \
-                              Exiting.\n".format(self.getArg('base_name')))
+            sys.stderr.write("base genome name {} is not in tree. Exiting.\n".format(self.getArg('base_name')))
             sys.exit()
         tree.resolve_polytomies()
         if tree.length >= 1:
-            sys.stderr.write("WARNING: Tree length is high \
-                              - scale down tree or expect high multiple hits/homoplasy!\n")
+            sys.stderr.write("WARNING: Tree length is high- scale down tree or expect high multiple hits/homoplasy!\n")
         self.outtree = "{}/simtree.tre".format(self.outd)
         tree.write_to_path(self.outtree, schema='newick', suppress_internal_node_labels=True, )
         linrun = r"sed -i.bu -e's/\[&\w\]//' {}".format(self.outtree)
-        self.bashout.write(linrun+'\n')
+#        self.bashout.write(linrun+'\n')
         os.system(linrun) #TODO stop using system
         sys.stdout.write("Tree read\n")
 
@@ -235,10 +235,12 @@ class TreeToReads:
         crop = [lin[:-1] for lin in genfas[1:]]
         self.gen = "".join(crop)
         if '>' in self.gen[1:]:
-            sys.stderr.write("Your genome appears to have multiple contigs,\
-                                TTR can only handle single contigs currently.\n")
+            sys.stderr.write("Your genome appears to have multiple contigs,TTR can only handle single contigs currently.\n")
             sys.exit()
         self.genlen = len(self.gen)
+        if self.nsnp > self.genlen :
+            sys.stderr.write("number of variables sites {} is higher than the length of the contig or geonme {}. Exiting\n".format(self.nsnp,self.genlen))
+            sys.exit()
         sys.stdout.write("Genome has {} bases\n".format(self.genlen))
 
     def generateVarsites(self):
@@ -254,13 +256,13 @@ class TreeToReads:
                       '-f{}'.format(self.getArg('freqmat')), '-or']
         call(seqgenpar, 
             stdout=open('{}'.format(self.simloc), 'w'), 
-            stderr=open('{}/seqgen.out'.format(self.outd), 'w'), 
+            stderr=open('{}/seqgen_log'.format(self.outd), 'w'), 
             stdin=open('{}'.format(self.outtree)))
-        self.bashout.write(" ".join(seqgenpar + 
-            ['<', '{}'.format(self.outtree), '>',
-            '{}/{}'.format(self.outd, self.simloc), '2>',
-            '{}/seqgen.out'.format(self.outd)])+'\n')
-        assert  open('{}/seqgen.out'.format(self.outd)).readlines()[-1].startswith("Time taken")
+#        self.bashout.write(" ".join(seqgenpar + 
+#            ['<', '{}'.format(self.outtree), '>',
+#            '{}/{}'.format(self.outd, self.simloc), '2>',
+#            '{}/seqgen_log'.format(self.outd)])+'\n')
+        assert  open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken")
         sys.stdout.write("Variable sites generated using seq-gen\n")
 
     def readVarsites(self):
@@ -407,6 +409,7 @@ class TreeToReads:
             os.mkdir("{}/fastq".format(self.outd))
         if not self._genmut:
             self.mutGenomes()
+        sys.stdout.write("coverage is {}\n".format(self.config['coverage']))
         if 'read_length' in self.config:
             read_length = self.config['read_length'] #TODO Hmmm this feels a bit sloppy
         else:
@@ -426,8 +429,9 @@ class TreeToReads:
             sys.stdout.write("Generating reads for {}\n".format(seq))
             if not os.path.isdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq)):
                 os.mkdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq))
-            artparam = ['art_illumina', 
-                        '-1', self.getArg('errmod2'), 
+            if  self.getArg('errmod1'):
+                artparam = ['art_illumina', 
+                        '-1', self.getArg('errmod1'), 
                         '-2', self.getArg('errmod2'),
                         '-p', #for paired end reads
                         '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq), 
@@ -436,7 +440,16 @@ class TreeToReads:
                         '-m', '{}'.format(fragment_size), 
                         '-s', '{}'.format(stdev_frag_size), 
                         '-o', '{}/fastq/{}{}/{}{}_'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)] 
-            self.bashout.write(' '.join(artparam)+'\n')
+            else:
+                artparam = ['art_illumina', 
+                        '-p', #for paired end reads
+                        '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq), 
+                        '-l', '{}'.format(read_length),
+                        '-f', self.getArg('cov'), 
+                        '-m', '{}'.format(fragment_size), 
+                        '-s', '{}'.format(stdev_frag_size), 
+                        '-o', '{}/fastq/{}{}/{}{}_'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)] 
+#            self.bashout.write(' '.join(artparam)+'\n')
             call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq))
         sys.stdout.write("ART generated reads\n")
