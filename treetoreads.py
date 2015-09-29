@@ -345,13 +345,12 @@ class TreeToReads:
         else:
             ran = random.sample(range(self.genlen), self.nsnp) 
             rands = set(ran)
-        while len(rands) < self.nsnp: #deals inelegantly with multiple hits
-            print len(rands)
-            print self.nsnp
-            ran = random.sample(range(self.genlen), self.nsnp-len(rands)) 
-            rands.union(set(ran))
+        while len(rands) < self.nsnp: #deals inelegantly with multiple hits, to make sure there are nsnp-len individual sites
+            ran = random.sample(range(self.genlen), 1+(self.nsnp-len(rands)))
+            rands = rands | set(ran)
         for site in rands:
                 fi.write(str(site)+'\n')
+        sys.stdout.write("{} variable sites generated\n".format(self.nsnp))
         self.mutlocs = rands
         self._mutlocs = 1
 
