@@ -1,8 +1,19 @@
 Tree to reads tutorial
 ======================
 
-Tree to reads (TTR) will simulate raw reads from a phylogeny of interest.  
+Tree to reads (TTR) is a simulation pipeline to generate next generation sequencing reads from realistic phylogenies.
+Can be used to test effects of model of evolution, rates of evolution, genomic distribution of mutations, and phylogenetic relatedness of samples and of reference genome on SNP calling and evolutionary inference.
 
+Inputs are a phylogeny, a genome to be used as a tip in the tree, and a set of configuration parameters in a control file
+
+Optional inputs can include a sequencing error model parameterized from empirical data, and a distribution for the distances separating pairs of mutations in the genome.
+
+Outputs are mutated genomes representing all tips in the phylogeny, and simulated whole genome sequencing reads representing those genomes. These are are useful for testing and comparison of analysis pipelines. Mutations are currently only single nucleotide variants - no indels or rearrangements.
+
+The code is still in draft format - but testing welcome, and will be supported via email ejmctavish, gmail. 
+
+
+==Configuration==
 All the necessary parameters for TTR are specified in a configuration file. In this tutorial we will walk though the parameter arguments in the "ttr.cfg" example file.
 
 * Choose a phylogeny (we will use example/simtree.tre). Include the full path to the tree file in either newick or nexus in the configuration file.  
@@ -81,7 +92,7 @@ exponential_lambda = 0.008
 ```
 Setting mutation_clustering clustering to OFF will cause these values to be ignored and mutation locations to be drawn from a uniform random distribution.
 
-* Run the program!
+==Run the program!==
 ```
 python treetoreads.py
 ```
@@ -91,7 +102,7 @@ You can also save your configuration under a different name and pass it as an ar
 python treetoreads.py ttr_alt.cfg
 ```
 
-* Output files.  
+==Output files== 
 By default the sequence files will have the names of the tips in the input tree.
 Alternatively, a prefix can be specified using
 ```
@@ -103,7 +114,7 @@ The key output files consist of:
     * mutsites.txt - unordered list of the locations of mutations in the genome  
     * var_site_matrix - an unordered list of the base present in each tip at each variable site, in the format "tip_name base genome_location"  
 
-Other files:
+Other files
     * analysis_configuration.cfg is a copy of the config file used for the analysis  
     * seq_sim.txt is the seqgen output file from which the variable sites are drawn.  
     * art_log and seqgen_log are the output files of art and seqgen, respectively, and are useful for diagnosing issues.  
