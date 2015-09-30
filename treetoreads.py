@@ -9,7 +9,7 @@ import argparse
 
 
 
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 
 
 
@@ -26,7 +26,7 @@ class TreeToReads:
     _genread = 0
     _vargen = 0
 
-    def __init__(self, configfi='seqsim.cfg', run=1):
+    def __init__(self, configfi='ttr.cfg', run=1):
         """initialized object, most attributes generated through self._checkArgs using config file."""
         self.configfi = configfi
         if os.path.isfile(self.configfi):
@@ -56,7 +56,7 @@ class TreeToReads:
                               It was not found.  Exiting\n")
             sys.exit()
         if call(['which', 'art_illumina'], stdout=open('/dev/null', 'w')) == 1:
-            sys.stderr.write("art_illumina needs to be installed \
+            sys.stderr.write("ERROR: art_illumina needs to be installed \
                              and in your path for TreeToReads to \
                              generate reads. Art not found. \
                              TTR will only generate mutated genomes. \n")
@@ -188,7 +188,6 @@ class TreeToReads:
         else:
             sys.stdout.write('Mutation clustering is OFF\n')
             self.clustering = 0
-
 
 
     def readTree(self):
@@ -429,10 +428,12 @@ class TreeToReads:
             sys.stdout.write("Generating reads for {}\n".format(seq))
             if not os.path.isdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq)):
                 os.mkdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq))
-            if  self.getArg('errmod1'):
+            if  self.getArg('error_model1'):
                 artparam = ['art_illumina', 
-                        '-1', self.getArg('errmod1'), 
-                        '-2', self.getArg('errmod2'),
+                        '-1', self.getArg('error_model1'), 
+                        '-2', self.getArg('error_model2'),
+                        '-na', #Don't output alignment file
+                        '-sam', #output a sam file
                         '-p', #for paired end reads
                         '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq), 
                         '-l', '{}'.format(read_length),
@@ -443,13 +444,15 @@ class TreeToReads:
             else:
                 artparam = ['art_illumina', 
                         '-p', #for paired end reads
+                        '-na', #Don't output alignment file
+                        '-sam', #output a sam file
                         '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq), 
                         '-l', '{}'.format(read_length),
                         '-f', self.getArg('cov'), 
                         '-m', '{}'.format(fragment_size), 
                         '-s', '{}'.format(stdev_frag_size), 
                         '-o', '{}/fastq/{}{}/{}{}_'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)] 
-#            self.bashout.write(' '.join(artparam)+'\n')
+            print(' '.join(artparam)+'\n')
             call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq))
         sys.stdout.write("ART generated reads\n")
