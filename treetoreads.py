@@ -254,12 +254,12 @@ class TreeToReads:
                       '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')),
                       '-f{}'.format(self.getArg('freqmat')), '-or']
         call(seqgenpar, 
-            stdout=open('{}'.format(self.simloc), 'w'), 
-            stderr=open('{}/seqgen_log'.format(self.outd), 'w'), 
-            stdin=open('{}'.format(self.outtree)))
+             stdout=open('{}'.format(self.simloc), 'w'), 
+             stderr=open('{}/seqgen_log'.format(self.outd), 'w'), 
+             stdin=open('{}'.format(self.outtree)))
         if not open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken"):
-           os.system( " ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>','{}/{}'.format(self.outd, self.simloc), '2>','{}/seqgen_log'.format(self.outd)]))
-        sys.stderr.write( " ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>','{}/{}'.format(self.outd, self.simloc), '2>','{}/seqgen_log'.format(self.outd)]))
+            os.system( " ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>','{}'.format(self.simloc), '2>','{}/seqgen_log'.format(self.outd)]))
+        sys.stderr.write( " ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>','{}'.format(self.simloc), '2>','{}/seqgen_log'.format(self.outd)]))
         assert  open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken")
         sys.stdout.write("Variable sites generated using seq-gen\n")
 
