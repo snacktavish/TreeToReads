@@ -452,7 +452,7 @@ class TreeToReads:
                         '-m', '{}'.format(fragment_size), 
                         '-s', '{}'.format(stdev_frag_size), 
                         '-o', '{}/fastq/{}{}/{}{}_'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)] 
-            print(' '.join(artparam)+'\n')
+#            print(' '.join(artparam)+'\n')
             call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq))
         sys.stdout.write("ART generated reads\n")
