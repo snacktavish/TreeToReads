@@ -1,5 +1,7 @@
 \documentclass[a4paper,10pt]{article}
 \usepackage[utf8]{inputenc}
+\usepackage{natbib}
+\bibliographystyle{apalike}
 
 %opening
 \title{TreeToReads - a pipeline for simulating raw reads from phylogenies}
@@ -10,62 +12,91 @@
 \maketitle
 
 \begin{abstract}
-There has been much recent development of computationall approaches to calling variants from short read data.
-Phylogenetic signal can affect the efficiency and accuracy of these approaches, for example, reference genome based approaches often exhibit
-reduced read mapping from samples which are more evolutionarily distant from the refence taxon.
-This can in turn afftect the ability of researchers to infer patterns of interest, such as the phylogeny.
-We present an apporach to generate realistic raw read data, directly from phylogenetic estimates, 
+There are many computational approaches to calling variants from short read data.
+Phylogenetic signal can affect the efficiency and accuracy of these approaches.
+reduced read mapping from samples which are more evolutionarily distant from the reference taxon.
+This can in turn affect the ability of researchers to infer evolutionary patterns of interest, such as the phylogeny.
+We present an approach to generate realistic raw read data, directly from phylogenetic estimates, 
 so that the effect of evolutionary models and phylogenetic parameters many be tested.
 
 \end{abstract}
 
 \section{Introduction}
-Next generation sequencing has much to offer evolutionary biologists.
 Genomics has revolutionized understanding of patterns and processes of evolution across a wide range of taxa.
-For many biological questions the big data provided by whole genome sequencing is often over-powered for the question at hand.
-However, in-depth investigation of very recent evolutionary radiations, in which only one or a handful of single nucleotide polymorphisms (SNPs) may differentiate lineages, is only possible in the light of genomic data, where the attempt is made to collect every single nucleotide.
-In these examples where estimates of ancestry rely on a handful of data points, it is particularly important to ensure that our analysis methods are validated and free from bias. 
-Unlike the current methods of identifying pathogens through serotyping and pulse field gel electrophoresis (PFGE) SNPs are homologous, which means they are descended from a common ancestral DNA sequence.
-This detail is extremely powerful, opening up new, more robust analytical methods.
-Instead of being limited to similarity-based clustering methods for describing PFGE patterns, we can draw from the large academic field of evolutionary theory, which is rich with models of nucleotide evolution and statistically consistent phylogenetic inference methods (REFS).
+In-depth investigation of very recent evolutionary radiations, in which only one or a handful of single nucleotide polymorphisms (SNPs) may differentiate lineages, 
+is only possible in the light of genomic data, where the attempt is made to collect every single nucleotide.
+In these examples where estimates of ancestry rely on a handful of data points, it is particularly important to ensure that analysis methods are validated and free from bias. 
+Rigorous testing of the accuracy and robustness of novel approaches for making evolutionary estimates
+from sequence data is necessary.
 
-SNP-based analyses are quickly becoming the standard method for tracking disease through the human population, both in delineating disease outbreaks (Parkhill and Wren, 2011; Bakker et al., 2014; Hasman et al., 2014) as well as identifying the contamination sources of those outbreaks (Lienau et al., 2011; Snitkin et al., 2012; Allard et al., 2013; Underwood et al., 2013).
-Most of these recent manuscripts use standard phylogenic methods, which have been well validated for single-gene, or multi-gene phylogenies, but when the application of these methods to SNP data has not been validated.
-Standard phylogenetic methods, such as maximum likelihood, made a few assumptions: 1) that the data are gathered in an unbiased manor and 2) that the alignments are composed of orthologous characters.
-The collection and analysis of SNP data clearly violates the first assumption in two ways There can be ascertainment bias in the collection of SNPs depending on the method of SNP identification. 
-Bertels et al. used simulated data to show that systematic error can result from mapping to a single reference that is more than 5 percent divergent (Bertels et al., 2014).
-Pightling et al. dug deeper finding different error rates amongst individual mapping algorithms (Pightling et al., 2014). 
+Standard phylogenetic methods, such as maximum likelihood assume that the data are gathered in an unbiased manor.
+Despite the sheer quantities of genomic data, it is possible that biases in data processing of single nucleotide polymorphism (SNP) data from genomes
+affect conclusions.
+Importantly, these biases are not readily recognizable from standard measures of phylogenetic uncertainty, 
+such as bootstrap proportions.
+If biases are systematic, inappropriate methods will converge to an incorrect result with high confidence.
 
+Such problems can be caused by various factors, 
+including genotyping of single nucleotides which are polymorphic in a subset of the population \citep{mctavish_how_2015},
+missing data cutoffs resulting in preferential inclusion of loci evolving at lower rates \citep{huang_unforeseen_2014},
+and biases in read mapping due to choice of reference genome \citep{bertels_automated_2014} or different error rates amongst 
+individual mapping algorithms (Pightling et al., 2014). .
+Mis-estimation can become even more pronounced by interaction between these dataset biases and analysis choices;
+for example using a model of evolution developed for sequence data 
+on a panel of exclusively variable sites \citep{lewis_likelihood_2001}.
+or choosing an inappropriate model of evolution \citep{sullivan_are_1997} has been shown to affect inferences.
+
+The TreeToReads (TTR) simulation procedure describe here captures realistic patters of sequence variation across phylogenies 
+in order to assess the robustness of evolutionary inferences from whole genome data to potential biases in the
+data collection and analysis pipeline.
+TTR uses an observed or expected phylogeny, empirical base frequencies, a full general time reversible evolutionary rate matrix, and gamma distributed rate variation
+and an empirically informed spatial distribution of variant sites across the genome.
+TTR generates sequencing reads based on a reference or ``anchor'' genome, and a phylogeny.
 
 \section{Methods}
-The TreeToReads pipeline requires an input phylogeny and an ``anchor genome''. 
-The anchor genome provides the genomic structure and base content that will be used for the simulations.
+The TreeToReads (TTR) pipeline generates short read data, from genomes simulated along an input phylogeny.
+TTR requires an input phylogeny with branch lengths and an ``anchor genome''. 
+The anchor genome provides the genomic structure that will be used for the simulations.
+One user-specified tip in the phylogeny will have this genome sequence.
+Currently the anchor genome can only consist of a single contig, so multiple chromosomes must be simulated individually.
 The user selects a number variable sites to be simulated on the genome.
-The pipeline then uses seq-gen to simulate variable sites along the phylogeny, which are then placed into the genome.
-The locations of mutations on the genome can be either drawn from a uniform distibution across the genome, or clustered accorrding to parameters of a gamma distribution.
-
-
-#REQUIRED PARAMETERS
-treefile_path = example/simtree.tre #Should be newick
-number_of_variable_sites = 20 #
-base_genome_name = gi
-base_genome_path = example/mini_ref.fasta
-output_dir = example_out
-
-
-#parameters of evolutionary model
-rate_matrix = 1,1,1,1,1,1
-freq_matrix =  0.19,0.31,0.29,0.22
-gamma_shape = 5
-
-#parameters for read simulation
-error_model1 = example/ErrprofR1.txt  # If you haven't generated have one of your own, using ART, you can use one supplied by ART
-error_model2 = example/ErrprofR2.txt 
-coverage = 20
+This will be total number of sites that vary across all individuals, not the expected number of substitutions between any pair of individuals.
+The user also provides parameters for the generalized time reversible (GTR) model with gamma distributed rate heterogeneity.
+These parameters consist of rates of changes between all pairs of nucleotides, the expected frequency of nucleotides, 
+and a shape parameter for the gamma distribution determining the relative rates of change at different sites. 
+Values for these parameters may easily be estimated from empirical data using Paup \citep{swofford_paup:_2001} or other phylogenetic software.
+The relative branch lengths are determined by the branch lengths of the input tree, but while the output branch lengths will be proportional to the input branch lengths, 
+they will be scaled by the number of variable sites which are simulated.
+The values of the input branch lengths will determine the probability that a single site is affected by multiple mutational events 
+(e.g. multiple hit mutations resulting in homoplasy or three nucleotides observed across the sample).
+The pipeline uses seq-gen \citep{rambaut_seq-gen:_1997} to simulate variable sites along the phylogeny.
+The variable sites generated by seq-gen are placed on the anchor genome resulting in different genomic sequences at each tip.
+The locations of mutations on the genome can be either drawn from a uniform distribution across the genome, 
+or clustered according to parameters of a gamma distribution, which can be assigned in a configuration file.
+This procedure creates a folder containing the simulated genomes for each tip in the tree.
+Using these simulated genomes, TTR calls the read simulation software, ART \citep{huang_art:_2012}.
+While currently TTR only supports automated generation of illumina paired end reads, 
+the simulated genome files may be used with any ART parameter configuration.
+Alternatively, these simulated genomes may be fed into pipelines for simulation of other types of next-generation sequencing data, 
+for example such as SimRAD \citep{lepais_simrad:_2014}, if RAD-seq like simulated data are desired.
+If ART is invoked to simulated read data, TTR will output a fastq folder containing folders with the names of each tip from the simulation tree. 
+In each of these folders are the simulated reads  in .fastq format and .sam format file of the read alignments.
+In addition the locations of mutations in the genome and a list of the base present in each tip at each variable site are provided.
 
 
 \section{Case Study}
+Need to describe case study here, and have it be convincing....
+
 
 \section{Conclusions}
+TreeToReads allows researchers to test the joint effects of choices in data set construction and subsequent phylogenetic analysis on data sets with a known true phylogenetic histories.
+By anchoring simulated data in empirical estimates of phylogeny and mutation distributions, 
+we can determine the robustness of phylogenetic analyses and model selection to variant ascertainment procedures.
+The phylogenetic perspective in simulation testing of assembly and alignment tools has been lacking in genomic simulation software.
+It is essential to include it because if there is phylogenetic signal in, for example, what proportion of reads can be mapped, due to distance from a reference genome \citep{bertels_automated_2014},
+this can bias the final inference of topology.
+This simulation framework will provide researchers with access to empirical evidence to discern among the numerous options available for read mapping, assembly, alignment and SNP phylogenetic approaches,
+based on the specific characteristics of their question and dataset.
 
+\bibliography{note}
 \end{document}
