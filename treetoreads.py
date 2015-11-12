@@ -257,10 +257,9 @@ class TreeToReads:
             stdout=open('{}'.format(self.simloc), 'w'), 
             stderr=open('{}/seqgen_log'.format(self.outd), 'w'), 
             stdin=open('{}'.format(self.outtree)))
-#        self.bashout.write(" ".join(seqgenpar + 
-#            ['<', '{}'.format(self.outtree), '>',
-#            '{}/{}'.format(self.outd, self.simloc), '2>',
-#            '{}/seqgen_log'.format(self.outd)])+'\n')
+        if not open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken"):
+           os.system( " ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>','{}/{}'.format(self.outd, self.simloc), '2>','{}/seqgen_log'.format(self.outd)]))
+        sys.stderr.write( " ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>','{}/{}'.format(self.outd, self.simloc), '2>','{}/seqgen_log'.format(self.outd)]))
         assert  open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken")
         sys.stdout.write("Variable sites generated using seq-gen\n")
 
