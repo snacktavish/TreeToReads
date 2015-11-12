@@ -13,7 +13,7 @@ Outputs are mutated genomes representing all tips in the phylogeny, and simulate
 The code is still in draft format - but testing welcome, and will be supported via email ejmctavish, gmail. 
 
 
-==Configuration==
+## Configuration
 All the necessary parameters for TTR are specified in a configuration file. In this tutorial we will walk though the parameter arguments in the "ttr.cfg" example file.
 
 * Choose a phylogeny (we will use example/simtree.tre). Include the full path to the tree file in either newick or nexus in the configuration file.  
@@ -92,7 +92,7 @@ exponential_lambda = 0.008
 ```
 Setting mutation_clustering clustering to OFF will cause these values to be ignored and mutation locations to be drawn from a uniform random distribution.
 
-==Run the program!==
+## Run the program!
 ```
 python treetoreads.py
 ```
@@ -102,7 +102,7 @@ You can also save your configuration under a different name and pass it as an ar
 python treetoreads.py ttr_alt.cfg
 ```
 
-==Output files== 
+## Output files
 By default the sequence files will have the names of the tips in the input tree.
 Alternatively, a prefix can be specified using
 ```
