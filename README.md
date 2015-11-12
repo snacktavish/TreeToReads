@@ -33,16 +33,30 @@ python packages
 
 ##To install requirements
 
-###Install seq-gen, software to simulate mutations (http://tree.bio.ed.ac.uk/software/seqgen/)
+##### Install seq-gen, software to simulate mutations (http://tree.bio.ed.ac.uk/software/seqgen/) 
+on ubuntu: 
+
     sudo apt-get install seq-gen
 
-###Install ART
+on Mac (using homebrew): 
+
+    brew install seq-gen
+
+
+
+##### Install ART, software to generate short reads from simulated genomes (http://www.niehs.nih.gov/research/resources/software/biostatistics/art/)
+
+on ubuntu: 
 
     wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
     tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
+add art_illumina to path (see http://askubuntu.com/questions/60218/how-to-add-a-directory-to-my-path)
 
-You need to add art_illumina to your path or include a line in your cfg file with the location of the folder
-e.g ART_path = /usr/snacktavish/software/artbinvanillaicecream031114linux64 (TODO Needs to be implemented)
+on Mac (using homebrew): 
+
+    brew install Art
+   
+You need to add art_illumina to your path
 
 
 ###Install Dendropy
@@ -51,19 +65,20 @@ e.g ART_path = /usr/snacktavish/software/artbinvanillaicecream031114linux64 (TOD
 
 
 -----------------------------------------------------------
-##Running the simulations:
+##Running the simulations (quick version):
 
     git clone https://github.com/snacktavish/TreeToReads.git
     cd TreeToReads
     python treetoreads.py seqsim.cfg
  
-
 Edit config file, seqsim.cfg, to fit your data.
 The script by default look for a file called 'seqsim.cfg'
 or first argument can be the path to a control file with any name.
 
 Currently only runs art_illumina and generates paired end illumina data.
 Alternatively, genomes can be generated, and ART run separately using any chosen parameters.
+
+### [Full Tutorial](https://github.com/snacktavish/TreeToReads/blob/master/docs/tutorial.md)
 
 ---------------------------------------------------------
 ##Expected output
