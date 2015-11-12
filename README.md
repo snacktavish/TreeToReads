@@ -65,19 +65,20 @@ You need to add art_illumina to your path
 
 
 -----------------------------------------------------------
-##Running the simulations:
+##Running the simulations (quick version):
 
     git clone https://github.com/snacktavish/TreeToReads.git
     cd TreeToReads
     python treetoreads.py seqsim.cfg
  
-
 Edit config file, seqsim.cfg, to fit your data.
 The script by default look for a file called 'seqsim.cfg'
 or first argument can be the path to a control file with any name.
 
 Currently only runs art_illumina and generates paired end illumina data.
 Alternatively, genomes can be generated, and ART run separately using any chosen parameters.
+
+### [Full Tutorial](https://github.com/snacktavish/TreeToReads/blob/master/docs/tutorial.md)
 
 ---------------------------------------------------------
 ##Expected output
