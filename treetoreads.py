@@ -220,10 +220,7 @@ class TreeToReads:
         if tree.length >= 1:
             sys.stderr.write("WARNING: Tree length is high- scale down tree or expect high multiple hits/homoplasy!\n")
         self.outtree = "{}/simtree.tre".format(self.outd)
-        tree.write_to_path(self.outtree, schema='newick', suppress_internal_node_labels=True, )
-        linrun = r"sed -i.bu -e's/\[&\w\]//' {}".format(self.outtree)
-#        self.bashout.write(linrun+'\n')
-        os.system(linrun) #TODO stop using system
+        tree.write_to_path(self.outtree, schema='newick', suppress_internal_node_labels=True, suppress_rooting=True)
         sys.stdout.write("Tree read\n")
 
     def readGenome(self):
@@ -257,9 +254,6 @@ class TreeToReads:
              stdout=open('{}'.format(self.simloc), 'w'), 
              stderr=open('{}/seqgen_log'.format(self.outd), 'w'), 
              stdin=open('{}'.format(self.outtree)))
-        if not open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken"):
-            os.system( " ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>','{}'.format(self.simloc), '2>','{}/seqgen_log'.format(self.outd)]))
-        sys.stderr.write( " ".join(seqgenpar + ['<', '{}'.format(self.outtree), '>','{}'.format(self.simloc), '2>','{}/seqgen_log'.format(self.outd)]))
         assert  open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken")
         sys.stdout.write("Variable sites generated using seq-gen\n")
 
