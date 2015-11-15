@@ -12,12 +12,10 @@
 \maketitle
 
 \begin{abstract}
-There are many computational approaches to calling variants from short read data.
-Phylogenetic signal can affect the efficiency and accuracy of these approaches.
-reduced read mapping from samples which are more evolutionarily distant from the reference taxon.
-This can in turn affect the ability of researchers to infer evolutionary patterns of interest, such as the phylogeny.
-We present an approach to generate realistic raw read data, directly from phylogenetic estimates, 
-so that the effect of evolutionary models and phylogenetic parameters many be tested.
+Using genome-wide SNP-based methods for tracking pathogens has become standard practice in academia and public health agencies across the world. 
+There are multiple computational approaches available now that all perform a similar task: call variants by mapping short read data against a reference genome, filter these variants against set quality thresholds, then concatenate the variants, or SNPs, into a sequence matrix for downstream phylogenetic analysis. However, there are no existing methods to validate the accuracy of these approaches. 
+We know there are multiple parameters that can affect whether or not the correct tree is recovered, such as a distant reference genome, low read coverage, low sequence diversity, etc. 
+We present a simulatiion approach to generate realistic raw read data, allowing the user to vary  parameters of interest at each step i the simulation (tree shape, model of sequence evolution, distance of reference genome, etc.) so that the values of parameter can be explored individually.
 
 \end{abstract}
 
@@ -46,19 +44,16 @@ for example using a model of evolution developed for sequence data
 on a panel of exclusively variable sites \citep{lewis_likelihood_2001}.
 or choosing an inappropriate model of evolution \citep{sullivan_are_1997} has been shown to affect inferences.
 
-The TreeToReads (TTR) simulation procedure describe here captures realistic patters of sequence variation across phylogenies 
-in order to assess the robustness of evolutionary inferences from whole genome data to potential biases in the
-data collection and analysis pipeline.
-TTR uses an observed or expected phylogeny, empirical base frequencies, a full general time reversible evolutionary rate matrix, and gamma distributed rate variation
-and an empirically informed spatial distribution of variant sites across the genome.
+The TreeToReads (TTR) simulation procedure described here captures realistic patterns of sequence variation across phylogenies in order to assess the robustness of evolutionary inferences from whole genome data to potential biases in the data collection and analysis pipeline.
+TTR uses an observed or expected phylogeny, empirical base frequencies, a full general time reversible evolutionary rate matrix, and gamma distributed rate variation and an empirically informed spatial distribution of variant sites across the genome. 
 TTR generates sequencing reads based on a reference or ``anchor'' genome, and a phylogeny.
 
 \section{Methods}
-The TreeToReads (TTR) pipeline generates short read data, from genomes simulated along an input phylogeny.
+The TreeToReads (TTR) pipeline generates short read data from genomes simulated along an input phylogeny.
 TTR requires an input phylogeny with branch lengths and an ``anchor genome''. 
 The anchor genome provides the genomic structure that will be used for the simulations.
 One user-specified tip in the phylogeny will have this genome sequence.
-Currently the anchor genome can only consist of a single contig, so multiple chromosomes must be simulated individually.
+Currently the anchor genome can only consist of a single contig, so multiple chromosomes must be simulated individually or concatenated within the anchor genome.
 The user selects a number variable sites to be simulated on the genome.
 This will be total number of sites that vary across all individuals, not the expected number of substitutions between any pair of individuals.
 The user also provides parameters for the generalized time reversible (GTR) model with gamma distributed rate heterogeneity.
