@@ -17,4 +17,4 @@ RUN git clone https://github.com/snacktavish/TreeToReads.git
 
 WORKDIR /tmp/TreeToReads/
 
-ENTRYPOINT python /tmp/TreeToReads/treetoreads.py
+ENTRYPOINT ["python","/tmp/TreeToReads/treetoreads.py"]
