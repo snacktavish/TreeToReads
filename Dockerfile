@@ -12,7 +12,7 @@ RUN curl -O http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanill
 RUN tar -xzvf ./artbinvanillaicecream031114linux64tgz.tgz
 RUN export PATH="$PATH:$PWD/artbinvanillaicecream031114linux64"
 
-RUN pip install dendropy numpy
+RUN pip install dendropy
 RUN git clone https://github.com/snacktavish/TreeToReads.git
 
 WORKDIR /tmp/TreeToReads/
