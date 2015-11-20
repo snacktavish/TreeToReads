@@ -59,7 +59,7 @@ on Mac or linux (using homebrew):
 
 ###Install Dendropy
 
-    easy_install dendropy
+    pip2 dendropy
 
 
 -----------------------------------------------------------
