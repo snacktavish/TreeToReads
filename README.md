@@ -34,11 +34,11 @@ python packages
 ##To install requirements
 
 ##### Install seq-gen, software to simulate mutations (http://tree.bio.ed.ac.uk/software/seqgen/) 
-on ubuntu: 
+on ubuntu using apt-get: 
 
     sudo apt-get install seq-gen
 
-on Mac (using homebrew): 
+on Mac or linux (using homebrew): 
 
     brew install seq-gen
 
@@ -46,17 +46,15 @@ on Mac (using homebrew):
 
 ##### Install ART, software to generate short reads from simulated genomes (http://www.niehs.nih.gov/research/resources/software/biostatistics/art/)
 
-on ubuntu: 
+on ubuntu using apt-get: 
 
     wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
     tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
 add art_illumina to path (see http://askubuntu.com/questions/60218/how-to-add-a-directory-to-my-path)
 
-on Mac (using homebrew): 
+on Mac or linux (using homebrew): 
 
-    brew install Art
-   
-You need to add art_illumina to your path
+    brew install art
 
 
 ###Install Dendropy
