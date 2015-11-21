@@ -448,7 +448,7 @@ class TreeToReads:
 #            print(' '.join(artparam)+'\n')
             call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq))
-            # LK - gzipping output files
+            # LK - gzipping fastq files
             gzippar=[
                       'gzip',
                       '-vf',
@@ -459,17 +459,38 @@ class TreeToReads:
 
             # LK - sam => bam
             sam='{}/fastq/{}{}/{}{}_.sam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+            fixedSam='{}/fastq/{}{}/{}{}_.sam.tmp'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
             bam='{}/fastq/{}{}/{}{}_.bam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
-            #replaceHexPipe=subprocess.Popen("perl -lane 
-            #samtoolspar=[
-            #              'perl',' -lane ',
-            #                '\'$F[5]=0; print join("\t",@F);\'',
-            #              ' < ', sam, '|',
-            #              'samtools', 'view',
-            #              '-bS', '-', '-o', bam
-            #            ]
-            #print samtoolspar
-            #call(samtoolspar);
+            sortedBamPrefix='{}/fastq/{}{}/{}{}_.sorted'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+            sortedBam='{}/fastq/{}{}/{}{}_.sorted.bam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+
+            # Fix the messed up sixth column.  ART puts in a weird hex code that needs to be removed.
+            fixedFh=open(fixedSam,'w')
+            with open(sam,'r') as samfh:
+              for line in samfh:
+                if(line.startswith('@')):
+                  fixedFh.write(line)
+                else:
+                  # 1. replace the sixth column with '0'
+                  orderedList=line.split("\t")
+                  orderedList[5]="0"
+                  # 2. join the string together with the new '0'
+                  modifiedline="\t".join(orderedList)
+                  # 3. print the new string to output file
+                  fixedFh.write(modifiedline)
+
+            fixedFh.close()
+
+            # convert sam to bam
+            call(['samtools','view','-bS','-o',bam,fixedSam])
+            # sort the bam
+            call(['samtools','sort',bam,sortedBamPrefix])
+            # index the bam
+            call(['samtools','index',sortedBam])
+            # remove intermediate files
+            os.remove(sam)
+            os.remove(fixedSam)
+            os.remove(bam)
 
         sys.stdout.write("ART generated reads\n")
         sys.stdout.write("TreeToReads completed successfully!\n")
