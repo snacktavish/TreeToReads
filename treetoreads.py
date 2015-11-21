@@ -448,8 +448,32 @@ class TreeToReads:
 #            print(' '.join(artparam)+'\n')
             call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq))
+            # LK - gzipping output files
+            gzippar=[
+                      'gzip',
+                      '-vf',
+                      '{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq),
+                      '{}/fastq/{}{}/{}{}_2.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+                    ]
+            call(gzippar)
+
+            # LK - sam => bam
+            sam='{}/fastq/{}{}/{}{}_.sam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+            bam='{}/fastq/{}{}/{}{}_.bam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+            #replaceHexPipe=subprocess.Popen("perl -lane 
+            #samtoolspar=[
+            #              'perl',' -lane ',
+            #                '\'$F[5]=0; print join("\t",@F);\'',
+            #              ' < ', sam, '|',
+            #              'samtools', 'view',
+            #              '-bS', '-', '-o', bam
+            #            ]
+            #print samtoolspar
+            #call(samtoolspar);
+
         sys.stdout.write("ART generated reads\n")
         sys.stdout.write("TreeToReads completed successfully!\n")
+        assert  open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken")
 
 
 parser = argparse.ArgumentParser(
