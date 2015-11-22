@@ -64,6 +64,13 @@ class TreeToReads:
             self.noART = 1
         else:
             self.noART = 0
+        if call(['which', 'samtools'], stdout=open('/dev/null', 'w')) == 1:
+            sys.stderr.write("ERROR: samtools needs to be installed to output sorted bam files.\
+                             samtools not found\
+                             TTR will generate SAM files (and may take up a lot of disk space!) \n")
+            self.noSAM = 1
+        else:
+            self.noSAM = 0
 
     def readArgs(self):
         """reads arguments from config file"""
@@ -452,50 +459,30 @@ class TreeToReads:
             # LK - gzipping fastq files
             gzippar=[
                       'gzip',
-                      '-vf',
+                      '-f',
                       '{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq),
                       '{}/fastq/{}{}/{}{}_2.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
                     ]
             call(gzippar)
-
-            # LK - sam => bam
-            sam='{}/fastq/{}{}/{}{}_.sam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
-            fixedSam='{}/fastq/{}{}/{}{}_.sam.tmp'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
-            bam='{}/fastq/{}{}/{}{}_.bam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
-            sortedBamPrefix='{}/fastq/{}{}/{}{}_.sorted'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
-            sortedBam='{}/fastq/{}{}/{}{}_.sorted.bam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
-
-            # Fix the messed up sixth column.  ART puts in a weird hex code that needs to be removed.
-            fixedFh=open(fixedSam,'w')
-            with open(sam,'r') as samfh:
-              for line in samfh:
-                if(line.startswith('@')):
-                  fixedFh.write(line)
-                else:
-                  # 1. replace the sixth column with '0'
-                  orderedList=line.split("\t")
-                  orderedList[5]="0"
-                  # 2. join the string together with the new '0'
-                  modifiedline="\t".join(orderedList)
-                  # 3. print the new string to output file
-                  fixedFh.write(modifiedline)
-
-            fixedFh.close()
-
-            # convert sam to bam
-            call(['samtools','view','-bS','-o',bam,fixedSam])
-            # sort the bam
-            call(['samtools','sort',bam,sortedBamPrefix])
-            # index the bam
-            call(['samtools','index',sortedBam])
-            # remove intermediate files
-            os.remove(sam)
-            os.remove(fixedSam)
-            os.remove(bam)
+            if not self.noSAM:
+                # LK - sam => bam
+                sam='{}/fastq/{}{}/{}{}_.sam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+                bam='{}/fastq/{}{}/{}{}.bam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+                sortedBamPrefix='{}/fastq/{}{}/{}{}.sorted'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+                sortedBam='{}/fastq/{}{}/{}{}.sorted.bam'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq)
+                # convert sam to bam
+                call(['samtools','view','-bS','-o',bam,sam])
+                # sort the bam
+                call(['samtools','sort',bam,sortedBamPrefix])
+                # index the bam
+                call(['samtools','index',sortedBam])
+                # remove intermediate files
+                os.remove(sam)
+#                os.remove(fixedSam)
+                os.remove(bam)
 
         sys.stdout.write("ART generated reads\n")
         sys.stdout.write("TreeToReads completed successfully!\n")
-        assert  open('{}/seqgen_log'.format(self.outd)).readlines()[-1].startswith("Time taken")
 
 
 parser = argparse.ArgumentParser(
