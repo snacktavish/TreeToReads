@@ -1,5 +1,6 @@
-#!/usr/bin/python
-"""Module docstring""" #TODO figure out what to put here
+#!/usr/bin/env python
+"""Tree to Reads - A python script to to read a tree, 
+resolve polytomes, generate mutations and simulate reads.""" #TODO figure out what to put here
 import dendropy
 from subprocess import call
 import random
@@ -26,7 +27,7 @@ class TreeToReads:
     _genread = 0
     _vargen = 0
 
-    def __init__(self, configfi='ttr.cfg', run=1):
+    def __init__(self, configfi, run=1):
         """initialized object, most attributes generated through self._checkArgs using config file."""
         self.configfi = configfi
         if os.path.isfile(self.configfi):
@@ -501,7 +502,7 @@ parser = argparse.ArgumentParser(
     description='''Tree to Reads - A python script to to read a tree, 
                     resolve polytomes, generate mutations and simulate reads.''',
     epilog="""Still in development - email ejmctavish@gmail.com with questions, suggestions, issues etc.""")
-parser.add_argument("configfi", nargs='?', default="seqsim.cfg", type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
+parser.add_argument("config_file",  type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
 parser.add_argument('-V', '--version',
                     action='version',
                     version='Tree to reads version {}'.format(VERSION))
@@ -510,4 +511,4 @@ args = parser.parse_args()
 
 
 if __name__ == "__main__":
-    ttr = TreeToReads(configfi=args.configfi)
+    ttr = TreeToReads(configfi=args.config_file)
