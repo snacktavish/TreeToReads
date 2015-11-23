@@ -9,15 +9,16 @@ RUN apt-get update && apt-get install -y \
 		python \
 		python-dev \
 		python-pip \
-	&& curl -O http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz \
-	&& tar -xzvf ./artbinvanillaicecream031114linux64tgz.tgz \
+		samtools \
+	&& curl -O http://www.niehs.nih.gov/research/resources/assets/docs/artbinchocolatecherrycake031915linux64tgz.tgz \
+	&& tar -xzvf ./artbinchocolatecherrycake031915linux64tgz.tgz \
 	&& pip install dendropy \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 	
 RUN git clone https://github.com/snacktavish/TreeToReads.git
 
-ENV PATH $PATH:/sw/art_bin_VanillaIceCream
+ENV PATH $PATH:/sw/art_bin_ChocolateCherryCake
 
 WORKDIR /sw/TreeToReads/
 
