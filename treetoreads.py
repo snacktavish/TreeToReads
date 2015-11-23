@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Tree to Reads - A python script to to read a tree, 
-resolve polytomes, generate mutations and simulate reads.""" #TODO figure out what to put here
+resolve polytomes, generate mutations and simulate reads.""" 
 import dendropy
 from subprocess import call
 import random
@@ -250,7 +250,6 @@ class TreeToReads:
     def generateVarsites(self):
         """Runs seqgen to generate variable sites on tree"""
         self._vargen = 1
-        ## TODO make model variable, currently only GTR is possible
         if not self._treeread:
             self.readTree()
         self.simloc = "{}/seqs_sim.txt".format(self.outd)
@@ -411,7 +410,7 @@ class TreeToReads:
             self.mutGenomes()
         sys.stdout.write("coverage is {}\n".format(self.config['coverage']))
         if 'read_length' in self.config:
-            read_length = self.config['read_length'] #TODO Hmmm this feels a bit sloppy
+            read_length = self.config['read_length']
         else:
             read_length = 150
         sys.stdout.write("read length is {}\n".format(read_length))
@@ -485,17 +484,16 @@ class TreeToReads:
         sys.stdout.write("TreeToReads completed successfully!\n")
 
 
-parser = argparse.ArgumentParser(
-    description='''Tree to Reads - A python script to to read a tree, 
-                    resolve polytomes, generate mutations and simulate reads.''',
-    epilog="""Still in development - email ejmctavish@gmail.com with questions, suggestions, issues etc.""")
-parser.add_argument("config_file",  type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
-parser.add_argument('-V', '--version',
-                    action='version',
-                    version='Tree to reads version {}'.format(VERSION))
-args = parser.parse_args()
-
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+    description='''Tree to Reads - A python script to to read a tree, 
+                    resolve polytomes, generate mutations and simulate reads.''',
+    epilog="""Still in development - email ejmctavish@gmail.com with questions, suggestions, issues etc.""")
+    parser.add_argument("config_file",  type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
+    parser.add_argument('-V', '--version',
+                        action='version',
+                        version='Tree to reads version {}'.format(VERSION))
+    args = parser.parse_args()
     ttr = TreeToReads(configfi=args.config_file)
