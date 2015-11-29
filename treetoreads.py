@@ -125,7 +125,6 @@ class TreeToReads:
                         'genome':'base_genome_path',
                         'ratmat':'rate_matrix',
                         'freqmat':'freq_matrix',
-                        'shape':'gamma_shape',
                         'cov':'coverage',
                         'outd':'output_dir'
                         }
@@ -149,12 +148,6 @@ class TreeToReads:
                               Exiting.\n".format(len(self.getArg('freqmat').split(','))))
             sys.exit()
         try:
-            float(self.getArg('shape'))
-        except:
-            sys.stderr.write("shape parameter {} could not be coerced to a float. \
-                              Exiting.\n".format(self.getArg('shape')))
-            sys.exit()
-        try:
             tf=open(self.getArg('treepath'))
             if tf.readline().startswith('#NEXUS'):
                 self.treetype="nexus"
@@ -176,6 +169,15 @@ class TreeToReads:
         except:
             self.outd = ('ttr_out')
         #optional parameters
+        if self.getArg('gamma_shape') is not None:
+            try:
+                 self.shape = float(self.getArg('gamma_shape'))
+            except:
+                sys.stderr.write("shape parameter {} could not be coerced to a float. \
+                              Exiting.\n".format(self.getArg('gamma_shape')))
+                sys.exit()
+        else:
+            self.shape = None
         if self.getArg('mutation_clustering') is not None:
             if self.getArg('mutation_clustering') == 'ON':
                 self.clustering = 1
@@ -255,8 +257,13 @@ class TreeToReads:
             self.readTree()
         self.simloc = "{}/seqs_sim.txt".format(self.outd)
         lenseqgen = 40*self.nsnp ##TODO - scale to branch lengths?
-        seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
-                      '-a{}'.format(self.getArg('shape')), '-r{}'.format(self.getArg('ratmat')),
+        if self.shape:
+            seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
+                      '-a{}'.format(self.shape), '-r{}'.format(self.getArg('ratmat')),
+                      '-f{}'.format(self.getArg('freqmat')), '-or']
+        else:
+            seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
+                      '-r{}'.format(self.getArg('ratmat')),
                       '-f{}'.format(self.getArg('freqmat')), '-or']
         call(seqgenpar, 
              stdout=open('{}'.format(self.simloc), 'w'), 

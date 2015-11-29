@@ -36,7 +36,7 @@ number_of_variable_sites = 20
 output_dir = example_out
 ```
 * Set the parameters of your evolutionary model. These parameters may be generated from real sequence analysis, or a null model. TTR requires a full general time reversible evolutionary model including a rate matrix, state frequencies, and a gamma shape parameter. These parameters are passed to seq-gen (http://bioweb2.pasteur.fr/docs/seq-gen/) and are in seq-gen like format.
-A good ways to estimate these model parameters from your observed SNP data is using Paup (http://paup.csit.fsu.edu/) and ModelTest (http://www.molecularevolution.org/software/phylogenetics/modeltest).
+Good ways to estimate these model parameters from your observed SNP data is using Paup (http://paup.csit.fsu.edu/) or jModelTest (http://jmodeltest.org/).
 ```
 rate_matrix = 1,1,1,1,1,1
 ```
@@ -48,7 +48,9 @@ where these 4 values are decimal numbers for the frequencies of the nucleotides 
 ```
 gamma_shape = 5
 ```
-where the value is a real number >0 that specifies the shape of the gamma distribution to use with gamma rate heterogeneity.
+where the value is a real number >0 that specifies the shape of the gamma distribution to use with gamma rate heterogeneity.  
+NOTE: if you are estmating these parameters from data where all sites variable the gamma shape parameter will be estimated as infinity due to ascertainment bias. 
+You can delete or comment out this line to not use across site rate vartiation.
 
 * Set the parameters for read simulation.  
 TTR currently only automates simulation of illumina paired end short read data (but that will be expanded in future).  The read simulation parameters are passed to Art (http://www.niehs.nih.gov/research/resources/software/biostatistics/art/).
