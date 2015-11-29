@@ -36,6 +36,7 @@ number_of_variable_sites = 20
 output_dir = example_out
 ```
 * Set the parameters of your evolutionary model. These parameters may be generated from real sequence analysis, or a null model. TTR requires a full general time reversible evolutionary model including a rate matrix, state frequencies, and a gamma shape parameter. These parameters are passed to seq-gen (http://bioweb2.pasteur.fr/docs/seq-gen/) and are in seq-gen like format.
+A good ways to estimate these model parameters from your observed SNP data is using Paup (http://paup.csit.fsu.edu/) and ModelTest (http://www.molecularevolution.org/software/phylogenetics/modeltest).
 ```
 rate_matrix = 1,1,1,1,1,1
 ```
@@ -85,12 +86,13 @@ error_model2 = example/ErrprofR2.txt
 ```
 
 * Optional mutation distributions.  
-By default the location of variable sites will be selected from a random uniform distribution across the genome. Optionally, some proportion of mutation locations can be generated in a clustered fashion (pairs of mutations closer to each other than would be expected from a random distributions). The distance between these sites is drawn from an exponential distribution, the variance of which must be given using exponential_lambda. The higher the lambda value the more closely clustered paired sites will be. The mean distance between clustered sites is 1/lambda, so lambda should not exceed  1, because that would be a distance of less than 1 bp between sites. If the distance between sites drawn is 0, then a new distance is drawn from the distribution.
+By default the location of variable sites will be selected from a random uniform distribution across the genome. Optionally, some proportion of mutation locations can be generated in a clustered fashion (pairs of mutations closer to each other than would be expected from a random distributions). The distance between these sites is drawn from an exponential distribution, the variance of which must be given using exponential_mean. The lower the mean value the more closely clustered paired sites will be. 
+These can be tricky to estimate from observed data, and trial and error comparing observed and simulated mutation distance distributions is helpful, but note that SNP calling 
 ```
 #parameters for clustering of variable site locations (OPTIONAL)
 mutation_clustering = ON
 percent_clustered = 0.25
-exponential_lambda = 0.008
+exponential_mean = 10
 ```
 Setting mutation_clustering clustering to OFF will cause these values to be ignored and mutation locations to be drawn from a uniform random distribution.
 
