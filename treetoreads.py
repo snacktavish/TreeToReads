@@ -14,6 +14,7 @@ VERSION = "0.0.2"
 
 
 
+
 class TreeToReads:
     """A tree to reads object that holds the input tree and base genome,
     and has methods to create different outputs"""
@@ -180,9 +181,9 @@ class TreeToReads:
                 self.clustering = 1
                 try:
                     self.clustPerc = float(self.getArg('percent_clustered'))
-                    self.lambd = float(self.getArg('exponential_lambda'))
+                    self.lambd = 1.0/(int(self.getArg('exponential_mean'))-1)
                     print("clustering proportion is {}".format(self.clustPerc))
-                    print("lambda is {}".format(self.lambd))
+                    print("exponential_mean is {}".format(self.getArg('exponential_mean')))
                 except:
                     sys.stderr.write("Problem reading clustering parameters, \
                                      requires float for 'percent_clustered' \
@@ -191,7 +192,7 @@ class TreeToReads:
             else:
                 sys.stdout.write('Mutation clustering is OFF, \
                                   to use set mutation_clustering = ON \
-                                  and values for "percent_clustered" and "exponential_lambda"\n')
+                                  and values for "percent_clustered" and an integer for "exponential_mean"\n')
                 self.clustering = 0
         else:
             sys.stdout.write('Mutation clustering is OFF\n')
@@ -333,9 +334,7 @@ class TreeToReads:
             ranpairA = random.sample(range(self.genlen), nclust)
             for site in ranpairA:
                 rands.add(site)
-                diff = 0
-                while diff == 0: #RISKY at HIGH LAMBDA!, could be v. slow
-                    diff = int(random.expovariate(self.lambd))
+                diff = int(random.expovariate(self.lambd)) + 1
                 if (random.choice([0, 1]) or (site-diff < 0)) and (site+diff < self.genlen):
                     ranpairB = site+diff
                 else:
