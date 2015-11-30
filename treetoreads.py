@@ -82,9 +82,31 @@ class TreeToReads:
                               Exiting.".format(self.configfi))
             sys.exit()
         self.config = {}
+        poss_args = ['treefile_path',
+                    'number_of_variable_sites',
+                    'base_genome_name',
+                    'base_genome_path',
+                    'rate_matrix',
+                    'freq_matrix',  
+                    'coverage',
+                    'prefix',
+                    'output_dir',
+                    'mutation_clustering',
+                    'percent_clustered',
+                    'exponential_mean',
+                    'gamma_shape',
+                    'read_length',
+                    'fragment_size',
+                    'stdev_frag_size',
+                    'error_model1',
+                    'error_model2']
         for lin in config:
             lii = lin.split('=')
             self.config[lii[0].strip()] = lii[-1].split('#')[0].strip()
+            if (lii[0].strip() != '') and (not lii[0].strip().startswith("#")) and (lii[0].strip() not in poss_args):
+                sys.stderr.write("Config paramater '{}' not in possible parameter list. Acceptable params are {} \
+                              Exiting\n.".format(lii[0].strip(), "\n".join(poss_args)))
+                sys.exit()
         sys.stdout.write("Arguments read\n")
         self._argread = 1
 
@@ -434,7 +456,9 @@ class TreeToReads:
             sys.stdout.write("Generating reads for {}\n".format(seq))
             if not os.path.isdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq)):
                 os.mkdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq))
-            if  self.getArg('error_model1'):
+            if  self.getArg('error_model1') and self.getArg('error_model2'):
+                assert(os.path.exists(self.getArg('error_model1')))
+                assert(os.path.exists(self.getArg('error_model2')))
                 artparam = ['art_illumina', 
                         '-1', self.getArg('error_model1'), 
                         '-2', self.getArg('error_model2'),
@@ -461,6 +485,7 @@ class TreeToReads:
 #            print(' '.join(artparam)+'\n')
             call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.getArg('outd'), self.prefix, seq, self.prefix, seq))
+            #sys.stdout.write("ART generated reads\n")
             # LK - gzipping fastq files
             gzippar=[
                       'gzip',
@@ -485,8 +510,6 @@ class TreeToReads:
                 os.remove(sam)
 #                os.remove(fixedSam)
                 os.remove(bam)
-
-        sys.stdout.write("ART generated reads\n")
         sys.stdout.write("TreeToReads completed successfully!\n")
 
 
