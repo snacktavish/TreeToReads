@@ -2,6 +2,7 @@
 \copyrightyear{2015}
 \pubyear{2015}
 \usepackage{natbib}
+\usepackage{subfig}
 %\bibliographystyle{apalike}
 \bibliographystyle{natbib.bst}
 \newcommand{\mytitle}[2]{\title[#1]{#2}}
@@ -27,7 +28,7 @@ $^{2}$ Center for Food Safety and Nutrition, Food and Drug Administration\\
 
 \begin{document}
 \firstpage{1}
-\mytitle{Trer to Reads}{TreeToReads - a pipeline for simulating raw reads from phylogenies}
+\mytitle{Tree to Reads}{TreeToReads - a pipeline for simulating raw reads from phylogenies}
 
 \myauthor{McTavish \textit{et~al}}{\authorswaffil}
 \myaddress{\affil}
@@ -41,7 +42,7 @@ $^{2}$ Center for Food Safety and Nutrition, Food and Drug Administration\\
 Using genome-wide SNP-based methods for tracking pathogens has become standard practice in academia and public health agencies across the world. 
 There are multiple computational approaches available now that all perform a similar task: call variants by mapping short read data against a reference genome, filter these variants against set quality thresholds, then concatenate the variants, or SNPs, into a sequence matrix for downstream phylogenetic analysis. However, there are no existing methods to validate the accuracy of these approaches. 
 We know there are multiple parameters that can affect whether or not the correct tree is recovered, such as a distant reference genome, low read coverage, low sequence diversity, etc. 
-We present a simulatiion approach to generate realistic raw read data, allowing the user to vary  parameters of interest at each step i the simulation (tree shape, model of sequence evolution, distance of reference genome, etc.) so that the values of parameter can be explored individually.
+We present a simulation approach to generate realistic raw read data, allowing the user to vary  parameters of interest at each step i the simulation (tree shape, model of sequence evolution, distance of reference genome, etc.) so that the values of parameter can be explored individually.
 
 \end{abstract}
 
@@ -106,14 +107,20 @@ In addition the locations of mutations in the genome and a list of the base pres
 
 
 \section{Case Study}
-We used tree to reads to simulate short read data for an observed phylogeny of Salmonella Bareilly sequences associated with a 2010 slamonella outbreak.
-Evolutionary sequence model parameters were estiamted from empirical SNP data. 
-To reflect the observed clustering of mutations in this data, we used a clustering setting of 25\% mutations having a distance to the nearest mutation drawn from a gamma distribution with an average of 
+We used tree to reads to simulate short read data for an observed phylogeny of ten Salmonella Bareilly sequences associated with a 2010 salmonella outbreak.
+Variable sites were called from paired end read sequences available on the NCBI Sequence read archive, using the CFSAN snp-pipeline \citep{pettengill_evaluation_2014}.
+Evolutionary sequence model parameters for the GTR model were estimated these data using Paup \citep{swofford_paup:_2001} from the empirical SNP data. 
+To reflect the observed clustering of mutations in this data, we used a clustering setting of 20 \% mutations having a distance to the nearest mutation drawn 
+from an exponential distribution with a mean of 125 base pairs.
 
-We started with the observed tree (Fig 1a), and generated an read error profiles using the observed data, and generated short reads at different coverage levels,
-and used these short reads to test the ability of the FDA's analysis pipeline to accurately call SNPs at different simluated sequence covereage levels (Fig 1b, Fig1c). 
+We started with the observed tree, as estimated using RaxML \citep{stamatakis_novel_2013} (Fig 1a), and generated an read error profile using the observed data and ART \citep{huang_art:_2012}
+and generated short reads at two different convergence levels, 10x and 40x, 
+and used these short reads to test the ability of the FDR's analysis pipeline to accurately call SNPs and infer phylogenies at different simulated sequence coverage levels (Fig 1b, Fig1c).
+In both cases we used the anchor genome as the reference genome.
+IN the 10x coverage simulation the snp pipeline was able to locate 135 out of 150 variable sites, in the 40x coverage 
 The input and configuration files needed to run these simulations are included in the 'example' directory of the TreeToReads repository.
-
+While this is a very simple test case, this framework provides the ability to test effects of branch lengths, distance to reference genome, evolutionary model, or many other proportionally important factors 
+meaningfully affect snp analysis pipelines ability to accurately infer phylogenies.
 
 \section{Conclusions}
 TreeToReads allows researchers to test the joint effects of choices in data set construction and subsequent phylogenetic analysis on data sets with a known true phylogenetic histories.
@@ -124,6 +131,15 @@ It is essential to include it because if there is phylogenetic signal in, for ex
 this can bias the final inference of topology.
 This simulation framework will provide researchers with access to empirical evidence to discern among the numerous options available for read mapping, assembly, alignment and SNP phylogenetic approaches,
 based on the specific characteristics of their question and dataset.
+
+
+\begin{figure*}[trees]
+\subfloat[Phylogeny from empirical data (147 variable sites detected)]{\includegraphics[height=3in]{fig1a}}
+\subfloat[Phylogeny from simulated data at 10x coverage (135/150 variable sites detected)]{\includegraphics[height=3in]{fig1b}}
+\subfloat[Phylogeny from simulated data at 40x coverage (XX variable sites detected)]{\includegraphics[height=3in]{fig1c}}
+\caption{Phylogenies estimated from empirical and simulated data}
+\end{figure*}
+
 
 \bibliography{note}
 \end{document}
