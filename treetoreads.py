@@ -125,16 +125,13 @@ class TreeToReads:
         configout.close()
 
     def getArg(self, nam):
-        """Returns arugments from the argument dictionary"""#TODO replace with simple dict get
+        """Returns arugments from the argument dictionary"""# a bit more convoluted than necessary...
         if not self._argread:
             self.readArgs()
         if nam in self.argdict:
             return self.config[self.argdict[nam]]
         else:
-            try:
-                return self.config[nam]
-            except:
-                return None
+           return self.config.get(nam)
 
     def _checkArgs(self):
         """Checks that arguments are of the appropriate types,
