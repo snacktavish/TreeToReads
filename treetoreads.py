@@ -125,7 +125,7 @@ class TreeToReads:
         configout.close()
 
     def getArg(self, nam):
-        """Returns arugments from the argument dictionary"""#TODO Is this really needed?
+        """Returns arugments from the argument dictionary"""#TODO replace with simple dict get
         if not self._argread:
             self.readArgs()
         if nam in self.argdict:
@@ -265,6 +265,10 @@ class TreeToReads:
         self.gen = "".join(crop)
         if '>' in self.gen[1:]:
             sys.stderr.write("Your genome appears to have multiple contigs,TTR can only handle single contigs currently.\n")
+            sys.exit()
+        self.gen = self.gen.upper()
+        if set(self.gen) != set(['A','T','G','C']):
+            sys.stderr.write("Your genome appears to have characters other than ATGC, such as: {} Please check your input genome.\n".format(set(self.gen)))
             sys.exit()
         self.genlen = len(self.gen)
         if self.nsnp > self.genlen :
