@@ -71,7 +71,7 @@ read_length = 150
 fragment_size = 350
 stdev_frag_size = 130
 ```
-the maximum possible value for read length is currently 250 bp, under the default error models, but you can build an error model for different read lengths as described below.
+You can build an error model based on your sequenced reads as described below.
 ART by default selects a built-in quality score profile according to the read length specified for the run.
 To use a default profile 
 or you can provide an error model for the reads. You can either build one from your own data using Art or use one of the error models packaged with Art, found in the ART/Illumina_profiles directory. To read more about the Art error models see art_illumina_README in the Art directory.
