@@ -13,8 +13,6 @@ import argparse
 VERSION = "0.0.2"
 
 
-
-
 class TreeToReads:
     """A tree to reads object that holds the input tree and base genome,
     and has methods to create different outputs"""
@@ -260,20 +258,40 @@ class TreeToReads:
         self._genread = 1
         if not self._argread: self.readArgs()
         genfas = open(self.getArg('genome')).readlines()
-        crop = [lin[:-1] for lin in genfas[1:]]
+        crop = [lin.strip() for lin in genfas[1:]]
         self.gen = "".join(crop)
-        if '>' in self.gen[1:]:
-            sys.stderr.write("Your genome appears to have multiple contigs,TTR can only handle single contigs currently.\n")
+        #print self.gen
+        if '>' in self.gen:
+            print "Multiple COntigs"
+            self.multicontig = 1
+            self.contigs = {}
+            self.contig_list = []
+            self.contig_breaks = []
+            self.genlen = 0
+            self.gen = ""
+            cont = ""
+            for lin in genfas:
+                if lin.startswith('>'):
+                    self.genlen += len(cont)
+                    self.contig_breaks.append(len(cont))
+                    self.contig_list.append(lin)
+                    self.gen = self.gen + cont
+                    cont = ""
+                    print "breaks are {}".format(self.contig_breaks)
+                else:
+                    cont = cont + lin.strip()
+            self.gen = self.gen + cont
+            self.genlen += len(cont)
+        else:
+            self.gen = self.gen.upper()
+            if set(self.gen) != set(['A','T','G','C']):
+                sys.stderr.write("Your genome appears to have characters other than ATGC, such as: {} Please check your input genome.\n".format(set(self.gen)))
             #sys.exit()
-        self.gen = self.gen.upper()
-        if set(self.gen) != set(['A','T','G','C']):
-            sys.stderr.write("Your genome appears to have characters other than ATGC, such as: {} Please check your input genome.\n".format(set(self.gen)))
-            #sys.exit()
-        self.genlen = len(self.gen)
-        if self.nsnp > self.genlen :
-            sys.stderr.write("number of variables sites {} is higher than the length of the contig or geonme {}. Exiting\n".format(self.nsnp,self.genlen))
-            #sys.exit()
-        sys.stdout.write("Genome has {} bases\n".format(self.genlen))
+            self.genlen = len(self.gen)
+            if self.nsnp > self.genlen :
+                sys.stderr.write("number of variables sites {} is higher than the length of the contig or geonme {}. Exiting\n".format(self.nsnp,self.genlen))
+                #sys.exit()
+            sys.stdout.write("Genome has {} bases\n".format(self.genlen))
 
     def generateVarsites(self):
         """Runs seqgen to generate variable sites on tree"""
@@ -430,10 +448,14 @@ class TreeToReads:
                 os.mkdir("{}/fasta_files".format(self.outd))
             genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             ii = 0
+            cont_i = 1
             genout.write(">{}{}".format(self.prefix, seq))
             for nuc in self.gen:
                 if ii%70 == 0:
                     genout.write('\n')
+                if ii in self.contig_breaks[1:]:
+                    genout.write(self.contig_list[cont_i])
+                    cont_i += 1
                 ii += 1
                 if ii in self.mutlocs:
                     patt = self.sitepatts[nuc][self.snpdic[ii]]
