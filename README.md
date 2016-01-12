@@ -16,7 +16,7 @@ and simulated whole genome sequencing reads representing those genomes.
 These are are useful for testing and comparison of analysis pipelines.
 Mutations are currently only single nucleotide variants - no indels or rearrangements.
 
-The code is still in draft format - but testing welcome, and will be supported via email ejmctavish, gmail.  
+The code is still in development - but testing welcome, and will be supported via email ejmctavish, gmail.  
 
 ##Requirements:
 
@@ -132,16 +132,16 @@ to run on real data, where ```/an/example/path/``` contains the file ```my_treet
 ----------------------------------------------------------------------------------------
 
 ### Citations
-This tool relies on ART and Seqgen!  
-Please cite them (as well as this repo) in any published work using this simulation pipeline  
+This tool relies on Dendropy, ART, and Seqgen.
+Please cite them (as well as this repo) in any published work using this simulation pipeline (appropriate citations below)
 
 McTavish E. J., Timme R, (2015) Tree To Reads. https://github.com/snacktavish/TreeToReads  
-
-Rambaut A. and Grassly N. C. (1997) Seq-Gen: An application for the Monte Carlo simulation of DNA sequence evolution along phylogenetic trees. Comput. Appl. Biosci. 13: 235-238  
 
 Huang W., Li L, Myers J. R., Marth G. T. (2012). ART: a next-generation sequencing read simulator, Bioinformatics 28 (4): 593-594  
 
 Li H., Handsaker B., Wysoker A., Fennell T., Ruan J., Homer N., Marth G., Abecasis G., Durbin R. and 1000 Genome Project Data Processing Subgroup (2009) The Sequence alignment/map (SAM) format and SAMtools. Bioinformatics, 25, 2078-9  
 
+Rambaut A. and Grassly N. C. (1997) Seq-Gen: An application for the Monte Carlo simulation of DNA sequence evolution along phylogenetic trees. Comput. Appl. Biosci. 13: 235-238  
 
+Sukumaran, J. and Mark T. Holder. 2010. DendroPy: A Python library for phylogenetic computing. Bioinformatics 26: 1569-1571.
 
