@@ -254,44 +254,27 @@ class TreeToReads:
         sys.stdout.write("Tree read\n")
 
     def readGenome(self):
-        """Reads in base genome to use for simulations from file"""
+        """Reads in base genome information to use for simulations from file"""
         self._genread = 1
         if not self._argread: self.readArgs()
-        genfas = open(self.getArg('genome')).readlines()
-        crop = [lin.strip() for lin in genfas[1:]]
-        self.gen = "".join(crop)
-        #print self.gen
-        if '>' in self.gen:
-            print "Multiple COntigs"
-            self.multicontig = 1
-            self.contigs = {}
-            self.contig_list = []
-            self.contig_breaks = []
-            self.genlen = 0
-            self.gen = ""
-            cont = ""
-            for lin in genfas:
-                if lin.startswith('>'):
-                    self.genlen += len(cont)
-                    self.contig_breaks.append(len(cont))
-                    self.contig_list.append(lin)
-                    self.gen = self.gen + cont
-                    cont = ""
-                    print "breaks are {}".format(self.contig_breaks)
+        self.genlen = 0
+        contigs = 0
+        self.contig_breaks = []
+        with open(self.getArg('genome'), 'r') as in_file:
+            for line in in_file:
+                line = line.strip()
+                if line.startswith('>'):
+                    contigs +=1
+                    self.contig_breaks.append(self.genlen)
                 else:
-                    cont = cont + lin.strip()
-            self.gen = self.gen + cont
-            self.genlen += len(cont)
-        else:
-            self.gen = self.gen.upper()
-            if set(self.gen) != set(['A','T','G','C']):
-                sys.stderr.write("Your genome appears to have characters other than ATGC, such as: {} Please check your input genome.\n".format(set(self.gen)))
-            #sys.exit()
-            self.genlen = len(self.gen)
-            if self.nsnp > self.genlen :
-                sys.stderr.write("number of variables sites {} is higher than the length of the contig or geonme {}. Exiting\n".format(self.nsnp,self.genlen))
-                #sys.exit()
-            sys.stdout.write("Genome has {} bases\n".format(self.genlen))
+                    self.genlen += len(line)
+                    if not set(line.upper()).issubset(set(['A','T','G','C'])):
+                        sys.stderr.write("Your genome appears to have characters other than ATGC, such as: {} Please check your input genome.\n".format(set(line)))
+        if self.nsnp > self.genlen :
+                    sys.stderr.write("number of variables sites {} is higher than the length of the contig or geonme {}. Exiting\n".format(self.nsnp,self.genlen))
+                    #sys.exit()
+        sys.stdout.write("{} contigs\n".format(len(self.contig_breaks)))
+        sys.stdout.write("Genome has {} bases\n".format(self.genlen))
 
     def generateVarsites(self):
         """Runs seqgen to generate variable sites on tree"""
@@ -426,13 +409,20 @@ class TreeToReads:
         patnuc['C'] = 0
         self.snpdic = {}
         #This next section is to index mutations, and re-simulate if there are not enough of a base
-        for nuc in self.gen:
-            ri += 1
-            if ri in self.mutlocs:
-                patnuc[nuc] += 1
-                self.snpdic[ri] = patnuc[nuc]
-                if len(self.sitepatts[nuc]) < patnuc[nuc]:
-                    self.addVarsites()
+        base = 0
+        with open(self.getArg('genome'), 'r') as in_file:
+            for line in in_file:
+                line = line.strip()
+                if line.startswith('>'):
+                    pass
+                else:
+                    for nuc in line:
+                        ri += 1
+                        if ri in self.mutlocs:
+                            patnuc[nuc] += 1
+                            self.snpdic[ri] = patnuc[nuc]
+                            if len(self.sitepatts[nuc]) < patnuc[nuc]:
+                                self.addVarsites()
         sys.stderr.write('''{} variable sites with more than 2 bases out of {} sites.
         Scale down tree length if this is too high.\n'''.format(self.trip_hit, self.var_site))
 
@@ -447,23 +437,27 @@ class TreeToReads:
             if not os.path.isdir("{}/fasta_files".format(self.outd)):
                 os.mkdir("{}/fasta_files".format(self.outd))
             genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
+#            genout.write(">{}{}".format(self.prefix, seq))
             ii = 0
-            cont_i = 1
-            genout.write(">{}{}".format(self.prefix, seq))
-            for nuc in self.gen:
-                if ii%70 == 0:
-                    genout.write('\n')
-                if ii in self.contig_breaks[1:]:
-                    genout.write(self.contig_list[cont_i])
-                    cont_i += 1
-                ii += 1
-                if ii in self.mutlocs:
-                    patt = self.sitepatts[nuc][self.snpdic[ii]]
-                    genout.write(patt[seq])
-                    self.mut_genos[seq].append(patt[seq])
-                    matout.write("{} {} {}\n".format(seq, patt[seq], ii))
-                else:
-                    genout.write(nuc)
+            with open(self.getArg('genome'), 'r') as in_file:
+                for line in in_file:
+                    if line.startswith('>'):
+                        if ii > 0:
+                            genout.write('\n')
+                        genout.write(line.strip()+"_"+self.prefix+seq)
+                    else:
+                        line = line.strip()
+                        for nuc in line:
+                            if ii%70 == 0:
+                                genout.write('\n')
+                            ii += 1
+                            if ii in self.mutlocs:
+                                patt = self.sitepatts[nuc][self.snpdic[ii]]
+                                genout.write(patt[seq])
+                                self.mut_genos[seq].append(patt[seq])
+                                matout.write("{} {} {}\n".format(seq, patt[seq], ii))
+                            else:
+                                genout.write(nuc)
             genout.write('\n')
             genout.write('\n')
             genout.close()
