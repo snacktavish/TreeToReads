@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Tree to Reads - A python script to to read a tree, 
-resolve polytomes, generate mutations and simulate reads.""" 
+resolve polytomies, generate mutations and simulate reads.""" 
 import dendropy
 from subprocess import call
 import random
@@ -10,7 +10,7 @@ import argparse
 
 
 
-VERSION = "0.0.2"
+VERSION = "0.0.2b"
 
 
 class TreeToReads:
