@@ -10,7 +10,7 @@ import argparse
 
 
 
-VERSION = "0.0.2b"
+VERSION = "0.0.3"
 
 
 class TreeToReads:
