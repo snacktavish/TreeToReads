@@ -1,9 +1,0 @@
-Tests needed:
-
-count simulated SNPs in mutlocs - make sure don't exceed length of genome
-
-count number of SNPs
-
-test for empty simseqs
-
-What about mutiple hits at same site?
