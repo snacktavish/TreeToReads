@@ -117,12 +117,12 @@ art_log - log messages from ART software
 ###Docker container
 TreeToReads is also available as a [Docker](https://www.docker.com/) container:
 
-	docker pull crashfrog/treetoreads
-	docker run crashfrog/treetoreads seqsim.cfg
+	docker pull snacktavish/treetoreads
+	docker run snacktavish/treetoreads seqsim.cfg
 	
 to run the default example, or
 
-	docker run -v /an/example/path:/a/container/path crashfrog/treetoreads /a/container/path/my_treetoreads_config.cfg
+	docker run -v /an/example/path:/a/container/path snacktavish/treetoreads /a/container/path/my_treetoreads_config.cfg
 	
 to run on real data, where ```/an/example/path/``` contains the file ```my_treetoreads_config.cfg```.
 
