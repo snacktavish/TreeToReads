@@ -557,7 +557,7 @@ if __name__ == "__main__":
     description='''Tree to Reads - A python script to to read a tree, 
                     resolve polytomes, generate mutations and simulate reads.''',
     epilog="""Still in development - email ejmctavish@gmail.com with questions, suggestions, issues etc.""")
-    parser.add_argument("config_file",  type=str, help="configuration file path. Optional, defaults to seqsim.cfg")
+    parser.add_argument("config_file",  type=str, help="configuration file path. Required, defaults to seqsim.cfg")
     parser.add_argument('-V', '--version',
                         action='version',
                         version='Tree to reads version {}'.format(VERSION))
