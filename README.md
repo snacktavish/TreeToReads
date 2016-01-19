@@ -71,6 +71,7 @@ on Mac or linux (using homebrew):
 
     brew install samtools
 
+
 -----------------------------------------------------------
 ##Running the simulations (quick version):
 
@@ -78,12 +79,11 @@ on Mac or linux (using homebrew):
     cd TreeToReads
     python treetoreads.py seqsim.cfg
  
-Edit config file, seqsim.cfg, to fit your data.
-The script by default look for a file called 'seqsim.cfg'
-or first argument can be the path to a control file with any name.
+Edit the configuration file, seqsim.cfg, to fit your data.
 
-Currently only runs art_illumina and generates paired end illumina data.
-Alternatively, genomes can be generated, and ART run separately using any chosen parameters.
+Currently generates paired end illumina data.
+Alternatively, genomes can be generated, and ART may be
+ run separately using any chosen parameters.
 
 ### [Full Tutorial](https://github.com/snacktavish/TreeToReads/blob/master/docs/tutorial.md)
 
@@ -98,7 +98,6 @@ seqsim.cfg file, e.g. example_out
 and will consist of:
 
 ##Key files
-seqeunce names are prefixed by 'sim_'  
 fasta_files   - a folder containing the simulated genomes for each tip in the tree  
 fastq - folder containing folders with the names of each tip from the simulation tree, in each of these folders is the gziped simulated fastq.
 mutsites.txt  - unordered list of the locations of mutations in the genome  
@@ -135,7 +134,7 @@ to run on real data, where ```/an/example/path/``` contains the file ```my_treet
 This tool relies on Dendropy, ART, and Seqgen.
 Please cite them (as well as this repo) in any published work using this simulation pipeline (appropriate citations below)
 
-McTavish E. J., Timme R, (2015) Tree To Reads. https://github.com/snacktavish/TreeToReads  
+McTavish E. J., Timme R, (2015) Tree To Reads. https://github.com/snacktavish/TreeToReads  bioRxiv
 
 Huang W., Li L, Myers J. R., Marth G. T. (2012). ART: a next-generation sequencing read simulator, Bioinformatics 28 (4): 593-594  
 
