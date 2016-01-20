@@ -1,21 +1,8 @@
-\documentclass{bioinfo}
-\copyrightyear{2015}
-\pubyear{2015}
-\usepackage{natbib}
-\usepackage{subfig}
-%\bibliographystyle{apalike}
-\bibliographystyle{natbib.bst}
-\newcommand{\mytitle}[2]{\title[#1]{#2}}
-\newcommand{\myauthor}[2]{\author[#1]{#2}}
-\newcommand{\myaddress}[1]{\address{#1}}
-\newcommand{\myfootnote}[1]{\footnote{#1}}
-\newcommand{\posttitle}[2]{}
 \usepackage{xspace}
 \newcommand{\ps}{phylesystem\xspace}
 \newcommand{\otol}{Open Tree of Life\xspace}
 \newcommand{\nexson}{otNexSON\xspace}
 \newcommand{\js}{JavaScript\xspace}
-\newcommand{\nexml}{NeXML\xspace}
 \newcommand{\authorswaffil}{Emily Jane McTavish,$^{1}$
  James Pettengill$^{2}$, Steve Davis$^{2}$, Hugh Rand$^{2}$, Errol Strain$^{2}$, Marc Allard$^{2}$,
  Ruth E. Timme$^{2}$
@@ -23,9 +10,6 @@
 \newcommand{\affil}{$^{1}$Department of Ecology and Evolutionary Biology, University of Kansas, Lawrence KS, USA\\
 $^{2}$ Center for Food Safety and Nutrition, Food and Drug Administration\\
 }
-
-\usepackage{hyperref}
-\hypersetup{backref,  linkcolor=blue, citecolor=black, colorlinks=true, hyperindex=true}
 
 \begin{document}
 \firstpage{1}
@@ -64,7 +48,7 @@ especially when the phylogenetic trees are used by public heath agencies to make
 SNP-calling biases can be caused by various factors, 
 including genotyping of single nucleotides which are polymorphic in a subset of the population \citep{mctavish_how_2015}, 
 missing data cutoffs resulting in preferential inclusion of loci evolving at lower rates \citep{huang_unforeseen_2014} and those related to read mapping due to choice of reference genome \citep{bertels_automated_2014}. 
-filter artifacts \citep{li_toward_2014,} and different mapping algorithms \citep{pightling_choice_2014}. 
+filter artifacts \citep{li_toward_2014} and different mapping algorithms \citep{pightling_choice_2014}. 
 Mis-estimation can be exacerbated by interaction between these dataset biases and analysis choices; 
 for example using a model of evolution developed for sequence data on a panel of exclusively variable sites \citep{lewis_likelihood_2001} 
 or choosing an inappropriate model of evolution \citep{sullivan_are_1997}. Despite the sheer quantities of genomic data, 
@@ -74,6 +58,13 @@ Without in silico modeling food safety scientists would have to rely on benchmar
 
 Here, we present TreeToReads (TTR), a software tool to simulate realistic patterns of sequence variation across phylogenies 
 in order to assess the robustness of evolutionary inferences from whole genome data to potential biases in the data collection and analysis pipeline. 
+
+
+\begin{figure}[trees]
+\includegraphics[width=\textwidth]{TTR-figure}
+\caption{Schematic of the TreeToReads procedure}
+\label{scheme}
+\end{figure}
 
 \section{Methods}
 The TTR pipeline generates short read data from genomes simulated along an input phylogeny. 
@@ -85,7 +76,7 @@ The pipeline uses seq-gen \citep{rambaut_seq-gen:_1997} to simulate the variable
 These sites are then distributed across the anchor genome (Figure 1b), the locations for which are either drawn from a uniform distribution, 
 or clustered according to parameters of an exponential distribution specified in the configuration file. 
 This procedure creates an output folder for each tip in the tree that contains the simulated genomes (fasta files). Using these simulated genomes, 
-TTR calls the read simulation software, ART \citep{huang_art:_2012,} to generate Illumina MiSeq paired-end reads (Figure 1c). 
+TTR calls the read simulation software, ART \citep{huang_art:_2012} to generate Illumina MiSeq paired-end reads (Figure 1c). 
 The user can specify a different sequence error model in the configuration file. 
 While TTR only supports automated generation of Illumina paired end reads, the simulated genome files may be used outside of TTR with any ART parameter configuration. 
 Alternatively, if RAD-seq like data are desired other raw-read generators such as SimRAD \citep{lepais_simrad:_2014} can be used. 
@@ -93,10 +84,6 @@ If ART is invoked in TTR the program will output a fastq folder containing direc
 simulation tree within which the simulated reads in .fastq.gz and .sam format are deposited. 
 A file with the location and nucleotide state of each mutation within each tip is also provided.
 
-\begin{figure}[trees]
-\includegraphics[height=8.5in]{TTR-figure}
-\caption{Schematic of the TreesToReads procedure}
-\end{figure}
 
 \section{Case Study}
 To illustrate the utility of TTR, we tested the effects of sequence coverage on the ability of the CFSAN SNP pipeline \citep{davis_cfsan_2015} 
