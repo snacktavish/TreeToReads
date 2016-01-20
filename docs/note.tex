@@ -8,7 +8,7 @@
  Ruth E. Timme$^{2}$
 }
 \newcommand{\affil}{$^{1}$Department of Ecology and Evolutionary Biology, University of Kansas, Lawrence KS, USA\\
-$^{2}$ Center for Food Safety and Nutrition, Food and Drug Administration\\
+$^{2}$ Center for Food Safety and Nutrition, Food and Drug Administration, College Park, MD\\
 }
 
 \begin{document}
@@ -47,7 +47,7 @@ especially when the phylogenetic trees are used by public heath agencies to make
 
 SNP-calling biases can be caused by various factors, 
 including genotyping of single nucleotides which are polymorphic in a subset of the population \citep{mctavish_how_2015}, 
-missing data cutoffs resulting in preferential inclusion of loci evolving at lower rates \citep{huang_unforeseen_2014} and those related to read mapping due to choice of reference genome \citep{bertels_automated_2014}. 
+missing data cutoffs resulting in preferential inclusion of loci evolving at lower rates \citep{huang_unforeseen_2014} and those related to read mapping due to choice of reference genome \citep{bertels_automated_2014}). 
 filter artifacts \citep{li_toward_2014} and different mapping algorithms \citep{pightling_choice_2014}. 
 Mis-estimation can be exacerbated by interaction between these dataset biases and analysis choices; 
 for example using a model of evolution developed for sequence data on a panel of exclusively variable sites \citep{lewis_likelihood_2001} 
@@ -60,25 +60,25 @@ Here, we present TreeToReads (TTR), a software tool to simulate realistic patter
 in order to assess the robustness of evolutionary inferences from whole genome data to potential biases in the data collection and analysis pipeline. 
 
 
-\begin{figure}[trees]
-\includegraphics[width=\textwidth]{TTR-figure}
+\begin{figure*}[trees]
+\includegraphics[width=6in]{TTR-figure}
 \caption{Schematic of the TreeToReads procedure}
 \label{scheme}
-\end{figure}
+\end{figure*}
 
 \section{Methods}
 The TTR pipeline generates short read data from genomes simulated along an input phylogeny. 
-The software is written in python and requires two input files – a phylogeny with branch lengths and an “anchor genome” (Figure 1a); 
+The software is written in python and requires two input files - a phylogeny with branch lengths and an “anchor genome” (Figure 1a); 
 there is also a default configuration file within which the user can specify parameter settings (e.g., number of variable sites to simulate and nucleotide substitution model parameters). 
-The branch lengths of the user provided phylogeny determine the probability that a single site is affected by multiple mutational events.
-Multifurcations in the tree are randomly resolved with 0 leth branches \citep{sukumaran_dendropy:_2010}.
+The branch lengths of the user provided phylogeny determine the probability that a single site is affected by multiple mutational events \citep{sukumaran_dendropy:_2010}.
 The pipeline uses seq-gen \citep{rambaut_seq-gen:_1997} to simulate the variable sites specified in the configuration file. 
-These sites are then distributed across the anchor genome (Figure 1b), the locations for which are either drawn from a uniform distribution, 
+These sites are then distributed across the anchor genome (Figure 1b).
+The locations for mutations either drawn from a uniform distribution, 
 or clustered according to parameters of an exponential distribution specified in the configuration file. 
 This procedure creates an output folder for each tip in the tree that contains the simulated genomes (fasta files). Using these simulated genomes, 
 TTR calls the read simulation software, ART \citep{huang_art:_2012} to generate Illumina MiSeq paired-end reads (Figure 1c). 
 The user can specify a different sequence error model in the configuration file. 
-While TTR only supports automated generation of Illumina paired end reads, the simulated genome files may be used outside of TTR with any ART parameter configuration. 
+While TTR currently only supports automated generation of Illumina paired end reads, the simulated genome files may be used outside of TTR with any ART parameter configuration. 
 Alternatively, if RAD-seq like data are desired other raw-read generators such as SimRAD \citep{lepais_simrad:_2014} can be used. 
 If ART is invoked in TTR the program will output a fastq folder containing directories labeled with the names of each tip from the 
 simulation tree within which the simulated reads in .fastq.gz and .sam format are deposited. 
