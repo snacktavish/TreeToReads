@@ -18,6 +18,9 @@ Mutations are currently only single nucleotide variants - no indels or rearrange
 
 The code is still in development - but testing welcome, and will be supported via email ejmctavish, gmail.  
 
+##Schematic of TreeToReads procedure
+![](https://github.com/snacktavish/TreeToReads/blob/master/docs/TTR-figure.png?raw=true)
+
 ##Requirements:
 
 -   Seq-Gen
