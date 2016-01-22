@@ -24,6 +24,7 @@ $^{2}$ Center for Food Safety and Nutrition, Food and Drug Administration, Colle
 
 
 \begin{abstract}
+\textbf{Summary:}
 Using genome-wide SNP-based methods for tracking pathogens has become standard practice in academia and public health agencies.
 There are multiple computational approaches available that perform a similar task:
 call variants by mapping short read data against a reference genome, quality filter these variants,
@@ -33,7 +34,12 @@ or the correct tree is recovered.
 We present a simulation approach (TreeToReads) to generate raw read data from mutated genomes simulated under a known phylogeny. 
 The user can vary parameters of interest at each step in the simulation (e.g., topology, model of sequence evolution, and read coverage) to assess the robustness of a given result, 
 which is critical within both research and applied settings.
-Source code, examples, and a tutorial are available at \url{https://github.com/snacktavish/TreeToReads}.
+\textbf{Availability and implementation:}
+Source code, examples, and a tutorial are available at \url{https://github.com/snacktavish/TreeToReads}. 
+
+\textbf{Contact:} ejmctavish@gmail.com
+\textbf{Supplementary information:}
+Input and output files for the case study are available in the online supplementary information.
 \end{abstract}
 
 \section{Introduction}
@@ -60,23 +66,23 @@ Here, we present TreeToReads (TTR), a software tool to simulate realistic patter
 in order to assess the robustness of evolutionary inferences from whole genome data to potential biases in the data collection and analysis pipeline. 
 
 
-\begin{figure*}[trees]
-\includegraphics[width=6in]{TTR-figure}
-\caption{Schematic of the TreeToReads procedure}
-\label{scheme}
-\end{figure*}
+%\begin{figure*}[trees]
+%\includegraphics[width=4in]{TTR-figure}
+%\caption{Schematic of the TreeToReads procedure}
+%\label{scheme}
+%\end{figure*}
 
 \section{Methods}
 The TTR pipeline generates short read data from genomes simulated along an input phylogeny. 
-The software is written in python and requires two input files - a phylogeny with branch lengths and an “anchor genome” (Figure 1a); 
+The software is written in python and requires two input files - a phylogeny with branch lengths and an “anchor genome”; 
 there is also a default configuration file within which the user can specify parameter settings (e.g., number of variable sites to simulate and nucleotide substitution model parameters). 
 The branch lengths of the user provided phylogeny determine the probability that a single site is affected by multiple mutational events \citep{sukumaran_dendropy:_2010}.
 The pipeline uses seq-gen \citep{rambaut_seq-gen:_1997} to simulate the variable sites specified in the configuration file. 
-These sites are then distributed across the anchor genome (Figure 1b).
+These sites are then distributed across the anchor genome.
 The locations for mutations either drawn from a uniform distribution, 
 or clustered according to parameters of an exponential distribution specified in the configuration file. 
 This procedure creates an output folder for each tip in the tree that contains the simulated genomes (fasta files). Using these simulated genomes, 
-TTR calls the read simulation software, ART \citep{huang_art:_2012} to generate Illumina MiSeq paired-end reads (Figure 1c). 
+TTR calls the read simulation software, ART \citep{huang_art:_2012} to generate Illumina MiSeq paired-end reads. 
 The user can specify a different sequence error model in the configuration file. 
 While TTR currently only supports automated generation of Illumina paired end reads, the simulated genome files may be used outside of TTR with any ART parameter configuration. 
 Alternatively, if RAD-seq like data are desired other raw-read generators such as SimRAD \citep{lepais_simrad:_2014} can be used. 
@@ -87,8 +93,8 @@ A file with the location and nucleotide state of each mutation within each tip i
 
 \section{Case Study}
 To illustrate the utility of TTR, we tested the effects of sequence coverage on the ability of the CFSAN SNP pipeline \citep{davis_cfsan_2015} 
-to call SNPs and recover an observed phylogeny (more importantly, the outbreak clade) (Figure 1a) of ten Salmonella enterica subsp. enterica serovar Bareilly sequences 
-associated with a 2010 outbreak \citep{hoffmann_tracing_2015}. 
+to call SNPs and recover an observed phylogeny (more importantly, the outbreak clade) of ten Salmonella enterica subsp. enterica serovar Bareilly sequences 
+associated with a 2010 outbreak \citep{hoffmann_tracing_2015} (phylogeny, input and output files provided in supplementary material). 
 For outbreak regulatory decisions the most important part of a foodborne outbreak phylogenetic tree is the split that separates isolates belonging to the outbreak versus not part of the outbreak. 
 We used a closed Salmonella enterica genome (CFSAN000189, GenBank: CP006053.1) as the anchor, simulated 150 variable sites under the GTR model, 
 SNP clustering ON with locations for 20\% drawing from an exponential distribution with a 125bp mean, and finally, a read error profile based on observed data. 
