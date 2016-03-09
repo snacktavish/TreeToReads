@@ -349,8 +349,6 @@ class TreeToReads(object):
                 for i in varsites:
                     simseqs[seq].append(bases[i])
         try:
-            print self.seqnames
-            print simseqs.keys()
             assert set(self.seqnames) == set(simseqs.keys())
         except:
             sys.stderr.write(self.seqnames)
