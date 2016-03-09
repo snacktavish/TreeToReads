@@ -340,6 +340,10 @@ class TreeToReads(object):
             next(f)
             for lin in f:
                 seq = lin.split()[0]
+                if seq.startswith('"') and seq.endswith('"'):
+                    seq = seq[1:-1]
+                if seq.startswith("'") and seq.endswith("'"):
+                    seq = seq[1:-1]
                 simseqs[seq] = []
                 bases = lin.split()[1].strip()
                 for i in varsites:
@@ -452,6 +456,7 @@ class TreeToReads(object):
                         if ii > 0:
                             genout.write('\n')
                         genout.write(line.strip()+"_"+self.prefix+seq)
+                        ii = 0
                     else:
                         line = line.strip()
                         for nuc in line:
