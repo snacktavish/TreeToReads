@@ -273,7 +273,7 @@ class TreeToReads(object):
                     self.contig_breaks.append(self.genlen)
                 else:
                     self.genlen += len(line)
-                    if not set(line.upper()).issubset(set(['A', 'T', 'G', 'C'])):
+                    if not set(line.upper()).issubset(set(['A', 'T', 'G', 'C','N'])):
                         sys.stderr.write('''Your genome appears to have characters other than ATGC,
                                          such as: {} Please check your input genome.\n'''.format(set(line)))
         if self.nsnp > self.genlen:
@@ -459,10 +459,13 @@ class TreeToReads(object):
                                 genout.write('\n')
                             ii += 1
                             if ii in self.mutlocs:
-                                patt = self.sitepatts[nuc][self.snpdic[ii]]
-                                genout.write(patt[seq])
-                                self.mut_genos[seq].append(patt[seq])
-                                matout.write("{} {} {}\n".format(seq, patt[seq], ii))
+                                if nuc == 'N':
+                                    genout.write('N')
+                                else:
+                                    patt = self.sitepatts[nuc][self.snpdic[ii]]
+                                    genout.write(patt[seq])
+                                    self.mut_genos[seq].append(patt[seq])
+                                    matout.write("{} {} {}\n".format(seq, patt[seq], ii))
                             else:
                                 genout.write(nuc)
             genout.write('\n')
