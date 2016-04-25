@@ -26,14 +26,14 @@ $^{2}$ Center for Food Safety and Nutrition, Food and Drug Administration, Colle
 \begin{abstract}
 \textbf{Summary:}
 Using genome-wide SNP-based methods for tracking pathogens has become standard practice in academia and public health agencies.
-There are multiple computational approaches available that perform a similar task:
-call variants by mapping short read data against a reference genome, quality filter these variants,
-then concatenate the variants into a sequence matrix for downstream phylogenetic analysis.
-However, there are no existing methods to validate the accuracy of these approaches despite the fact that we know there are parameters that can affect whether a SNP is called,
-or the correct tree is recovered. 
-We present a simulation approach (TreeToReads) to generate raw read data from mutated genomes simulated under a known phylogeny. 
-The user can vary parameters of interest at each step in the simulation (e.g., topology, model of sequence evolution, and read coverage) to assess the robustness of a given result, 
-which is critical within both research and applied settings.
+Multiple computational approaches can call variants by mapping short read data against a reference genome, quality filter those variants, then concatenate them into a sequence matrix for downstream phylogenetic analysis.
+However, despite our knowledge of the parameters that can affect whether a SNP is called, no methods are available to validate the accuracy of any particular approach or determine whether the correct tree has been recovered.
+Here we offer TreesToReads, a program which can generate raw read data from mutated genomes simulated under a known phylogeny.
+This simulation pipeline allows for direct comparisons of read mapping of simulated and observed data to the same reference genome,
+and can be used to test phylogenetic effects of distance to reference genome.
+At each step of the simulation, researchers can vary parameters of interest (e.g., topology, model of sequence evolution, and read coverage) to assess the robustness of a given result. 
+Such critical assessments of genomic structure are essential to progress in both research and applied settings
+
 \textbf{Availability and implementation:}
 Source code, examples, and a tutorial are available at \url{https://github.com/snacktavish/TreeToReads}. 
 
@@ -62,9 +62,19 @@ it is possible that these types of biases could affect phylogenetic conclusions 
 In order to adopt data analysis pipelines for the regulatory environment it is necessary to understand these biases and validate their use. 
 Without in silico modeling food safety scientists would have to rely on benchmark datasets where the “truth” can never be truly known.
 
+
 Here, we present TreeToReads (TTR), a software tool to simulate realistic patterns of sequence variation across phylogenies 
 in order to assess the robustness of evolutionary inferences from whole genome data to potential biases in the data collection and analysis pipeline. 
 
+There are two key aspects of TreeToReads that together differentiate it from existing simulation alternatives, 
+and make it appropriate for testing analyses of closely related microbial data.
+Firstly - the variable sites follow a user specified phylogeny.
+Secondly, those variable sites are placed in the context of an observed genome, which is represented a tip on tree.
+This combination allows for direct comparisons of read mapping between observed and simulated reads.
+The 'anchor genome' can be used as a reference genome for read mapping, or mapping can be tested against other empirically observed genomes.
+In the latter case, real evolutionary history separates the reference and the simulated data.
+Simulated sequences where a known genome is a tip on the tree makes these direct comparisons for testing reference genome effects, 
+and is not possible using existing simulation software.
 
 %\begin{figure*}[trees]
 %\includegraphics[width=4in]{TTR-figure}
@@ -104,6 +114,41 @@ which identified SNPS within each set.
 Finally, we inferred the phylogeny for each set using RAxML \citep{stamatakis_raxml_2014} under the ASC\_GTRCAT model.  
 Results are as follows: 1X) zero SNPS, no phylogeny; 5X) 37 SNPS, correct outbreak (OB) clade; 15X) 146 SNPS, correct OB clade; 30X) 148 SNPS, correct OB clade.  
 While this is a very simple test case, it illustrates the utility of TTR to test important parameters and their interactions affecting analysis pipelines ability to accurately call SNPS and infer phylogenies.
+
+\section{Alternatives}
+Many software tools exist for simulating sequence data,
+but no existing tools capture both phylogenetic realtionships and observed genomic context.
+
+ptions that simulate mutations on a phylogeny in a stochastically generated sequence context,
+and approaches it apply random mutations to an observed genome, no existing software unites the approaches.
+In addition, TreeToReads provides a pipeline to simulate next-gen sequencing reads from these simulated genomes, using an observed error model.
+By combining the observed genomic context, the phylogenetic relationships driving shared variable sites across lineages,
+and the error distribution of reads, TTR makes it possible to directly compare mapping and inference between observed an simulated data.
+SeqGen, which is used to generate the variable sites in this pipeline, uses the full model generalized time reversible model of evolution specified.
+However, on it's own, SeqGen generates random sequences, and therefore does not account for the observed genomic context,
+and reads from these genomes cannot be mapped to an observed reference. %explain more
+This is also true for other simulators of more complex evolutionary processes, such as Indel seq-gen (REF), SWGE (REF),  and ...
+These simulators include complex evolutionary processes not simulated in TreeToReads, such as indels and recombination across lineages.
+While these processes can be very important for accuracy of inference in phylogenetic questions at deeper timescales,
+they are not drivers of variation in closely related outbreak lineages.
+Coalescent simulators such as piBuss (REF), simCoal... are based on different assumptions, and do not allow for simulation of variable site sin the context of an observed genome.
+ALF sequence simulation software does allow for simulation of mutations in a chosen genomic context on an observed phylogeny and includes many complex processes, 
+such as codon evolution.
+ALF does allow for a supplied genome, and therefore captures the genomic context, but because this is the ancestral genomes, it is not analogous to the reference being an observed tip on a tree, 
+which is the case in empirical data.
+While this may seem to be a minor detail - treating anchoring a reference genome to a tip in a tree allows us to really test choices about selection of reference in a manner that is testable.
+Our reference genome is never going to be the ancestor - rather it is always a present day relative.
+
+
+In contrast, Tree to reads allows for direct integration of the genomic simulation and the the simulation of reads, and is simpler.
+However, ART allows for more complexity and... yeah.
+
+By placing these variable sites in an empirical genomic background, we can better capture variations across the genome that affect read mapping and SNP calling.
+SGWE (REF)
+Placing these variable sites in a specified genomic context is key to to addressing the questions related to read mapping and error inference
+we are interested in.
+By placing the anchor genome as a tip on the phylogeny we can directly compare read mapping to the same genome under observed and simulated conditions.
+
 
 \section{Conclusions}
 To date the phylogenetic perspective in simulation testing of assembly and alignment tools has been lacking in genomic simulation software. 
