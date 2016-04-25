@@ -25,14 +25,15 @@ $^{2}$ Center for Food Safety and Nutrition, Food and Drug Administration, Colle
 
 \begin{abstract}
 \textbf{Summary:}
-Using genome-wide SNP-based methods for tracking pathogens has become standard practice in academia and public health agencies.
+Using genome-wide single nucleotide polymorphism (SNP) based methods for tracking pathogens has become standard practice in academia and public health agencies.
 Multiple computational approaches can call variants by mapping short read data against a reference genome, quality filter those variants, then concatenate them into a sequence matrix for downstream phylogenetic analysis.
-However, despite our knowledge of the parameters that can affect whether a SNP is called, no methods are available to validate the accuracy of any particular approach or determine whether the correct tree has been recovered.
-Here we offer TreesToReads, a program which can generate raw read data from mutated genomes simulated under a known phylogeny.
-This simulation pipeline allows for direct comparisons of read mapping of simulated and observed data to the same reference genome,
+However, despite our knowledge of the parameters that can affect whether a SNP is called, 
+we lack methods to validate the accuracy of any particular approach or determine whether the correct tree has been recovered.
+Here we offer TreeToReads, a program which can generate raw read data from mutated genomes simulated under a known phylogeny.
+This simulation pipeline allows for direct comparisons of read-mapping of simulated and observed data to the same reference genome,
 and can be used to test phylogenetic effects of distance to reference genome.
 At each step of the simulation, researchers can vary parameters of interest (e.g., topology, model of sequence evolution, and read coverage) to assess the robustness of a given result. 
-Such critical assessments of genomic structure are essential to progress in both research and applied settings
+Such critical assessments of the accuracy and robustness of analytical pipelines are essential to progress in both research and applied settings
 
 \textbf{Availability and implementation:}
 Source code, examples, and a tutorial are available at \url{https://github.com/snacktavish/TreeToReads}. 
@@ -42,7 +43,7 @@ Source code, examples, and a tutorial are available at \url{https://github.com/s
 Input and output files for the case study are available in the online supplementary information.
 \end{abstract}
 
-\section{Introduction}
+\section*{Introduction}
 Genomics has revolutionized our understanding of patterns and processes of evolution across a wide range of taxa. 
 Differentiating among individuals who only very recently diverged, between which only a few single nucleotide polymorphisms (SNPs) may exist, 
 is only possible in the light of whole genome sequence data. 
@@ -53,7 +54,7 @@ especially when the phylogenetic trees are used by public heath agencies to make
 
 SNP-calling biases can be caused by various factors, 
 including genotyping of single nucleotides which are polymorphic in a subset of the population \citep{mctavish_how_2015}, 
-missing data cutoffs resulting in preferential inclusion of loci evolving at lower rates \citep{huang_unforeseen_2014} and those related to read mapping due to choice of reference genome \citep{bertels_automated_2014}). 
+missing data cutoffs resulting in preferential inclusion of loci evolving at lower rates \citep{huang_unforeseen_2014} and those related to read mapping due to choice of reference genome \citep{bertels_automated_2014},
 filter artifacts \citep{li_toward_2014} and different mapping algorithms \citep{pightling_choice_2014}. 
 Mis-estimation can be exacerbated by interaction between these dataset biases and analysis choices; 
 for example using a model of evolution developed for sequence data on a panel of exclusively variable sites \citep{lewis_likelihood_2001} 
@@ -66,12 +67,12 @@ Without in silico modeling food safety scientists would have to rely on benchmar
 Here, we present TreeToReads (TTR), a software tool to simulate realistic patterns of sequence variation across phylogenies 
 in order to assess the robustness of evolutionary inferences from whole genome data to potential biases in the data collection and analysis pipeline. 
 
-There are two key aspects of TreeToReads that together differentiate it from existing simulation alternatives, 
-and make it appropriate for testing analyses of closely related microbial data.
+There are two key aspects of TreeToReads that together differentiate it from existing simulation alternatives.
 Firstly - the variable sites follow a user specified phylogeny.
-Secondly, those variable sites are placed in the context of an observed genome, which is represented a tip on tree.
-This combination allows for direct comparisons of read mapping between observed and simulated reads.
-The 'anchor genome' can be used as a reference genome for read mapping, or mapping can be tested against other empirically observed genomes.
+Secondly, those variable sites are placed in the context of an observed or `anchor' genome, which is represented as tip of that phylogeny.
+This combination allows for direct comparisons of read mapping between observed and simulated reads, 
+and make TTR appropriate for testing effects of distance to a reference genome on phylogenetic inference from genomic data.
+The `anchor genome' can be used as a reference genome for read mapping, or mapping can be tested against other empirically observed genomes.
 In the latter case, real evolutionary history separates the reference and the simulated data.
 Simulated sequences where a known genome is a tip on the tree makes these direct comparisons for testing reference genome effects, 
 and is not possible using existing simulation software.
@@ -82,18 +83,24 @@ and is not possible using existing simulation software.
 %\label{scheme}
 %\end{figure*}
 
-\section{Methods}
+\section*{Methods}
 The TTR pipeline generates short read data from genomes simulated along an input phylogeny. 
-The software is written in python and requires two input files - a phylogeny with branch lengths and an “anchor genome”; 
-there is also a default configuration file within which the user can specify parameter settings (e.g., number of variable sites to simulate and nucleotide substitution model parameters). 
-The branch lengths of the user provided phylogeny determine the probability that a single site is affected by multiple mutational events \citep{sukumaran_dendropy:_2010}.
-The pipeline uses seq-gen \citep{rambaut_seq-gen:_1997} to simulate the variable sites specified in the configuration file. 
+The software is written in python and requires two input files - a phylogeny with branch lengths and a fasta formatted genome sequence which serves as the `anchor genome'.
+The user specifies parameter settings (e.g., number of variable sites to simulate and nucleotide substitution model parameters) in a configuration file.
+The branch lengths of the user provided phylogeny determine the relative number of mutations on each branch 
+and the probability that a single site is affected by multiple mutational events.
+To account for the ascertainment bias inherent in estimating phylogenies from panels of variable sites, 
+the total number of variable sites is determined by a user input parameter, not the branch lengths.
+The pipeline uses seq-gen \citep{rambaut_seq-gen:_1997} to simulate the variable sites specified in the configuration file along the input phylogeny  \citep{sukumaran_dendropy:_2010}.
 These sites are then distributed across the anchor genome.
 The locations for mutations either drawn from a uniform distribution, 
 or clustered according to parameters of an exponential distribution specified in the configuration file. 
-This procedure creates an output folder for each tip in the tree that contains the simulated genomes (fasta files). Using these simulated genomes, 
+This procedure creates an output folder for each tip in the tree that contains the simulated genomes (fasta files).
+A user specified tip will consist of the input anchor genome without any mutations.
+Using these simulated genomes, 
 TTR calls the read simulation software, ART \citep{huang_art:_2012} to generate Illumina MiSeq paired-end reads. 
-The user can specify a different sequence error model in the configuration file. 
+The user can apply a default sequence error model, or specify one in the configuration file.
+A error model can be generated for observed data using ART \citep{huang_art:_2012}.
 While TTR currently only supports automated generation of Illumina paired end reads, the simulated genome files may be used outside of TTR with any ART parameter configuration. 
 Alternatively, if RAD-seq like data are desired other raw-read generators such as SimRAD \citep{lepais_simrad:_2014} can be used. 
 If ART is invoked in TTR the program will output a fastq folder containing directories labeled with the names of each tip from the 
@@ -115,42 +122,31 @@ Finally, we inferred the phylogeny for each set using RAxML \citep{stamatakis_ra
 Results are as follows: 1X) zero SNPS, no phylogeny; 5X) 37 SNPS, correct outbreak (OB) clade; 15X) 146 SNPS, correct OB clade; 30X) 148 SNPS, correct OB clade.  
 While this is a very simple test case, it illustrates the utility of TTR to test important parameters and their interactions affecting analysis pipelines ability to accurately call SNPS and infer phylogenies.
 
-\section{Alternatives}
+\section*{Comparison to existing software}
 Many software tools exist for simulating sequence data,
-but no existing tools capture both phylogenetic realtionships and observed genomic context.
+but no existing tools unite both phylogenetic realtionships and observed genomic sequences.
+TreeToReads is designed to be used to test the effects of distance to a  reference genome on phylogenetic inference.
+In addition, TreeToReads provides a pipeline to simulate next-gen sequencing reads from tree using an observed error model.
+Using an anchor genome as a tip in the simulated tree means that simulated and empirical data can be mapped to the same reference genome,
+providing direct comparisons of inferences.
+In addition, that reference genome does not need to be the anchor genome on which the simulations are based.
+If a different reference is used, the biological evolution separating the anchor genome from the refence genome 
+includes real evolutionary processes affecting read mapping to genomes in a testable framwork. %TODO IGGHHH
 
-ptions that simulate mutations on a phylogeny in a stochastically generated sequence context,
-and approaches it apply random mutations to an observed genome, no existing software unites the approaches.
-In addition, TreeToReads provides a pipeline to simulate next-gen sequencing reads from these simulated genomes, using an observed error model.
-By combining the observed genomic context, the phylogenetic relationships driving shared variable sites across lineages,
-and the error distribution of reads, TTR makes it possible to directly compare mapping and inference between observed an simulated data.
-SeqGen, which is used to generate the variable sites in this pipeline, uses the full model generalized time reversible model of evolution specified.
-However, on it's own, SeqGen generates random sequences, and therefore does not account for the observed genomic context,
-and reads from these genomes cannot be mapped to an observed reference. %explain more
-This is also true for other simulators of more complex evolutionary processes, such as Indel seq-gen (REF), SWGE (REF),  and ...
+SeqGen \citep{rambaut_seq-gen:_1997} which is used to generate the variable sites in the TTR pipeline, uses the full model generalized time reversible model of evolution specified.
+However, on its own, SeqGen generates random sequences based on this model and therefore does not account for the observed genomic context,
+and reads from these genomes cannot be mapped to an observed reference.
+This is also true for other simulators of more complex evolutionary processes, such as Indelible \citep{fletcher_indelible:_2009} and SWGE \citep{arenas_simulation_2014},
 These simulators include complex evolutionary processes not simulated in TreeToReads, such as indels and recombination across lineages.
-While these processes can be very important for accuracy of inference in phylogenetic questions at deeper timescales,
-they are not drivers of variation in closely related outbreak lineages.
-Coalescent simulators such as piBuss (REF), simCoal... are based on different assumptions, and do not allow for simulation of variable site sin the context of an observed genome.
-ALF sequence simulation software does allow for simulation of mutations in a chosen genomic context on an observed phylogeny and includes many complex processes, 
-such as codon evolution.
-ALF does allow for a supplied genome, and therefore captures the genomic context, but because this is the ancestral genomes, it is not analogous to the reference being an observed tip on a tree, 
-which is the case in empirical data.
-While this may seem to be a minor detail - treating anchoring a reference genome to a tip in a tree allows us to really test choices about selection of reference in a manner that is testable.
-Our reference genome is never going to be the ancestor - rather it is always a present day relative.
+While these processes can be very important for accuracy of inference in phylogenetic questions at deeper timescales, they are not drivers of variation in closely related outbreak lineages
+Other sequence simulation software such as ALF \citep{dalquen_alfsimulation_2012}, and Indel Seq-gen \citep{strope_indel-seq-gen:_2007}
+can accept as input a genome representing the root of the phylogeny.
+However, in empirical data the reference genome not an ancestor - it is always a present day relative.
+Anchoring an observed genome to a tip in a tree using TreeToReads allows us to test choices about selection 
+of reference in a way that is directly comparable to empirical data.
 
 
-In contrast, Tree to reads allows for direct integration of the genomic simulation and the the simulation of reads, and is simpler.
-However, ART allows for more complexity and... yeah.
-
-By placing these variable sites in an empirical genomic background, we can better capture variations across the genome that affect read mapping and SNP calling.
-SGWE (REF)
-Placing these variable sites in a specified genomic context is key to to addressing the questions related to read mapping and error inference
-we are interested in.
-By placing the anchor genome as a tip on the phylogeny we can directly compare read mapping to the same genome under observed and simulated conditions.
-
-
-\section{Conclusions}
+\section*{Conclusions}
 To date the phylogenetic perspective in simulation testing of assembly and alignment tools has been lacking in genomic simulation software. 
 TreeToReads allows researchers to test the joint effects of multiple parameter values (such as coverage thresholds, 
 amount of sequence variation, choice of reference genome, phylogenetic inference method, etc.) on the ability of any analysis pipeline to recover the signal and infer the correct tree. 

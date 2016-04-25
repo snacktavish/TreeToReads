@@ -1,49 +1,98 @@
 
-@article{rambaut_seq-gen:_1997,
-	title = {Seq-{Gen}: an application for the {Monte} {Carlo} simulation of {DNA} sequence evolution along phylogenetic trees},
-	volume = {13},
-	shorttitle = {Seq-{Gen}},
-	url = {http://bioinformatics.oxfordjournals.org.www2.lib.ku.edu:2048/content/13/3/235.short},
-	number = {3},
-	urldate = {2014-08-14},
-	journal = {Computer applications in the biosciences: CABIOS},
-	author = {Rambaut, Andrew and Grass, Nicholas C.},
-	year = {1997},
-	pages = {235--238},
-	file = {Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/TKKPIJ39/AuthnEngine.html:text/html}
-}
-
-@article{sullivan_are_1997,
-	title = {Are {Guinea} {Pigs} {Rodents}? {The} {Importance} of {Adequate} {Models} in {Molecular} {Phylogenetics}},
-	volume = {4},
-	issn = {1064-7554, 1573-7055},
-	shorttitle = {Are {Guinea} {Pigs} {Rodents}?},
-	url = {http://link.springer.com/article/10.1023/A%3A1027314112438},
-	doi = {10.1023/A:1027314112438},
-	abstract = {The monophyly of Rodentia has repeatedly been challenged based on several studies of molecular sequence data. Most recently, D'Erchia et al. (1996) analyzed complete mtDNA sequences of 16 mammals and concluded that rodents are not monophyletic. We have reanalyzed these data using maximum-likelihood methods. We use two methods to test for significance of differences among alternative topologies and show that (1) models that incorporate variation in evolutionary rates across sites fit the data dramatically better than models used in the original analyses, (2) the mtDNA data fail to refute rodent monophyly, and (3) the original interpretation of strong support for nonmonophyly results from systematic error associated with an oversimplified model of sequence evolution. These analyses illustrate the importance of incorporating recent theoretical advances into molecular phylogenetic analyses, especially when results of these analyses conflict with classical hypotheses of relationships.},
+@article{fletcher_indelible:_2009,
+	title = {{INDELible}: {A} {Flexible} {Simulator} of {Biological} {Sequence} {Evolution}},
+	volume = {26},
+	issn = {0737-4038, 1537-1719},
+	shorttitle = {{INDELible}},
+	url = {http://mbe.oxfordjournals.org/content/26/8/1879},
+	doi = {10.1093/molbev/msp098},
+	abstract = {Many methods exist for reconstructing phylogenies from molecular sequence data, but few phylogenies are known and can be used to check their efficacy. Simulation remains the most important approach to testing the accuracy and robustness of phylogenetic inference methods. However, current simulation programs are limited, especially concerning realistic models for simulating insertions and deletions. We implement a portable and flexible application, named INDELible, for generating nucleotide, amino acid and codon sequence data by simulating insertions and deletions (indels) as well as substitutions. Indels are simulated under several models of indel-length distribution. The program implements a rich repertoire of substitution models, including the general unrestricted model and nonstationary nonhomogeneous models of nucleotide substitution, mixture, and partition models that account for heterogeneity among sites, and codon models that allow the nonsynonymous/synonymous substitution rate ratio to vary among sites and branches. With its many unique features, INDELible should be useful for evaluating the performance of many inference methods, including those for multiple sequence alignment, phylogenetic tree inference, and ancestral sequence, or genome reconstruction.},
 	language = {en},
-	number = {2},
-	urldate = {2014-09-03},
-	journal = {Journal of Mammalian Evolution},
-	author = {Sullivan, Jack and Swofford, David L.},
-	month = jun,
-	year = {1997},
-	keywords = {Evolutionary Biology, human genetics, inconsistency, maximum likelihood, molecular systematics, rate heterogeneity, rodents},
-	pages = {77--86},
-	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/WZX96WE8/Sullivan and Swofford - 1997 - Are Guinea Pigs Rodents The Importance of Adequat.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/5S5JDRDS/A1027314112438.html:text/html}
+	number = {8},
+	urldate = {2016-04-25},
+	journal = {Molecular Biology and Evolution},
+	author = {Fletcher, William and Yang, Ziheng},
+	month = aug,
+	year = {2009},
+	pmid = {19423664},
+	keywords = {codon models, deletion, indels, Insertion, nonstationary process, simulation},
+	pages = {1879--1888},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/FMMHP7MF/Fletcher and Yang - 2009 - INDELible A Flexible Simulator of Biological Sequ.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/VJSU6Z3W/1879.html:text/html}
 }
 
-@article{lewis_likelihood_2001,
-	title = {A likelihood approach to estimating phylogeny from discrete morphological character data},
-	volume = {50},
-	url = {http://sysbio.oxfordjournals.org/content/50/6/913.short},
-	number = {6},
-	urldate = {2014-07-18},
-	journal = {Systematic biology},
-	author = {Lewis, Paul O.},
-	year = {2001},
-	pages = {913--925},
-	file = {Lewis2001Systematic Biol.pdf:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/3IZXR835/Lewis2001Systematic Biol.pdf:application/pdf}
+@article{strope_indel-seq-gen:_2007,
+	title = {indel-{Seq}-{Gen}: a new protein family simulator incorporating domains, motifs, and indels},
+	volume = {24},
+	issn = {0737-4038},
+	shorttitle = {indel-{Seq}-{Gen}},
+	doi = {10.1093/molbev/msl195},
+	abstract = {Reconstructing the evolutionary history of protein sequences will provide a better understanding of divergence mechanisms of protein superfamilies and their functions. Long-term protein evolution often includes dynamic changes such as insertion, deletion, and domain shuffling. Such dynamic changes make reconstructing protein sequence evolution difficult and affect the accuracy of molecular evolutionary methods, such as multiple alignments and phylogenetic methods. Unfortunately, currently available simulation methods are not sufficiently flexible and do not allow biologically realistic dynamic protein sequence evolution. We introduce a new method, indel-Seq-Gen (iSG), that can simulate realistic evolutionary processes of protein sequences with insertions and deletions (indels). Unlike other simulation methods, iSG allows the user to simulate multiple subsequences according to different evolutionary parameters, which is necessary for generating realistic protein families with multiple domains. iSG tracks all evolutionary events including indels and outputs the "true" multiple alignment of the simulated sequences. iSG can also generate a larger sequence space by allowing the use of multiple related root sequences. With all these functions, iSG can be used to test the accuracy of, for example, multiple alignment methods, phylogenetic methods, evolutionary hypotheses, ancestral protein reconstruction methods, and protein family classification methods. We empirically evaluated the performance of iSG against currently available methods by simulating the evolution of the G protein-coupled receptor and lipocalin protein families. We examined their true multiple alignments, reconstruction of the transmembrane regions and beta-strands, and the results of similarity search against a protein database using the simulated sequences. We also presented an example of using iSG for examining how phylogenetic reconstruction is affected by high indel rates.},
+	language = {eng},
+	number = {3},
+	journal = {Molecular Biology and Evolution},
+	author = {Strope, Cory L. and Scott, Stephen D. and Moriyama, Etsuko N.},
+	month = mar,
+	year = {2007},
+	pmid = {17158778},
+	keywords = {Carrier Proteins, Computational Biology, Computer Simulation, Evolution, Molecular, Lipocalin 1, Models, Genetic, Phylogeny, Proteins, Protein Structure, Tertiary, Receptors, G-Protein-Coupled, Software},
+	pages = {640--649}
+}
+
+@article{dalquen_alfsimulation_2012,
+	title = {{ALF}—{A} {Simulation} {Framework} for {Genome} {Evolution}},
+	volume = {29},
+	issn = {0737-4038, 1537-1719},
+	url = {http://mbe.oxfordjournals.org/content/29/4/1115},
+	doi = {10.1093/molbev/msr268},
+	abstract = {In computational evolutionary biology, verification and benchmarking is a challenging task because the evolutionary history of studied biological entities is usually not known. Computer programs for simulating sequence evolution in silico have shown to be viable test beds for the verification of newly developed methods and to compare different algorithms. However, current simulation packages tend to focus either on gene-level aspects of genome evolution such as character substitutions and insertions and deletions (indels) or on genome-level aspects such as genome rearrangement and speciation events. Here, we introduce Artificial Life Framework (ALF), which aims at simulating the entire range of evolutionary forces that act on genomes: nucleotide, codon, or amino acid substitution (under simple or mixture models), indels, GC-content amelioration, gene duplication, gene loss, gene fusion, gene fission, genome rearrangement, lateral gene transfer (LGT), or speciation. The other distinctive feature of ALF is its user-friendly yet powerful web interface. We illustrate the utility of ALF with two possible applications: 1) we reanalyze data from a study of selection after globin gene duplication and test the statistical significance of the original conclusions and 2) we demonstrate that LGT can dramatically decrease the accuracy of two well-established orthology inference methods. ALF is available as a stand-alone application or via a web interface at http://www.cbrg.ethz.ch/alf.},
+	language = {en},
+	number = {4},
+	urldate = {2016-04-23},
+	journal = {Molecular Biology and Evolution},
+	author = {Dalquen, Daniel A. and Anisimova, Maria and Gonnet, Gaston H. and Dessimoz, Christophe},
+	month = apr,
+	year = {2012},
+	pmid = {22160766},
+	keywords = {codon models, GC-content amelioration, genome evolution, indel, lateral gene transfer, simulation},
+	pages = {1115--1123},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/QEERAKM7/Mol Biol Evol-2012-Dalquen-1115-23.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/C6GA8NK7/Dalquen et al. - 2012 - ALF—A Simulation Framework for Genome Evolution.html:text/html}
+}
+
+@article{bielejec_buss:_2014,
+	title = {π{BUSS}: a parallel {BEAST}/{BEAGLE} utility for sequence simulation under complex evolutionary scenarios},
+	volume = {15},
+	issn = {1471-2105},
+	shorttitle = {π{BUSS}},
+	url = {http://dx.doi.org/10.1186/1471-2105-15-133},
+	doi = {10.1186/1471-2105-15-133},
+	abstract = {Simulated nucleotide or amino acid sequences are frequently used to assess the performance of phylogenetic reconstruction methods. BEAST, a Bayesian statistical framework that focuses on reconstructing time-calibrated molecular evolutionary processes, supports a wide array of evolutionary models, but lacked matching machinery for simulation of character evolution along phylogenies.},
+	urldate = {2016-04-19},
+	journal = {BMC Bioinformatics},
+	author = {Bielejec, Filip and Lemey, Philippe and Carvalho, Luiz Max and Baele, Guy and Rambaut, Andrew and Suchard, Marc A.},
+	year = {2014},
+	keywords = {BEAGLE, BEAST, Evolution, Monte Carlo, Phylogenetics, simulation},
+	pages = {133},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/8ZW9Z227/Bielejec et al. - 2014 - πBUSS a parallel BEASTBEAGLE utility for sequenc.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/NDJAQZ66/1471-2105-15-133.html:text/html}
+}
+
+@article{arenas_simulation_2014,
+	title = {Simulation of {Genome}-{Wide} {Evolution} under {Heterogeneous} {Substitution} {Models} and {Complex} {Multispecies} {Coalescent} {Histories}},
+	volume = {31},
+	issn = {0737-4038, 1537-1719},
+	url = {http://mbe.oxfordjournals.org/content/31/5/1295},
+	doi = {10.1093/molbev/msu078},
+	abstract = {Genomic evolution can be highly heterogeneous. Here, we introduce a new framework to simulate genome-wide sequence evolution under a variety of substitution models that may change along the genome and the phylogeny, following complex multispecies coalescent histories that can include recombination, demographics, longitudinal sampling, population subdivision/species history, and migration. A key aspect of our simulation strategy is that the heterogeneity of the whole evolutionary process can be parameterized according to statistical prior distributions specified by the user. We used this framework to carry out a study of the impact of variable codon frequencies across genomic regions on the estimation of the genome-wide nonsynonymous/synonymous ratio. We found that both variable codon frequencies across genes and rate variation among sites and regions can lead to severe underestimation of the global dN/dS values. The program SGWE—Simulation of Genome-Wide Evolution—is freely available from http://code.google.com/p/sgwe-project/, including extensive documentation and detailed examples.},
+	language = {en},
+	number = {5},
+	urldate = {2016-04-19},
+	journal = {Molecular Biology and Evolution},
+	author = {Arenas, Miguel and Posada, David},
+	month = may,
+	year = {2014},
+	pmid = {24557445},
+	keywords = {heterogeneous substitution models, molecular adaptation, molecular evolution, multispecies coalescent},
+	pages = {1295--1301},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/MV76EG4U/Arenas and Posada - 2014 - Simulation of Genome-Wide Evolution under Heteroge.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/P9395ERJ/1295.html:text/html}
 }
 
 @article{sukumaran_dendropy:_2010,
@@ -68,6 +117,143 @@ Contact: jeet@ku.edu},
 	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/5HTR9WKR/Sukumaran and Holder - 2010 - DendroPy a Python library for phylogenetic comput.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/S32XJJF2/1569.html:text/html}
 }
 
+@article{li_toward_2014,
+	title = {Toward better understanding of artifacts in variant calling from high-coverage samples},
+	volume = {30},
+	issn = {1367-4803, 1460-2059},
+	url = {http://bioinformatics.oxfordjournals.org/content/30/20/2843},
+	doi = {10.1093/bioinformatics/btu356},
+	abstract = {Motivation: Whole-genome high-coverage sequencing has been widely used for personal and cancer genomics as well as in various research areas. However, in the lack of an unbiased whole-genome truth set, the global error rate of variant calls and the leading causal artifacts still remain unclear even given the great efforts in the evaluation of variant calling methods.
+Results: We made 10 single nucleotide polymorphism and INDEL call sets with two read mappers and five variant callers, both on a haploid human genome and a diploid genome at a similar coverage. By investigating false heterozygous calls in the haploid genome, we identified the erroneous realignment in low-complexity regions and the incomplete reference genome with respect to the sample as the two major sources of errors, which press for continued improvements in these two areas. We estimated that the error rate of raw genotype calls is as high as 1 in 10–15 kb, but the error rate of post-filtered calls is reduced to 1 in 100–200 kb without significant compromise on the sensitivity.
+Availability and implementation: BWA-MEM alignment and raw variant calls are available at http://bit.ly/1g8XqRt scripts and miscellaneous data at https://github.com/lh3/varcmp.
+Contact: hengli@broadinstitute.org
+Supplementary information: Supplementary data are available at Bioinformatics online.},
+	language = {en},
+	number = {20},
+	urldate = {2016-01-20},
+	journal = {Bioinformatics},
+	author = {Li, Heng},
+	month = oct,
+	year = {2014},
+	pmid = {24974202},
+	pages = {2843--2851},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/ZDZ87TUU/Li - 2014 - Toward better understanding of artifacts in varian.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/W7T4VMAJ/2843.html:text/html}
+}
+
+@article{hoffmann_tracing_2015,
+	title = {Tracing {Origins} of the {Salmonella} {Bareilly} strain causing a {Foodborne} {Outbreak} in the {United} {States}},
+	issn = {0022-1899, 1537-6613},
+	url = {http://jid.oxfordjournals.org/content/early/2015/05/19/infdis.jiv297},
+	doi = {10.1093/infdis/jiv297},
+	abstract = {Background. Using a novel combination of whole-genome sequencing (WGS) analysis and geographic metadata, we traced the origins of Salmonella Bareilly isolates collected in 2012 during a widespread foodborne outbreak in the United States associated with scraped tuna imported from India.
+Methods. Using next-generation sequencing, we sequenced the complete genome of 100 S. Bareilly isolates obtained from patients who consumed contaminated product, from natural sources, and from unrelated historically and geographically disparate foods. Pathogen genomes were linked to geography by projecting the phylogeny on a virtual globe and produced a transmission network.
+Results. Phylogenetic analysis of WGS data revealed a common origin for outbreak strains, indicating that patients in Maryland and New York were infected from sources originating at a facility in India.
+Conclusion. These data represent the first report fully integrating WGS analysis with geographic mapping and a novel use of transmission networks. Results showed that WGS vastly improves our ability to delimit the scope and source of bacterial foodborne contamination events. Furthermore, these findings reinforce the extraordinary utility that WGS brings to global outbreak investigation as a greatly enhanced approach to protecting the human food supply chain as well as public health in general.},
+	language = {en},
+	urldate = {2016-01-20},
+	journal = {Journal of Infectious Diseases},
+	author = {Hoffmann, Maria and Luo, Yan and Monday, Steven R. and Gonzales-Escalona, Narjol and Ottesen, Andrea R. and Muruvanda, Tim and Wang, Charles and Kastanis, George and Keys, Christine and Janies, Daniel and Senturk, Izzet F. and Catalyurek, Umit V. and Wang, Hua and Hammack, Thomas S. and Wolfgang, William J. and Schoonmaker-Bopp, Dianna and Chu, Alvina and Myers, Robert and Haendiges, Julie and Evans, Peter S. and Meng, Jianghong and Strain, Errol A. and Allard, Marc W. and Brown, Eric W.},
+	month = may,
+	year = {2015},
+	pmid = {25995194},
+	pages = {jiv297},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/43MJKPJH/Hoffmann et al. - 2015 - Tracing Origins of the Salmonella Bareilly strain .pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/NJ74RHCA/infdis.jiv297.html:text/html}
+}
+
+@article{davis_cfsan_2015,
+	title = {{CFSAN} {SNP} {Pipeline}: an automated method for constructing {SNP} matrices from next-generation sequence data},
+	volume = {1},
+	issn = {2376-5992},
+	shorttitle = {{CFSAN} {SNP} {Pipeline}},
+	url = {https://peerj.com/articles/cs-20},
+	doi = {10.7717/peerj-cs.20},
+	language = {en},
+	urldate = {2016-01-20},
+	journal = {PeerJ Computer Science},
+	author = {Davis, Steve and Pettengill, James B. and Luo, Yan and Payne, Justin and Shpuntoff, Al and Rand, Hugh and Strain, Errol},
+	month = aug,
+	year = {2015},
+	pages = {e20}
+}
+
+@article{lepais_simrad:_2014,
+	title = {{SimRAD}: an {R} package for simulation-based prediction of the number of loci expected in {RADseq} and similar genotyping by sequencing approaches},
+	volume = {14},
+	copyright = {© 2014 John Wiley \& Sons Ltd},
+	issn = {1755-0998},
+	shorttitle = {{SimRAD}},
+	url = {http://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12273/abstract},
+	doi = {10.1111/1755-0998.12273},
+	abstract = {Application of high-throughput sequencing platforms in the field of ecology and evolutionary biology is developing quickly with the introduction of efficient methods to reduce genome complexity. Numerous approaches for genome complexity reduction have been developed using different combinations of restriction enzymes, library construction strategies and fragment size selection. As a result, the choice of which techniques to use may become cumbersome, because it is difficult to anticipate the number of loci resulting from each method. We developed SimRAD, an R package that performs in silico restriction enzyme digests and fragment size selection as implemented in most restriction site associated DNA polymorphism and genotyping by sequencing methods. In silico digestion is performed on a reference genome or on a randomly generated DNA sequence when no reference genome sequence is available. SimRAD accurately predicts the number of loci under alternative protocols when a reference genome sequence is available for the targeted species (or a close relative) but may be unreliable when no reference genome is available. SimRAD is also useful for fine-tuning a given protocol to adjust the number of targeted loci. Here, we outline the functionality of SimRAD and provide an illustrative example of the use of the package (available on the CRAN at http://cran.r-project.org/web/packages/SimRAD).},
+	language = {en},
+	number = {6},
+	urldate = {2015-10-14},
+	journal = {Molecular Ecology Resources},
+	author = {Lepais, Olivier and Weir, Jason T.},
+	month = nov,
+	year = {2014},
+	keywords = {GBS, genome complexity reduction, in silico digestion, next generation sequencing, restriction site associated DNA polymorphism, single nucleotide polymorphism},
+	pages = {1314--1321},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/4M7MPRZA/Lepais and Weir - 2014 - SimRAD an R package for simulation-based predicti.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/RNJM2JTI/full.html:text/html}
+}
+
+@article{mctavish_how_2015,
+	title = {How do {SNP} ascertainment schemes and population demographics affect inferences about population history?},
+	volume = {16},
+	copyright = {2015 McTavish and Hillis; licensee BioMed Central.},
+	issn = {1471-2164},
+	url = {http://www.biomedcentral.com/1471-2164/16/266/abstract},
+	doi = {10.1186/s12864-015-1469-5},
+	abstract = {PMID: 25887858},
+	language = {en},
+	number = {1},
+	urldate = {2015-06-15},
+	journal = {BMC Genomics},
+	author = {McTavish, Emily J. and Hillis, David M.},
+	month = apr,
+	year = {2015},
+	pmid = {25887858},
+	keywords = {Bos indicus, Bos taurus, Gene-flow, Migration, SNP chip},
+	pages = {266},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/MDKPW3BF/McTavish and Hillis - 2015 - How do SNP ascertainment schemes and population de.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/9TKT2HGD/266.html:text/html}
+}
+
+@article{pightling_choice_2014,
+	title = {Choice of {Reference} {Sequence} and {Assembler} for {Alignment} of {Listeria} monocytogenes {Short}-{Read} {Sequence} {Data} {Greatly} {Influences} {Rates} of {Error} in {SNP} {Analyses}},
+	volume = {9},
+	url = {http://dx.doi.org/10.1371/journal.pone.0104579},
+	doi = {10.1371/journal.pone.0104579},
+	abstract = {The wide availability of whole-genome sequencing (WGS) and an abundance of open-source software have made detection of single-nucleotide polymorphisms (SNPs) in bacterial genomes an increasingly accessible and effective tool for comparative analyses. Thus, ensuring that real nucleotide differences between genomes (i.e., true SNPs) are detected at high rates and that the influences of errors (such as false positive SNPs, ambiguously called sites, and gaps) are mitigated is of utmost importance. The choices researchers make regarding the generation and analysis of WGS data can greatly influence the accuracy of short-read sequence alignments and, therefore, the efficacy of such experiments. We studied the effects of some of these choices, including: i) depth of sequencing coverage, ii) choice of reference-guided short-read sequence assembler, iii) choice of reference genome, and iv) whether to perform read-quality filtering and trimming, on our ability to detect true SNPs and on the frequencies of errors. We performed benchmarking experiments, during which we assembled simulated and real Listeria monocytogenes strain 08-5578 short-read sequence datasets of varying quality with four commonly used assemblers (BWA, MOSAIK, Novoalign, and SMALT), using reference genomes of varying genetic distances, and with or without read pre-processing (i.e., quality filtering and trimming). We found that assemblies of at least 50-fold coverage provided the most accurate results. In addition, MOSAIK yielded the fewest errors when reads were aligned to a nearly identical reference genome, while using SMALT to align reads against a reference sequence that is ∼0.82\% distant from 08-5578 at the nucleotide level resulted in the detection of the greatest numbers of true SNPs and the fewest errors. Finally, we show that whether read pre-processing improves SNP detection depends upon the choice of reference sequence and assembler. In total, this study demonstrates that researchers should test a variety of conditions to achieve optimal results.},
+	number = {8},
+	urldate = {2014-09-04},
+	journal = {PLoS ONE},
+	author = {Pightling, Arthur W. and Petronella, Nicholas and Pagotto, Franco},
+	month = aug,
+	year = {2014},
+	pages = {e104579},
+	file = {PLoS Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/QWWGPK4F/Pightling et al. - 2014 - Choice of Reference Sequence and Assembler for Ali.pdf:application/pdf;PLoS Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/WABRURA9/infodoi10.1371journal.pone.html:text/html}
+}
+
+@article{sullivan_are_1997,
+	title = {Are {Guinea} {Pigs} {Rodents}? {The} {Importance} of {Adequate} {Models} in {Molecular} {Phylogenetics}},
+	volume = {4},
+	issn = {1064-7554, 1573-7055},
+	shorttitle = {Are {Guinea} {Pigs} {Rodents}?},
+	url = {http://link.springer.com/article/10.1023/A%3A1027314112438},
+	doi = {10.1023/A:1027314112438},
+	abstract = {The monophyly of Rodentia has repeatedly been challenged based on several studies of molecular sequence data. Most recently, D'Erchia et al. (1996) analyzed complete mtDNA sequences of 16 mammals and concluded that rodents are not monophyletic. We have reanalyzed these data using maximum-likelihood methods. We use two methods to test for significance of differences among alternative topologies and show that (1) models that incorporate variation in evolutionary rates across sites fit the data dramatically better than models used in the original analyses, (2) the mtDNA data fail to refute rodent monophyly, and (3) the original interpretation of strong support for nonmonophyly results from systematic error associated with an oversimplified model of sequence evolution. These analyses illustrate the importance of incorporating recent theoretical advances into molecular phylogenetic analyses, especially when results of these analyses conflict with classical hypotheses of relationships.},
+	language = {en},
+	number = {2},
+	urldate = {2014-09-03},
+	journal = {Journal of Mammalian Evolution},
+	author = {Sullivan, Jack and Swofford, David L.},
+	month = jun,
+	year = {1997},
+	keywords = {Evolutionary Biology, human genetics, inconsistency, maximum likelihood, molecular systematics, rate heterogeneity, rodents},
+	pages = {77--86},
+	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/WZX96WE8/Sullivan and Swofford - 1997 - Are Guinea Pigs Rodents The Importance of Adequat.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/5S5JDRDS/A1027314112438.html:text/html}
+}
+
 @article{huang_art:_2012,
 	title = {{ART}: a next-generation sequencing read simulator},
 	volume = {28},
@@ -88,6 +274,33 @@ Contact: WH at weichun.huang@nih.gov or GTM at gabor.marth@bc.edu.},
 	pmid = {22199392},
 	pages = {593--594},
 	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/NQTKR5F3/Huang et al. - 2011 - ART a next-generation sequencing read simulator.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/DKJ4MHPI/bioinformatics.html:text/html}
+}
+
+@article{rambaut_seq-gen:_1997,
+	title = {Seq-{Gen}: an application for the {Monte} {Carlo} simulation of {DNA} sequence evolution along phylogenetic trees},
+	volume = {13},
+	shorttitle = {Seq-{Gen}},
+	url = {http://bioinformatics.oxfordjournals.org.www2.lib.ku.edu:2048/content/13/3/235.short},
+	number = {3},
+	urldate = {2014-08-14},
+	journal = {Computer applications in the biosciences: CABIOS},
+	author = {Rambaut, Andrew and Grass, Nicholas C.},
+	year = {1997},
+	pages = {235--238},
+	file = {Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/TKKPIJ39/AuthnEngine.html:text/html}
+}
+
+@article{lewis_likelihood_2001,
+	title = {A likelihood approach to estimating phylogeny from discrete morphological character data},
+	volume = {50},
+	url = {http://sysbio.oxfordjournals.org/content/50/6/913.short},
+	number = {6},
+	urldate = {2014-07-18},
+	journal = {Systematic biology},
+	author = {Lewis, Paul O.},
+	year = {2001},
+	pages = {913--925},
+	file = {Lewis2001Systematic Biol.pdf:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/3IZXR835/Lewis2001Systematic Biol.pdf:application/pdf}
 }
 
 @article{bertels_automated_2014,
@@ -121,66 +334,6 @@ Contact: WH at weichun.huang@nih.gov or GTM at gabor.marth@bc.edu.},
 	pages = {syu046}
 }
 
-@article{lepais_simrad:_2014,
-	title = {{SimRAD}: an {R} package for simulation-based prediction of the number of loci expected in {RADseq} and similar genotyping by sequencing approaches},
-	volume = {14},
-	copyright = {© 2014 John Wiley \& Sons Ltd},
-	issn = {1755-0998},
-	shorttitle = {{SimRAD}},
-	url = {http://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12273/abstract},
-	doi = {10.1111/1755-0998.12273},
-	abstract = {Application of high-throughput sequencing platforms in the field of ecology and evolutionary biology is developing quickly with the introduction of efficient methods to reduce genome complexity. Numerous approaches for genome complexity reduction have been developed using different combinations of restriction enzymes, library construction strategies and fragment size selection. As a result, the choice of which techniques to use may become cumbersome, because it is difficult to anticipate the number of loci resulting from each method. We developed SimRAD, an R package that performs in silico restriction enzyme digests and fragment size selection as implemented in most restriction site associated DNA polymorphism and genotyping by sequencing methods. In silico digestion is performed on a reference genome or on a randomly generated DNA sequence when no reference genome sequence is available. SimRAD accurately predicts the number of loci under alternative protocols when a reference genome sequence is available for the targeted species (or a close relative) but may be unreliable when no reference genome is available. SimRAD is also useful for fine-tuning a given protocol to adjust the number of targeted loci. Here, we outline the functionality of SimRAD and provide an illustrative example of the use of the package (available on the CRAN at http://cran.r-project.org/web/packages/SimRAD).},
-	language = {en},
-	number = {6},
-	urldate = {2015-10-14},
-	journal = {Molecular Ecology Resources},
-	author = {Lepais, Olivier and Weir, Jason T.},
-	month = nov,
-	year = {2014},
-	keywords = {GBS, genome complexity reduction, in silico digestion, next generation sequencing, restriction site associated DNA polymorphism, single nucleotide polymorphism},
-	pages = {1314--1321},
-	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/4M7MPRZA/Lepais and Weir - 2014 - SimRAD an R package for simulation-based predicti.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/RNJM2JTI/full.html:text/html}
-}
-
-@article{li_toward_2014,
-	title = {Toward better understanding of artifacts in variant calling from high-coverage samples},
-	volume = {30},
-	issn = {1367-4803, 1460-2059},
-	url = {http://bioinformatics.oxfordjournals.org/content/30/20/2843},
-	doi = {10.1093/bioinformatics/btu356},
-	abstract = {Motivation: Whole-genome high-coverage sequencing has been widely used for personal and cancer genomics as well as in various research areas. However, in the lack of an unbiased whole-genome truth set, the global error rate of variant calls and the leading causal artifacts still remain unclear even given the great efforts in the evaluation of variant calling methods.
-Results: We made 10 single nucleotide polymorphism and INDEL call sets with two read mappers and five variant callers, both on a haploid human genome and a diploid genome at a similar coverage. By investigating false heterozygous calls in the haploid genome, we identified the erroneous realignment in low-complexity regions and the incomplete reference genome with respect to the sample as the two major sources of errors, which press for continued improvements in these two areas. We estimated that the error rate of raw genotype calls is as high as 1 in 10–15 kb, but the error rate of post-filtered calls is reduced to 1 in 100–200 kb without significant compromise on the sensitivity.
-Availability and implementation: BWA-MEM alignment and raw variant calls are available at http://bit.ly/1g8XqRt scripts and miscellaneous data at https://github.com/lh3/varcmp.
-Contact: hengli@broadinstitute.org
-Supplementary information: Supplementary data are available at Bioinformatics online.},
-	language = {en},
-	number = {20},
-	urldate = {2016-01-20},
-	journal = {Bioinformatics},
-	author = {Li, Heng},
-	month = oct,
-	year = {2014},
-	pmid = {24974202},
-	pages = {2843--2851},
-	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/ZDZ87TUU/Li - 2014 - Toward better understanding of artifacts in varian.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/W7T4VMAJ/2843.html:text/html}
-}
-
-@article{pightling_choice_2014,
-	title = {Choice of {Reference} {Sequence} and {Assembler} for {Alignment} of {Listeria} monocytogenes {Short}-{Read} {Sequence} {Data} {Greatly} {Influences} {Rates} of {Error} in {SNP} {Analyses}},
-	volume = {9},
-	url = {http://dx.doi.org/10.1371/journal.pone.0104579},
-	doi = {10.1371/journal.pone.0104579},
-	abstract = {The wide availability of whole-genome sequencing (WGS) and an abundance of open-source software have made detection of single-nucleotide polymorphisms (SNPs) in bacterial genomes an increasingly accessible and effective tool for comparative analyses. Thus, ensuring that real nucleotide differences between genomes (i.e., true SNPs) are detected at high rates and that the influences of errors (such as false positive SNPs, ambiguously called sites, and gaps) are mitigated is of utmost importance. The choices researchers make regarding the generation and analysis of WGS data can greatly influence the accuracy of short-read sequence alignments and, therefore, the efficacy of such experiments. We studied the effects of some of these choices, including: i) depth of sequencing coverage, ii) choice of reference-guided short-read sequence assembler, iii) choice of reference genome, and iv) whether to perform read-quality filtering and trimming, on our ability to detect true SNPs and on the frequencies of errors. We performed benchmarking experiments, during which we assembled simulated and real Listeria monocytogenes strain 08-5578 short-read sequence datasets of varying quality with four commonly used assemblers (BWA, MOSAIK, Novoalign, and SMALT), using reference genomes of varying genetic distances, and with or without read pre-processing (i.e., quality filtering and trimming). We found that assemblies of at least 50-fold coverage provided the most accurate results. In addition, MOSAIK yielded the fewest errors when reads were aligned to a nearly identical reference genome, while using SMALT to align reads against a reference sequence that is ∼0.82\% distant from 08-5578 at the nucleotide level resulted in the detection of the greatest numbers of true SNPs and the fewest errors. Finally, we show that whether read pre-processing improves SNP detection depends upon the choice of reference sequence and assembler. In total, this study demonstrates that researchers should test a variety of conditions to achieve optimal results.},
-	number = {8},
-	urldate = {2014-09-04},
-	journal = {PLoS ONE},
-	author = {Pightling, Arthur W. and Petronella, Nicholas and Pagotto, Franco},
-	month = aug,
-	year = {2014},
-	pages = {e104579},
-	file = {PLoS Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/QWWGPK4F/Pightling et al. - 2014 - Choice of Reference Sequence and Assembler for Ali.pdf:application/pdf;PLoS Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/WABRURA9/infodoi10.1371journal.pone.html:text/html}
-}
-
 @article{stamatakis_raxml_2014,
 	title = {{RAxML} {Version} 8: {A} tool for {Phylogenetic} {Analysis} and {Post}-{Analysis} of {Large} {Phylogenies}},
 	volume = {30},
@@ -201,61 +354,4 @@ Contact: Alexandros.Stamatakis@h-its.org},
 	pmid = {24451623},
 	pages = {1312--1313},
 	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/SMX2S28A/Stamatakis - 2014 - RAxML Version 8 A tool for Phylogenetic Analysis .pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/QVBIQUR4/Stamatakis - 2014 - RAxML Version 8 A tool for Phylogenetic Analysis .html:text/html}
-}
-
-@article{davis_cfsan_2015,
-	title = {{CFSAN} {SNP} {Pipeline}: an automated method for constructing {SNP} matrices from next-generation sequence data},
-	volume = {1},
-	issn = {2376-5992},
-	shorttitle = {{CFSAN} {SNP} {Pipeline}},
-	url = {https://peerj.com/articles/cs-20},
-	doi = {10.7717/peerj-cs.20},
-	language = {en},
-	urldate = {2016-01-20},
-	journal = {PeerJ Computer Science},
-	author = {Davis, Steve and Pettengill, James B. and Luo, Yan and Payne, Justin and Shpuntoff, Al and Rand, Hugh and Strain, Errol},
-	month = aug,
-	year = {2015},
-	pages = {e20}
-}
-
-@article{hoffmann_tracing_2015,
-	title = {Tracing {Origins} of the {Salmonella} {Bareilly} strain causing a {Foodborne} {Outbreak} in the {United} {States}},
-	issn = {0022-1899, 1537-6613},
-	url = {http://jid.oxfordjournals.org/content/early/2015/05/19/infdis.jiv297},
-	doi = {10.1093/infdis/jiv297},
-	abstract = {Background. Using a novel combination of whole-genome sequencing (WGS) analysis and geographic metadata, we traced the origins of Salmonella Bareilly isolates collected in 2012 during a widespread foodborne outbreak in the United States associated with scraped tuna imported from India.
-Methods. Using next-generation sequencing, we sequenced the complete genome of 100 S. Bareilly isolates obtained from patients who consumed contaminated product, from natural sources, and from unrelated historically and geographically disparate foods. Pathogen genomes were linked to geography by projecting the phylogeny on a virtual globe and produced a transmission network.
-Results. Phylogenetic analysis of WGS data revealed a common origin for outbreak strains, indicating that patients in Maryland and New York were infected from sources originating at a facility in India.
-Conclusion. These data represent the first report fully integrating WGS analysis with geographic mapping and a novel use of transmission networks. Results showed that WGS vastly improves our ability to delimit the scope and source of bacterial foodborne contamination events. Furthermore, these findings reinforce the extraordinary utility that WGS brings to global outbreak investigation as a greatly enhanced approach to protecting the human food supply chain as well as public health in general.},
-	language = {en},
-	urldate = {2016-01-20},
-	journal = {Journal of Infectious Diseases},
-	author = {Hoffmann, Maria and Luo, Yan and Monday, Steven R. and Gonzales-Escalona, Narjol and Ottesen, Andrea R. and Muruvanda, Tim and Wang, Charles and Kastanis, George and Keys, Christine and Janies, Daniel and Senturk, Izzet F. and Catalyurek, Umit V. and Wang, Hua and Hammack, Thomas S. and Wolfgang, William J. and Schoonmaker-Bopp, Dianna and Chu, Alvina and Myers, Robert and Haendiges, Julie and Evans, Peter S. and Meng, Jianghong and Strain, Errol A. and Allard, Marc W. and Brown, Eric W.},
-	month = may,
-	year = {2015},
-	pmid = {25995194},
-	pages = {jiv297},
-	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/43MJKPJH/Hoffmann et al. - 2015 - Tracing Origins of the Salmonella Bareilly strain .pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/NJ74RHCA/infdis.jiv297.html:text/html}
-}
-
-@article{mctavish_how_2015,
-	title = {How do {SNP} ascertainment schemes and population demographics affect inferences about population history?},
-	volume = {16},
-	copyright = {2015 McTavish and Hillis; licensee BioMed Central.},
-	issn = {1471-2164},
-	url = {http://www.biomedcentral.com/1471-2164/16/266/abstract},
-	doi = {10.1186/s12864-015-1469-5},
-	abstract = {PMID: 25887858},
-	language = {en},
-	number = {1},
-	urldate = {2015-06-15},
-	journal = {BMC Genomics},
-	author = {McTavish, Emily J. and Hillis, David M.},
-	month = apr,
-	year = {2015},
-	pmid = {25887858},
-	keywords = {Bos indicus, Bos taurus, Gene-flow, Migration, SNP chip},
-	pages = {266},
-	file = {Full Text PDF:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/MDKPW3BF/McTavish and Hillis - 2015 - How do SNP ascertainment schemes and population de.pdf:application/pdf;Snapshot:/home/ejmctavish/.zotero/zotero/n7lb4sp9.default/zotero/storage/9TKT2HGD/266.html:text/html}
 }
