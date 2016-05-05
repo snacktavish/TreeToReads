@@ -36,7 +36,7 @@ python packages
 -------------------------
 
 ##To install requirements
-###Install Dendropy
+###Install Dendropy (requires dendropy4)
 
     pip2 dendropy
 

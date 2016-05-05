@@ -28,7 +28,10 @@ if __name__ == '__main__':
     # enter the directory like this:
     os.system("cat {}/fasta_files/*.fasta > {}/mini.aln".format(ttr.outd, ttr.outd))
     os.system("Garli tests/garli_mini.conf > {}/garliout".format(ttr.outd))
-    assert(compare_trees('tests/input/simple_expected.tre','tests/tree_from_fasta/tff.best.tre')==0)
-    assert(compare_trees('tests/input/alt.tre','tests/tree_from_fasta/tff.best.tre')!=0)
-    print('Topology is correct')
-    os.system("rm -r /home/ejmctavish/Documents/FDA/TreetoReads/tests/tree_from_fasta")
+    if dendropy.__version__.startswith("4"):
+        assert(compare_trees('tests/input/simple_expected.tre','tests/tree_from_fasta/tff.best.tre')==0)
+        assert(compare_trees('tests/input/alt.tre','tests/tree_from_fasta/tff.best.tre')!=0)
+        print('Topology is correct')
+    else:
+        print('Update denropy to v4 to test topology')
+    os.system("rm -r tests/tree_from_fasta")
