@@ -74,6 +74,11 @@ class TreeToReads(object):
             self.no_sam = 1
         else:
             self.no_sam = 0
+        if not dendropy.__version__.startswith('4'):
+            sys.stderr.write('''ERROR: Please upgrade the python package dendropy to version 4, 
+                                using 'pip install dendropy --upgrade'.
+                                Exiting\n''')
+            self._exit_handler()
 
     def read_args(self):
         """reads arguments from config file"""
