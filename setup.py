@@ -12,6 +12,6 @@ setup(
     url = 'https://github.com/snacktavish/TreeToReads', # use the URL to the github repo
     long_description=open('README.md').read(),
     install_requires=[
-          'dendropy',
+          'dendropy>=4.0.0',
       ],
 )

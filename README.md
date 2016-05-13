@@ -5,6 +5,14 @@ Can be used to test effects of model of evolution, rates of evolution,
 genomic distribution of mutations, and phylogenetic relatedness of samples and of reference genome 
 on SNP calling and evolutionary inference.  
 
+TreeToReads (TTR) provides features not available in alternative simulation approaches:
+
+  - An observed genome is a tip on the simulated tree, allowing for direct comparison of read mapping between simulated and observed data.
+  - Variable sites are simulated on an input phylogeny, and next generation sequencing reads are simulated from these evolved genomes.
+
+Together these make TTR a useful simulator for testing the effects of phylogenetic structure on read mapping and inference of variable sites.
+
+
 Inputs are a phylogeny, a genome to be used as a tip in the tree,
 and a set of configuration parameters in a control file
 
@@ -36,9 +44,14 @@ python packages
 -------------------------
 
 ##To install requirements
-###Install Dendropy
+###Install TTR as a python module
 
-    pip2 dendropy
+    python setup.py install
+
+####Install Dendropy (requires dendropy4)
+(This step is not necessary if you installed TTR as a module)
+
+    pip install dendropy
 
 ##### Install seq-gen, software to simulate mutations (http://tree.bio.ed.ac.uk/software/seqgen/) 
 on ubuntu using apt-get: 
@@ -80,9 +93,9 @@ on Mac or linux (using homebrew):
 
     git clone https://github.com/snacktavish/TreeToReads.git
     cd TreeToReads
-    python treetoreads.py seqsim.cfg
+    python treetoreads.py example.config
  
-Edit the configuration file, seqsim.cfg, to fit your data.
+Edit the configuration file, example.config, to fit your data.
 
 Currently generates paired end illumina data.
 Alternatively, genomes can be generated, and ART may be
@@ -97,7 +110,7 @@ If it runs successfully it will end with
 "TreeToReads completed successfully!"
 
 The output files will be in the the output directory specified in the 
-seqsim.cfg file, e.g. example_out
+config file, e.g. example_out
 and will consist of:
 
 ##Key files
@@ -120,7 +133,7 @@ art_log - log messages from ART software
 TreeToReads is also available as a [Docker](https://www.docker.com/) container:
 
 	docker pull snacktavish/treetoreads
-	docker run snacktavish/treetoreads seqsim.cfg
+	docker run snacktavish/treetoreads example.config
 	
 to run the default example, or
 
