@@ -66,16 +66,22 @@ on Mac or linux (using homebrew, http://brew.sh/):
 ##### Art and Samtools are optional, but are required to generate reads from simulated genomes
 ##### Install ART, software to generate short reads from simulated genomes (http://www.niehs.nih.gov/research/resources/software/biostatistics/art/)
 
-on ubuntu using apt-get: 
+on ubuntu: 
 
-    wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
-    tar -xzvf artbinvanillaicecream031114linux64tgz.tgz
+    wget http://www.niehs.nih.gov/research/resources/assets/docs/artbingreatsmokymountains041716linux64tgz.tgz
+    tar -xzvf artbingreatsmokymountains041716linux64tgz.tgz
 
 add art_illumina to path (see http://askubuntu.com/questions/60218/how-to-add-a-directory-to-my-path)
 
-on Mac or linux (using homebrew): 
+on Mac (using homebrew): 
 
     brew install art
+or 
+   wget http://www.niehs.nih.gov/research/resources/assets/docs/artbingreatsmokymountains041716macos64tgz.tgz
+   tar -xzvf artbingreatsmokymountains041716macos64tgz.tgz
+
+add art_illumina to path (see https://coolestguidesontheplanet.com/add-shell-path-osx/)
+
 
 ##### Install samtools, to generate sorted bam files from sam files (and save disk space) (http://www.htslib.org/)
 
