@@ -14,7 +14,7 @@ The code is still in draft format - but testing welcome, and will be supported v
 
 
 ## Configuration
-All the necessary parameters for TTR are specified in a configuration file. In this tutorial we will walk though the parameter arguments in the "ttr.cfg" example file.
+All the necessary parameters for TTR are specified in a configuration file. In this tutorial we will walk though the parameter arguments in the "example.config" example file.
 
 * Choose a phylogeny (we will use example/simtree.tre). Include the full path to the tree file in either newick or nexus in the configuration file.  
 ```
@@ -23,7 +23,7 @@ treefile_path = example/simtree.tre
 NOTE: The branch lengths in this tree will be proportional to the branch lengths in your outputs, but not equivalent, as the final branch lengths will depend on the number of variable sites selected. Long branch lengths in the input tree will result in more multiple hit mutations at the same sites.  
 ALSO: TTR cannot handle polytomies, so any polytomies in this tree will be randomly resolved with 0 length branch lengths using dendropy, and saved to the output dir as simtree.tre
 
-* Select a "base genome" and specify the path to this file in the configuration file. This the base genome on which mutations will be placed. Currently TTR will only work with files containing a single contig or chromosome. Simulate reads for separate chromosomes individually.
+* Select a "base genome" and specify the path to this file in the configuration file. This the base genome or 'anchor genome' on which mutations will be placed. 
 One tip in your final tree will have this genome sequence. This tip label should be specified using the parameter "base_genome_name".  
 The number of variable sites can vary between 0 and the length of the genome.
 ```
