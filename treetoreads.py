@@ -485,8 +485,10 @@ class TreeToReads(object):
         self._genmut = 1
         sys.stdout.write("Mutated genomes\n")
 
-    def run_art(self):
+    def run_art(self, coverage=None):
         """Runs ART to simulate reads from the simulated genomes"""
+        if not coverage:
+            coverage = self.get_arg('cov')
         if not self._genmut:
             self.mut_genomes()
         if not os.path.isdir("{}/fastq".format(self.outd)):
@@ -524,7 +526,7 @@ class TreeToReads(object):
                             '-p', #for paired end reads
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
-                            '-f', self.get_arg('cov'),
+                            '-f', coverage,
                             '-m', '{}'.format(fragment_size),
                             '-s', '{}'.format(stdev_frag_size),
                             '-o', '{}/fastq/{}{}/{}{}_'.format(self.get_arg('outd'),
@@ -579,17 +581,13 @@ class TreeToReads(object):
                                                                      seq,
                                                                      self.prefix,
                                                                      seq)
-                sortedBam = '{}/fastq/{}{}/{}{}.sorted.bam'.format(self.get_arg('outd'),
-                                                                   self.prefix,
-                                                                   seq,
-                                                                   self.prefix,
-                                                                   seq)
+
                 # convert sam to bam
                 call(['samtools', 'view', '-bS', '-o', bam, sam])
                 # sort the bam
                 call(['samtools', 'sort', bam, sortedBamPrefix])
                 # index the bam
-                call(['samtools', 'index', sortedBam])
+                call(['samtools', 'index', '{}.bam',format(sortedBamPrefix)])
                 # remove intermediate files
                 os.remove(sam)
                 os.remove(bam)
