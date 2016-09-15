@@ -581,13 +581,17 @@ class TreeToReads(object):
                                                                      seq,
                                                                      self.prefix,
                                                                      seq)
-
+                sortedBam = '{}/fastq/{}{}/{}{}.sorted.bam'.format(self.get_arg('outd'),
+                                                                   self.prefix,
+                                                                   seq,
+                                                                   self.prefix,
+                                                                   seq)
                 # convert sam to bam
                 call(['samtools', 'view', '-bS', '-o', bam, sam])
                 # sort the bam
                 call(['samtools', 'sort', bam, sortedBamPrefix])
                 # index the bam
-                call(['samtools', 'index', '{}.bam',format(sortedBamPrefix)])
+                call(['samtools', 'index', sortedBam])
                 # remove intermediate files
                 os.remove(sam)
                 os.remove(bam)
