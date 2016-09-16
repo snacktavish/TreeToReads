@@ -106,7 +106,9 @@ class TreeToReads(object):
                      'fragment_size',
                      'stdev_frag_size',
                      'error_model1',
-                     'error_model2']
+                     'error_model2',
+                     'indel_model',
+                     'indel_rate']
         for lin in config:
             lii = lin.split('=')
             self.config[lii[0].strip()] = lii[-1].split('#')[0].strip()
@@ -254,10 +256,25 @@ class TreeToReads(object):
             sys.stderr.write("base genome name {} is not in tree. Exiting.\n".format(self.get_arg('base_name')))
             self._exit_handler()
         tree.resolve_polytomies()
-        self.seqgen_scaler = float((1.0/tree.length()) * 10)
-#        sys.stdout.write("scaler is {}\n".format(self.seqgen_scaler))
-        if tree.length() >= 1:
-            sys.stderr.write("WARNING: Tree length is high- scale down tree or expect high multiple hits/homoplasy!\n")
+        tree_len = tree.length()
+        expected_tree_len = float(self.nsnp)/self.genlen
+        print(expected_tree_len)
+        for edge in tree.postorder_edge_iter():
+            if edge.length is None:
+                edge.length = 0
+            else:
+                edge.length = (float(edge.length)/tree_len) * expected_tree_len
+        assert(-0.001 < expected_tree_len - tree.length() < 0.001)
+        self.scaledouttree = "{}/scaledtree.tre".format(self.outd)
+        tree.write_to_path(self.scaledouttree, schema='newick', suppress_internal_node_labels=True, suppress_rooting=True)
+        self.scaled_tree_newick =  tree.as_string(schema='newick',  real_value_format_specifier='.15f')
+        if expected_tree_len < 0.01:  #scale up tree length so generate mutations in seqgen without a million invariant sites.
+            stretch = 0.01/expected_tree_len
+            for edge in tree.postorder_edge_iter():
+                if edge.length is None:
+                    edge.length = 0
+                else:
+                    edge.length = edge.length * stretch
         self.outtree = "{}/simtree.tre".format(self.outd)
         tree.write_to_path(self.outtree, schema='newick', suppress_internal_node_labels=True, suppress_rooting=True)
         sys.stdout.write("Tree read\n")
@@ -296,7 +313,7 @@ class TreeToReads(object):
         if not self._treeread:
             self.read_tree()
         self.simloc = "{}/seqs_sim.txt".format(self.outd)
-        lenseqgen = self.seqgen_scaler*self.nsnp
+        lenseqgen = 120*self.nsnp
         if self.shape:
             seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
                          '-a{}'.format(self.shape), '-r{}'.format(self.get_arg('ratmat')),
@@ -369,10 +386,9 @@ class TreeToReads(object):
             assert len(nucs) > 1
             self.sitepatts[nuc].append(site)
 
-
     def add_varsites(self):
         """Simulates more varible sites if there are not enough"""
-        sys.stderr.write('simulating additional sites- consider scaling up input tree branch lengths\n')
+        sys.stderr.write('simulating additional variable sites\n')
         if self._siteread != 1:
             self.read_sites()
         self.generate_varsites()
@@ -438,7 +454,7 @@ class TreeToReads(object):
                         if ri in self.mutlocs:
                             patnuc[nuc] += 1
                             self.snpdic[ri] = patnuc[nuc]
-                            if len(self.sitepatts[nuc]) < patnuc[nuc]:
+                            if len(self.sitepatts[nuc]) <= patnuc[nuc]:
                                 self.add_varsites()
         sys.stderr.write('''{} variable sites with more than 2 bases out of {} sites.
         Scale down tree length if this is too high.\n'''.format(self.trip_hit, self.var_site))
@@ -482,6 +498,9 @@ class TreeToReads(object):
             genout.write('\n')
             genout.close()
         matout.close()
+        indelible = 1
+        if indelible:
+            write_indelible_controlfile(self.outd, self.get_arg('ratmat').replace(',',' '), self.get_arg('freqmat').replace(',',' '), self.get_arg('indel_model'), self.get_arg('indel_rate'), self.scaled_tree_newick[:-20], self.genlen)
         self._genmut = 1
         sys.stdout.write("Mutated genomes\n")
 
@@ -600,6 +619,33 @@ class TreeToReads(object):
 
 
 
+def write_indelible_controlfile(outputdir, ratmat, freqmat, indelmodel, indelrate, tree, seqlen):
+    fi=open("{}/control.txt".format(outputdir), 'w')
+    fi.write("[TYPE] NUCLEOTIDE 1 \n")
+    fi.write("[MODEL] TTRm \n")
+    fi.write("[submodel] GTR {} \n".format(ratmat))
+    fi.write("[indelmodel] {} \n".format(indelmodel))
+    fi.write("[indelrate]  {} \n".format(indelrate))
+    fi.write("[statefreq]  {} \n".format(freqmat))
+    fi.write("[TREE] TTR {};\n".format(tree))
+    fi.write("[PARTITIONS] partitionname\n")
+    fi.write("[TTR TTRm {}]\n".format(int(seqlen*1.2)))
+    fi.write("[EVOLVE] partitionname 1 TTRindelible\n")
+    fi.close()
+
+
+#def run_indelible():
+ #   call(['indelible', "{}/control.txt".format(outputdir)])
+
+
+
+#def read indeible_aln()
+
+
+
+#def gappify alignemnet()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="""Tree to Reads - A python script to to read a tree,
@@ -611,3 +657,5 @@ if __name__ == "__main__":
                         version='Tree to reads version {}'.format(VERSION))
     args = parser.parse_args()
     ttr = TreeToReads(configfi=args.config_file, main=1)
+
+
