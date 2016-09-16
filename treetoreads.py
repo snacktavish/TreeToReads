@@ -460,7 +460,7 @@ class TreeToReads(object):
         Scale down tree length if this is too high.\n'''.format(self.trip_hit, self.var_site))
 
 
-    def mut_genomes(self):
+    def mut_genomes_no_indels(self):
         """Writes out the simulated genomes with mutations"""
         self.assign_sites()
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
@@ -500,9 +500,60 @@ class TreeToReads(object):
         matout.close()
         indelible = 1
         if indelible:
-            write_indelible_controlfile(self.outd, self.get_arg('ratmat').replace(',',' '), self.get_arg('freqmat').replace(',',' '), self.get_arg('indel_model'), self.get_arg('indel_rate'), self.scaled_tree_newick[:-20], self.genlen)
+            self.do_indels()
         self._genmut = 1
         sys.stdout.write("Mutated genomes\n")
+
+    def mut_genomes_indels(self):#TODO does not account for SNPs in indsertions
+        """Writes out the simulated genomes with mutations and indels"""
+        write_indelible_controlfile(self.outd, self.get_arg('ratmat').replace(',',' '), self.get_arg('freqmat').replace(',',' '), self.get_arg('indel_model'), self.get_arg('indel_rate'), self.scaled_tree_newick[:-20], self.genlen)
+        run_indelible(self.outd)
+        insertions, deletions, insertionlocs= read_indelible_aln(self.outd, self.get_arg('base_name'))
+        self.assign_sites()
+        matout = open("{}/var_site_matrix".format(self.outd), 'w')
+        alignment_length = self.genlen + len(insertionlocs)
+        for seq in self.seqnames:
+            self.mut_genos[seq] = []
+            sys.stdout.write("writing genome for {}\n".format(seq))
+            if not os.path.isdir("{}/fasta_files".format(self.outd)):
+                os.mkdir("{}/fasta_files".format(self.outd))
+            genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
+            ii = 0 #indexing along reference goneome
+            ali = 0 #indexing along alignement
+            with open(self.get_arg('genome'), 'r') as in_file:
+                for line in in_file:
+                    if line.startswith('>'):
+                        if ii > 0:
+                            genout.write('\n')
+                        genout.write(line.strip()+"_"+self.prefix+seq)
+                        ii = 0
+                        ali = 0
+                    else:
+                        line = line.strip()
+                        for nuc in line:
+                            if ii%70 == 0:
+                                genout.write('\n')
+                            ii += 1
+                            if ii in self.mutlocs:
+                                if nuc == 'N':
+                                    genout.write('N')
+                                else:
+                                    patt = self.sitepatts[nuc][self.snpdic[ii]]
+                                    genout.write(patt[seq])
+                                    self.mut_genos[seq].append(patt[seq])
+                                    matout.write("{} {} {}\n".format(seq, patt[seq], ii))
+                            else:
+                                genout.write(nuc)
+            genout.write('\n')
+            genout.write('\n')
+            genout.close()
+        matout.close()
+        indelible = 1
+        if indelible:
+            self.do_indels()
+        self._genmut = 1
+        sys.stdout.write("Mutated genomes\n")
+
 
     def run_art(self, coverage=None):
         """Runs ART to simulate reads from the simulated genomes"""
@@ -634,12 +685,43 @@ def write_indelible_controlfile(outputdir, ratmat, freqmat, indelmodel, indelrat
     fi.close()
 
 
-#def run_indelible():
- #   call(['indelible', "{}/control.txt".format(outputdir)])
+def run_indelible(outputdir):
+    cwd = os.getcwd()
+    os.chdir(outputdir)
+    call(['indelible', "control.txt"])
+    os.chdir(cwd)
 
 
+def read_indelible_aln(outputdir, base_name,genlen):
+    insertionlocs = set
+    insertions = {}
+    deletions = {}
+    indel_aln = open("{}/TTRindelible_TRUE.phy".format(outputdir))
+    for lin in indel_aln:
+        if lin.startswith(base_name):
+            seq = lin[:15].strip()
+            ref_genome_i = 0
+            for i, char in enumerate(lin[15:]):
+                if char == '-':
+                    insertionlocs.add(i)
+                else:
+                    ref_genome_i += 1
+                if ref_genome_i == genlen:
+                    break
+    indel_aln = open("{}/TTRindelible_TRUE.phy".format(outputdir))
+    for lin in indel_aln:
+        if not lin.startswith(base_name):
+            seq = lin[:15].strip()
+            print(seq)
+            insertions[seq] = {}
+            deletions[seq] = set()
+            for i, char in enumerate(lin[15:]):
+                if i in insertionlocs:
+                    insertions[seq][i] = char
+                if char == '-':
+                    deletions[seq].add(i)
 
-#def read indeible_aln()
+
 
 
 
