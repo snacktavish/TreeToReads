@@ -239,13 +239,13 @@ class TreeToReads(object):
         if dendropy.__version__.startswith('4'):
             taxa = dendropy.TaxonNamespace()
             try:
-                tree = dendropy.Tree.get_from_path(self.get_arg('treepath'), self.treetype, taxon_namespace=taxa)
+                tree = dendropy.Tree.get_from_path(self.get_arg('treepath'), self.treetype, taxon_namespace=taxa, preserve_underscores=True)
             except:
                 sys.stderr.write("Problems reading the tree - is it in proper newick or nexus format?\n")
         else:
             taxa = dendropy.TaxonSet()
             try:
-                tree = dendropy.Tree.get_from_path(self.get_arg('treepath'), self.treetype, taxon_set=taxa)
+                tree = dendropy.Tree.get_from_path(self.get_arg('treepath'), self.treetype, taxon_set=taxa, preserve_underscores=True)
             except:
                 sys.stderr.write("Problems reading the tree - is it in proper newick or nexus format?\n")
         if tree.length() == 0:
