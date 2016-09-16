@@ -564,7 +564,7 @@ class TreeToReads(object):
         if not coverage:
             coverage = self.get_arg('cov')
         if not self._genmut:
-            if self.get_arg("indel_model")
+            if self.get_arg("indel_model"):
                 self.mut_genomes_indels()
             else:
                 self.mut_genomes_no_indels()
