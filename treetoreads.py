@@ -498,9 +498,6 @@ class TreeToReads(object):
             genout.write('\n')
             genout.close()
         matout.close()
-        indelible = 1
-        if indelible:
-            self.do_indels()
         self._genmut = 1
         sys.stdout.write("Mutated genomes\n")
 
@@ -518,7 +515,7 @@ class TreeToReads(object):
             if not os.path.isdir("{}/fasta_files".format(self.outd)):
                 os.mkdir("{}/fasta_files".format(self.outd))
             genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
-            ii = 0 #indexing along reference goneome
+            ii = 0 #indexing along reference genome
             ali = 0 #indexing along alignement
             with open(self.get_arg('genome'), 'r') as in_file:
                 for line in in_file:
@@ -531,10 +528,17 @@ class TreeToReads(object):
                     else:
                         line = line.strip()
                         for nuc in line:
-                            if ii%70 == 0:
+                            if ali%70 == 0:
                                 genout.write('\n')
                             ii += 1
-                            if ii in self.mutlocs:
+                            ali += 1
+                            if ii in insertionlocs:
+                                for pos in insertionlocs[ii]:
+                                    genout.write(insertions[pos])
+                                    ali+=1
+                            elif ali in deletions: #This shoudl be exclusive of the columns considered "insertions"
+                                 genout.write('-')
+                            elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
                                 else:
@@ -560,7 +564,10 @@ class TreeToReads(object):
         if not coverage:
             coverage = self.get_arg('cov')
         if not self._genmut:
-            self.mut_genomes()
+            if self.get_arg("indel_model")
+                self.mut_genomes_indels()
+            else:
+                self.mut_genomes_no_indels()
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
         if not self._genmut:
@@ -693,7 +700,8 @@ def run_indelible(outputdir):
 
 
 def read_indelible_aln(outputdir, base_name,genlen):
-    insertionlocs = set
+    insertionlocs = {}
+    insertionlocs_aln = set()
     insertions = {}
     deletions = {}
     indel_aln = open("{}/TTRindelible_TRUE.phy".format(outputdir))
@@ -703,22 +711,25 @@ def read_indelible_aln(outputdir, base_name,genlen):
             ref_genome_i = 0
             for i, char in enumerate(lin[15:]):
                 if char == '-':
-                    insertionlocs.add(i)
+                    insertionlocs_aln.add(i)
+                    if not insertionlocs[ref_genome_i]:
+                        insertionlocs[ref_genome_i] = set(i)
+                    else:
+                        insertionlocs[ref_genome_i].add(i)
                 else:
                     ref_genome_i += 1
                 if ref_genome_i == genlen:
                     break
     indel_aln = open("{}/TTRindelible_TRUE.phy".format(outputdir))
     for lin in indel_aln:
-        if not lin.startswith(base_name):
             seq = lin[:15].strip()
             print(seq)
             insertions[seq] = {}
             deletions[seq] = set()
             for i, char in enumerate(lin[15:]):
-                if i in insertionlocs:
+                if i in insertionlocs_aln:
                     insertions[seq][i] = char
-                if char == '-':
+                elif char == '-':
                     deletions[seq].add(i)
 
 
