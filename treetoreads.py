@@ -373,8 +373,8 @@ class TreeToReads(object):
         try:
             assert set(self.seqnames) == set(simseqs.keys())
         except:
-            sys.stderr.write(self.seqnames)
-            sys.stderr.write(simseqs.keys())
+            sys.stderr.write("Seqnames don't match simulated keys, seqnames :{} simulated names: {} ".format('\n'.join(self.seqnames), '\n'.join(simseqs.keys())))
+            #sys.stderr.write(simseqs.keys())
             self._exit_handler()
         ref = simseqs[self.get_arg('base_name')]
         for i, nuc in enumerate(ref):
@@ -599,7 +599,7 @@ class TreeToReads(object):
                             '-1', self.get_arg('error_model1'),
                             '-2', self.get_arg('error_model2'),
                             '-na', #Don't output alignment file
-                            '-sam', #output a sam file
+                        #   '-sam', #output a sam file
                             '-p', #for paired end reads
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
@@ -615,7 +615,7 @@ class TreeToReads(object):
                 artparam = ['art_illumina',
                             '-p', #for paired end reads
                             '-na', #Don't output alignment file
-                            '-sam', #output a sam file
+                         #   '-sam', #output a sam file
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
                             '-f', self.get_arg('cov'),
@@ -626,7 +626,7 @@ class TreeToReads(object):
                                                                seq,
                                                                self.prefix,
                                                                seq)]
-            call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'))
+            call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'), stderr=open('{}/art_log'.format(self.outd), 'a'))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.get_arg('outd'), self.prefix, seq, self.prefix, seq))
             gzippar = ['gzip',
                        '-f',
@@ -641,37 +641,6 @@ class TreeToReads(object):
                                                         self.prefix,
                                                         seq)]
             call(gzippar)
-            if not self.no_sam:
-                # LK - sam => bam
-                sam = '{}/fastq/{}{}/{}{}_.sam'.format(self.get_arg('outd'),
-                                                       self.prefix,
-                                                       seq,
-                                                       self.prefix,
-                                                       seq)
-                bam = '{}/fastq/{}{}/{}{}.bam'.format(self.get_arg('outd'),
-                                                      self.prefix,
-                                                      seq,
-                                                      self.prefix,
-                                                      seq)
-                sortedBamPrefix = '{}/fastq/{}{}/{}{}.sorted'.format(self.get_arg('outd'),
-                                                                     self.prefix,
-                                                                     seq,
-                                                                     self.prefix,
-                                                                     seq)
-                sortedBam = '{}/fastq/{}{}/{}{}.sorted.bam'.format(self.get_arg('outd'),
-                                                                   self.prefix,
-                                                                   seq,
-                                                                   self.prefix,
-                                                                   seq)
-                # convert sam to bam
-                call(['samtools', 'view', '-bS', '-o', bam, sam])
-                # sort the bam
-                call(['samtools', 'sort', bam, sortedBamPrefix])
-                # index the bam
-                call(['samtools', 'index', sortedBam])
-                # remove intermediate files
-                os.remove(sam)
-                os.remove(bam)
         sys.stdout.write("TreeToReads completed successfully!\n")
 
 
