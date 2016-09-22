@@ -503,10 +503,10 @@ class TreeToReads(object):
 
     def mut_genomes_indels(self):#TODO does not account for SNPs in indsertions
         """Writes out the simulated genomes with mutations and indels"""
+        self.assign_sites()
         write_indelible_controlfile(self.outd, self.get_arg('ratmat').replace(',',' '), self.get_arg('freqmat').replace(',',' '), self.get_arg('indel_model'), self.get_arg('indel_rate'), self.scaled_tree_newick[:-20], self.genlen)
         run_indelible(self.outd)
-        insertions, deletions, insertionlocs= read_indelible_aln(self.outd, self.get_arg('base_name'))
-        self.assign_sites()
+        insertions, deletions, insertionlocs= read_indelible_aln(self.outd, self.get_arg('base_name'), self.genlen)
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
         alignment_length = self.genlen + len(insertionlocs)
         for seq in self.seqnames:
@@ -534,7 +534,10 @@ class TreeToReads(object):
                             ali += 1
                             if ii in insertionlocs:
                                 for pos in insertionlocs[ii]:
-                                    genout.write(insertions[pos])
+                                    if seq == self.get_arg('base_name'):
+                                        genout.write("-")
+                                    else:
+                                        genout.write(insertions[seq][pos])
                                     ali+=1
                             elif ali in deletions: #This shoudl be exclusive of the columns considered "insertions"
                                  genout.write('-')
@@ -552,9 +555,6 @@ class TreeToReads(object):
             genout.write('\n')
             genout.close()
         matout.close()
-        indelible = 1
-        if indelible:
-            self.do_indels()
         self._genmut = 1
         sys.stdout.write("Mutated genomes\n")
 
@@ -664,11 +664,13 @@ def write_indelible_controlfile(outputdir, ratmat, freqmat, indelmodel, indelrat
 def run_indelible(outputdir):
     cwd = os.getcwd()
     os.chdir(outputdir)
-    call(['indelible', "control.txt"])
+    call(['../indelible', "control.txt"])
     os.chdir(cwd)
 
 
-def read_indelible_aln(outputdir, base_name,genlen):
+def read_indelible_aln(outputdir, base_name, genlen):
+    '''insertion locs are in terms of the original sequence length,
+    but deletions are in terms of alignement length'''
     insertionlocs = {}
     insertionlocs_aln = set()
     insertions = {}
@@ -681,16 +683,22 @@ def read_indelible_aln(outputdir, base_name,genlen):
             for i, char in enumerate(lin[15:]):
                 if char == '-':
                     insertionlocs_aln.add(i)
-                    if not insertionlocs[ref_genome_i]:
-                        insertionlocs[ref_genome_i] = set(i)
+                    print('-')
+                    print(i)
+                    if not insertionlocs.get(ref_genome_i):
+                        insertionlocs[ref_genome_i] = set()
+                        insertionlocs[ref_genome_i].add(i)
                     else:
                         insertionlocs[ref_genome_i].add(i)
                 else:
                     ref_genome_i += 1
                 if ref_genome_i == genlen:
+                    alignment_length = i
+                    print("genlen is  {} and alignement length should be {}".format(genlen, i))
                     break
     indel_aln = open("{}/TTRindelible_TRUE.phy".format(outputdir))
     for lin in indel_aln:
+        if not lin.startswith(base_name):
             seq = lin[:15].strip()
             print(seq)
             insertions[seq] = {}
@@ -700,6 +708,10 @@ def read_indelible_aln(outputdir, base_name,genlen):
                     insertions[seq][i] = char
                 elif char == '-':
                     deletions[seq].add(i)
+                    print('del {}'.format(i))
+                if i >= alignment_length:
+                    break
+    return insertions, deletions, insertionlocs
 
 
 
