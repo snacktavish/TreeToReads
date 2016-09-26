@@ -531,16 +531,16 @@ class TreeToReads(object):
                             if ali%70 == 0:
                                 genout.write('\n')
                             ii += 1
-                            ali += 1
                             if ii in insertionlocs:
                                 for pos in insertionlocs[ii]:
                                     if seq == self.get_arg('base_name'):
                                         genout.write("-")
                                     else:
                                         genout.write(insertions[seq][pos])
-                                    ali+=1
-                            elif ali in deletions: #This shoudl be exclusive of the columns considered "insertions"
-                                 genout.write('-')
+                                    ali += 1
+                            if ali in deletions[seq]: #This shoudl be exclusive of the columns considered "insertions". IT ISNT THOUGH.
+                                   genout.write('-')
+                                   ali+=1
                             elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
@@ -549,8 +549,10 @@ class TreeToReads(object):
                                     genout.write(patt[seq])
                                     self.mut_genos[seq].append(patt[seq])
                                     matout.write("{} {} {}\n".format(seq, patt[seq], ii))
+                                ali += 1
                             else:
                                 genout.write(nuc)
+                                ali += 1
             genout.write('\n')
             genout.write('\n')
             genout.close()
@@ -649,6 +651,8 @@ class TreeToReads(object):
 def write_indelible_controlfile(outputdir, ratmat, freqmat, indelmodel, indelrate, tree, seqlen):
     fi=open("{}/control.txt".format(outputdir), 'w')
     fi.write("[TYPE] NUCLEOTIDE 1 \n")
+    fi.write("[SETTINGS]\n")
+    fi.write("[output] FASTA \n")
     fi.write("[MODEL] TTRm \n")
     fi.write("[submodel] GTR {} \n".format(ratmat))
     fi.write("[indelmodel] {} \n".format(indelmodel))
@@ -675,12 +679,15 @@ def read_indelible_aln(outputdir, base_name, genlen):
     insertionlocs_aln = set()
     insertions = {}
     deletions = {}
-    indel_aln = open("{}/TTRindelible_TRUE.phy".format(outputdir))
+    indel_aln = open("{}/TTRindelible_TRUE.fas".format(outputdir))
     for lin in indel_aln:
-        if lin.startswith(base_name):
+        if lin.startswith(">")
+           lii = lin.readline()
+           seqname = lii.strip(">")
+        if seqname==base_name:
             seq = lin[:15].strip()
             ref_genome_i = 0
-            for i, char in enumerate(lin[15:]):
+            for i, char in enumerate(lin[12:]):
                 if char == '-':
                     insertionlocs_aln.add(i)
                     print('-')
@@ -703,7 +710,7 @@ def read_indelible_aln(outputdir, base_name, genlen):
             print(seq)
             insertions[seq] = {}
             deletions[seq] = set()
-            for i, char in enumerate(lin[15:]):
+            for i, char in enumerate(lin[12:]):
                 if i in insertionlocs_aln:
                     insertions[seq][i] = char
                 elif char == '-':
@@ -711,6 +718,7 @@ def read_indelible_aln(outputdir, base_name, genlen):
                     print('del {}'.format(i))
                 if i >= alignment_length:
                     break
+        deletions[base_name]={}
     return insertions, deletions, insertionlocs
 
 
