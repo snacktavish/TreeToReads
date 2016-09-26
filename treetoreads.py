@@ -530,7 +530,6 @@ class TreeToReads(object):
                         for nuc in line:
                             if ali%70 == 0:
                                 genout.write('\n')
-                            ii += 1
                             if ii in insertionlocs:
                                 for pos in insertionlocs[ii]:
                                     if seq == self.get_arg('base_name'):
@@ -541,6 +540,7 @@ class TreeToReads(object):
                             if ali in deletions[seq]: #This shoudl be exclusive of the columns considered "insertions". IT ISNT THOUGH.
                                    genout.write('-')
                                    ali+=1
+                                   ii += 1
                             elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
@@ -550,9 +550,11 @@ class TreeToReads(object):
                                     self.mut_genos[seq].append(patt[seq])
                                     matout.write("{} {} {}\n".format(seq, patt[seq], ii))
                                 ali += 1
+                                ii += 1
                             else:
                                 genout.write(nuc)
                                 ali += 1
+                                ii += 1
             genout.write('\n')
             genout.write('\n')
             genout.close()
@@ -681,13 +683,13 @@ def read_indelible_aln(outputdir, base_name, genlen):
     deletions = {}
     indel_aln = open("{}/TTRindelible_TRUE.fas".format(outputdir))
     for lin in indel_aln:
-        if lin.startswith(">")
-           lii = lin.readline()
-           seqname = lii.strip(">")
-        if seqname==base_name:
-            seq = lin[:15].strip()
+        if lin.startswith(">"):
+           seqname = lin.strip(">").strip()
+           print(seqname)
+        elif seqname==base_name:
             ref_genome_i = 0
-            for i, char in enumerate(lin[12:]):
+            print("reading ref")
+            for i, char in enumerate(lin):
                 if char == '-':
                     insertionlocs_aln.add(i)
                     print('-')
@@ -703,21 +705,24 @@ def read_indelible_aln(outputdir, base_name, genlen):
                     alignment_length = i
                     print("genlen is  {} and alignement length should be {}".format(genlen, i))
                     break
-    indel_aln = open("{}/TTRindelible_TRUE.phy".format(outputdir))
+    indel_aln = open("{}/TTRindelible_TRUE.fas".format(outputdir))
     for lin in indel_aln:
-        if not lin.startswith(base_name):
-            seq = lin[:15].strip()
-            print(seq)
-            insertions[seq] = {}
-            deletions[seq] = set()
-            for i, char in enumerate(lin[12:]):
+        if lin.startswith(">"):
+           seqname = lin.strip(">").strip()
+           print "ok seqnems is {}".format(seqname)
+        elif seqname and seqname != base_name:
+            insertions[seqname] = {}
+            deletions[seqname] = set()
+            for i, char in enumerate(lin):
                 if i in insertionlocs_aln:
-                    insertions[seq][i] = char
+                    insertions[seqname][i] = char
+                    print("collecting base at {}, i is a {}".format(i, char))
                 elif char == '-':
-                    deletions[seq].add(i)
+                    deletions[seqname].add(i) ##
                     print('del {}'.format(i))
                 if i >= alignment_length:
                     break
+            seqname=None
         deletions[base_name]={}
     return insertions, deletions, insertionlocs
 
