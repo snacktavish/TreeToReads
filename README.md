@@ -62,7 +62,7 @@ on Mac or linux (using homebrew, http://brew.sh/):
     brew install seq-gen
 
 
-##### Art and Samtools are optional, but are required to generate reads from simulated genomes
+##### Art is optional, but are required to generate reads from simulated genomes
 ##### Install ART, software to generate short reads from simulated genomes (http://www.niehs.nih.gov/research/resources/software/biostatistics/art/)
 
 on ubuntu: 
@@ -80,17 +80,6 @@ or
    tar -xzvf artbingreatsmokymountains041716macos64tgz.tgz
 
 add art_illumina to path (see https://coolestguidesontheplanet.com/add-shell-path-osx/)
-
-
-##### Install samtools, to generate sorted bam files from sam files (and save disk space) (http://www.htslib.org/)
-
-on ubuntu using apt-get: 
-
-    apt-get install samtools
-
-on Mac or linux (using homebrew): 
-
-    brew install samtools
 
 
 -----------------------------------------------------------
@@ -158,8 +147,6 @@ Please cite them (as well as this repo) in any published work using this simulat
 McTavish E. J., Timme R, (2015) Tree To Reads. https://github.com/snacktavish/TreeToReads  bioRxiv
 
 Huang W., Li L, Myers J. R., Marth G. T. (2012). ART: a next-generation sequencing read simulator, Bioinformatics 28 (4): 593-594  
-
-Li H., Handsaker B., Wysoker A., Fennell T., Ruan J., Homer N., Marth G., Abecasis G., Durbin R. and 1000 Genome Project Data Processing Subgroup (2009) The Sequence alignment/map (SAM) format and SAMtools. Bioinformatics, 25, 2078-9  
 
 Rambaut A. and Grassly N. C. (1997) Seq-Gen: An application for the Monte Carlo simulation of DNA sequence evolution along phylogenetic trees. Comput. Appl. Biosci. 13: 235-238  
 
