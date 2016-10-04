@@ -35,7 +35,6 @@ The code is still in development - but testing welcome, and will be supported vi
 -   Art
 
 (can be run without Art if you want to generate mutated genomes, but not reads)
-- Samtools (to output sorted bam files instead of sam)
 
 python packages
 -   Dendropy
