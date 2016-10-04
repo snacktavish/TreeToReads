@@ -202,13 +202,13 @@
 
 \begin{abstract} % abstract
 \parttitle{Background} %if any
-Using genome-wide single nucleotide polymorphism (SNP)-based methods for tracking pathogens has become standard practice in academia and public health agencies.
-Multiple computational approaches call variants by mapping short read data against a reference genome, filtering those variants for quality, then concatenating them into a sequence matrix for down-stream phylogenetic analysis.
-However, despite our knowledge of the parameters that affect whether a SNP is called, we lack methods for determining the effects of read mapping choices on whether the correct phylogenetic tree has been recovered.
+Using phylogenomic analysis tools for tracking pathogens has become standard practice in academia, public health agencies, and large industries. 
+Using the same raw read genomic data as input, there are several different approaches being used to infer phylogenetic tree. These include many different SNP pipelines, wgMLST approaches, kmer algorithms, whole genome alignment and others; each of these has advantages and disadvantages, some have been extensively validated, some are faster, some have higher resolution. A few of these analysis approaches are well-integrated into the regulatory process of US Federal agencies (e.g. the FDA's SNP pipeline for tracking foodborne pathogens.) 
+However, despite extensive validation on benchmark datasets and comparison with other pipelines, we lack methods for fully exploring the effects of multiple parameter values in each pipeline that can potentially have an effect on whether the correct phylogenetic tree is recovered in the end.
 \parttitle{Results}
-To resolve this problem, we offer a program, TreeToReads, which can generate raw read data from mutated genomes simulated under a known phylogeny.
-This simulation pipeline allows direct comparisons of simulated and observed data to the same reference genome, and therefore can be used to test the phylogenetic effects of distance to that reference genome.
-At each step of these simulations, researchers can vary parameters of interest (e.g., topology, model of sequence evolution, and read coverage) to assess the robustness of a given result.
+To resolve this problem, we offer a program, TreeToReads, which can generate raw read data from mutated genomes simulated under a known phylogeny. 
+This simulation pipeline allows direct comparisons of simulated and observed data in a controlled environment.
+At each step of these simulations, researchers can vary parameters of interest (e.g., input tree topology, amount of sequence divergence, rate of indels, read coverage, distance of reference genome, etc) to assess the effects of various parameter values on correctly calling SNPs and reconstructing an accurate tree.
 \parttitle{Conclusions}
 Such critical assessments of the accuracy and robustness of analytical pipelines are essential to progress in both research and applied settings. 
 \end{abstract}
