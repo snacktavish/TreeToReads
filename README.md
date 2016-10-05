@@ -62,7 +62,7 @@ on Mac or linux (using homebrew, http://brew.sh/):
     brew install seq-gen
 
 
-##### Art is optional, but are required to generate reads from simulated genomes
+##### Art is optional, but is required to generate reads from simulated genomes
 ##### Install ART, software to generate short reads from simulated genomes (http://www.niehs.nih.gov/research/resources/software/biostatistics/art/)
 
 on ubuntu: 
@@ -81,7 +81,7 @@ or
 
 add art_illumina to path (see https://coolestguidesontheplanet.com/add-shell-path-osx/)
 
-##### Indelible is optional, but are required to simulate insterations and deletions.
+##### Indelible is optional, but is required to simulate insterations and deletions.
 
 Install from indelible webpage, and add to path.
     http://abacus.gene.ucl.ac.uk/software/indelible/
@@ -90,7 +90,8 @@ Note: to compile indelible from source for linux installations currently require
 
     #include <unistd.h>
 
-(I've reported the issue and it shoud be fixed soon)
+(I've reported the issue and it shoud be fixed soon)  
+add indeible to your path
 
 
 
