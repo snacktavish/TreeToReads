@@ -23,7 +23,7 @@ if __name__ == '__main__':
     ttr=TreeToReads(configfi='tests/input/tree_from_fasta.cfg',run=0)
     print("outd is {}".format(ttr.outd))
     ttr.make_output()
-    ttr.mut_genomes()
+    ttr.mut_genomes_no_indels()
     print(ttr.get_arg('genome'))
     # enter the directory like this:
     os.system("cat {}/fasta_files/*.fasta > {}/mini.aln".format(ttr.outd, ttr.outd))

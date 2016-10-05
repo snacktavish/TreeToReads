@@ -67,13 +67,6 @@ class TreeToReads(object):
             self.no_art = 1
         else:
             self.no_art = 0
-        if call(['which', 'samtools'], stdout=open('/dev/null', 'w')) == 1:
-            sys.stderr.write('''ERROR: samtools needs to be installed to output sorted bam files.
-                             samtools not found
-                             TTR will generate SAM files (and may take up a lot of disk space!) \n''')
-            self.no_sam = 1
-        else:
-            self.no_sam = 0
         if not dendropy.__version__.startswith('4'):
             sys.stderr.write('''ERROR: Please upgrade the python package dendropy to version 4, 
                                 using 'pip install dendropy --upgrade'.
@@ -258,7 +251,6 @@ class TreeToReads(object):
         tree.resolve_polytomies()
         tree_len = tree.length()
         expected_tree_len = float(self.nsnp)/self.genlen
-        print(expected_tree_len)
         for edge in tree.postorder_edge_iter():
             if edge.length is None:
                 edge.length = 0
@@ -456,8 +448,9 @@ class TreeToReads(object):
                             self.snpdic[ri] = patnuc[nuc]
                             if len(self.sitepatts[nuc]) <= patnuc[nuc]:
                                 self.add_varsites()
-        sys.stderr.write('''{} variable sites with more than 2 bases out of {} sites.
-        Scale down tree length if this is too high.\n'''.format(self.trip_hit, self.var_site))
+        if self.trip_hit:
+            sys.stderr.write('''{} variable sites with more than 2 bases out of {} sites.
+            Scale down tree length if this is too high.\n'''.format(self.trip_hit, self.var_site))
 
 
     def mut_genomes_no_indels(self):
@@ -569,7 +562,12 @@ class TreeToReads(object):
             coverage = self.get_arg('cov')
         if not self._genmut:
             if self.get_arg("indel_model"):
-                self.mut_genomes_indels()
+                if call(['which', 'indelible'], stdout=open('/dev/null', 'w')) == 1:
+                    sys.stderr.write('''ERROR: indelible not found. Needs to be installed to simulate insertations
+                                        and deletions. IGNORING indel parameters and continuaing simulation\n''')
+                    self.mut_genomes_no_indels()
+                else:
+                    self.mut_genomes_indels()
             else:
                 self.mut_genomes_no_indels()
         if not os.path.isdir("{}/fastq".format(self.outd)):
@@ -670,7 +668,7 @@ def write_indelible_controlfile(outputdir, ratmat, freqmat, indelmodel, indelrat
 def run_indelible(outputdir):
     cwd = os.getcwd()
     os.chdir(outputdir)
-    call(['../indelible', "control.txt"])
+    call(['indelible', "control.txt", ">", "indelible.log" ])
     os.chdir(cwd)
 
 
@@ -685,15 +683,11 @@ def read_indelible_aln(outputdir, base_name, genlen):
     for lin in indel_aln:
         if lin.startswith(">"):
            seqname = lin.strip(">").strip()
-           print(seqname)
         elif seqname==base_name:
             ref_genome_i = 0
-            print("reading ref")
             for i, char in enumerate(lin):
                 if char == '-':
                     insertionlocs_aln.add(i)
-                    print('-')
-                    print(i)
                     if not insertionlocs.get(ref_genome_i):
                         insertionlocs[ref_genome_i] = set()
                         insertionlocs[ref_genome_i].add(i)
@@ -703,23 +697,20 @@ def read_indelible_aln(outputdir, base_name, genlen):
                     ref_genome_i += 1
                 if ref_genome_i == genlen:
                     alignment_length = i
-                    print("genlen is  {} and alignement length should be {}".format(genlen, i))
+                    sys.stdout.write("Base genome length is  {} and alignement length will be {}\n".format(genlen, i))
                     break
     indel_aln = open("{}/TTRindelible_TRUE.fas".format(outputdir))
     for lin in indel_aln:
         if lin.startswith(">"):
            seqname = lin.strip(">").strip()
-           print "ok seqnems is {}".format(seqname)
         elif seqname and seqname != base_name:
             insertions[seqname] = {}
             deletions[seqname] = set()
             for i, char in enumerate(lin):
                 if i in insertionlocs_aln:
                     insertions[seqname][i] = char
-                    print("collecting base at {}, i is a {}".format(i, char))
                 elif char == '-':
                     deletions[seqname].add(i) ##
-                    print('del {}'.format(i))
                 if i >= alignment_length:
                     break
             seqname=None
