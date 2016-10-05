@@ -81,6 +81,18 @@ or
 
 add art_illumina to path (see https://coolestguidesontheplanet.com/add-shell-path-osx/)
 
+##### Indelible is optional, but are required to simulate insterations and deletions.
+
+Install from indelible webpage, and add to path.
+    http://abacus.gene.ucl.ac.uk/software/indelible/
+
+Note: to compile indelible from source for linux installations currently requires adding this include statement to the top of MersenneTwister.h
+
+    #include <unistd.h>
+
+(I've reported the issue and it shoud be fixed soon)
+
+
 
 -----------------------------------------------------------
 ##Running the simulations (quick version):
