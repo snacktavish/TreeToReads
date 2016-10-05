@@ -307,10 +307,12 @@ The software is written in Python and requires a configuration file and two inpu
 The user specifies parameter settings (e.g., number of variable sites to simulate and nucleotide substitution model parameters) in a configuration file.
 The branch lengths of the user provided phylogeny determine the relative number of mutations on each branch and the probability that a single site is affected by multiple mutational events.
 To account for the ascertainment bias inherent in estimating phylogenies from panels of variable sites, the total number of variable sites is determined by a user input parameter, not the branch lengths.
-Phylogeny formats are standardized using DendroPy \cite{sukumaran_dendropy:_2010}.
-The pipeline uses Seq-Gen \cite{rambaut_seq-gen:_1997} to simulate variable sites along the input phylogeny.
-These sites are then distributed across the anchor genome. 
+Using DendroPy \cite{sukumaran_dendropy:_2010} phylogeny formats are standardized from the many variants of standards in use.
+The pipeline uses Seq-Gen \cite{rambaut_seq-gen:_1997} to simulate variable sites along the input phylogeny under the selected model of evolution.
 The locations of mutations in the genome are either drawn from a uniform distribution, or clustered according to parameters of an exponential distribution specified in the configuration file.
+For each mutation site, an alignment column is drawn from the Seq-Gen simulation which has the correct base at the achor genome, 
+and at least one alternate base at another tip, and the simulated base from this site are assigned to each tip.
+Therefore the pattern of evolution at the site fits the phylogeny and model of evolution, but the anchor genome remains unchanged.
 This procedure creates an output folder for each tip in the tree that contains the simulated genomes (FASTA files).
 A user-specified tip will consist of the input anchor genome without any mutations.
 Using these simulated genomes, TreeToReads calls the read simulation software, ART, \cite{huang_art:_2012} to generate Illumina MiSeq paired-end reads.
