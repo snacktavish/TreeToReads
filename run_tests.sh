@@ -14,7 +14,6 @@ python  tests/check_refgenome.py tests/input/mini_ref_multi.fasta tests/multi_in
 
 rm -r tests/multi_indel
 
-
 echo "integration"
 python tests/integration_test.py 
 
