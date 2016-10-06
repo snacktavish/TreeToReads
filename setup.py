@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='TreeToReads',
-    version='0.0.4',
+    version='0.0.5',
     py_modules =['treetoreads',],
     license='No copyright',
     description = 'Tree to Reads - A python script to to read a tree, resolve polytomies, generate mutations and simulate NGS reads.',

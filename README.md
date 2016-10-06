@@ -91,7 +91,7 @@ Note: to compile indelible from source for linux installations currently require
     #include <unistd.h>
 
 (I've reported the issue and it shoud be fixed soon)  
-add indeible to your path
+add indelible to your path
 
 
 
