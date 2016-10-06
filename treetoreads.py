@@ -9,7 +9,7 @@ from subprocess import call
 import dendropy
 
 
-VERSION = "0.0.4"
+VERSION = "0.0.5"
 
 class TreeToReads(object):
     """A tree to reads object that holds the input tree and base genome,
