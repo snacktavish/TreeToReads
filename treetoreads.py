@@ -457,6 +457,9 @@ class TreeToReads(object):
         """Writes out the simulated genomes with mutations"""
         self.assign_sites()
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
+        self.vcf_dict = {}
+        for loc in self.mutlocs:
+            self.vcf_dict[loc] = {}
         for seq in self.seqnames:
             self.mut_genos[seq] = []
             sys.stdout.write("writing genome for {}\n".format(seq))
@@ -480,11 +483,13 @@ class TreeToReads(object):
                             if ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
+                                    self.vcf_dict[ii][seq] = 'N'
                                 else:
                                     patt = self.sitepatts[nuc][self.snpdic[ii]]
                                     genout.write(patt[seq])
                                     self.mut_genos[seq].append(patt[seq])
                                     matout.write("{} {} {}\n".format(seq, patt[seq], ii))
+                                    self.vcf_dict[ii][seq] = patt[seq]
                             else:
                                 genout.write(nuc)
             genout.write('\n')
@@ -492,6 +497,7 @@ class TreeToReads(object):
             genout.close()
         matout.close()
         self._genmut = 1
+        write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
 
     def mut_genomes_indels(self):#TODO does not account for SNPs in indsertions
@@ -716,6 +722,31 @@ def read_indelible_aln(outputdir, base_name, genlen):
             seqname=None
         deletions[base_name]={}
     return insertions, deletions, insertionlocs
+
+def write_vcf(ttrobj):
+    fi = open("{}/sim.vcf".format(ttrobj.outd),'w')
+    print("{}/sim.vcf".format(ttrobj.outd))
+    fi.write("##fileformat=VCFv4.0\n")
+    fi.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format('\t'.join(ttrobj.seqnames)))
+    mutlocs = ttrobj.vcf_dict.keys()
+    mutlocs.sort()
+    contig = 0
+    for loc in mutlocs:
+        if len(ttrobj.contig_breaks) > contig:
+            if ttrobj.contig_breaks[contig] < loc:
+                contig += 1
+        refbase = ttrobj.vcf_dict[loc][ttrobj.get_arg('base_name')]
+        base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
+        altbase = set(base_calls) - set(refbase)
+        assert(len(altbase)==1)
+        trans = {refbase:'0', list(altbase)[0]:'1'}
+        variants = [trans[ttrobj.vcf_dict[loc][seq]] for seq in ttrobj.seqnames]
+        fi.write("{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\tNA\tGT\t{vars}\n".format(chrm=contig,
+                                                                                        loc=loc,
+                                                                                        refbase=refbase, 
+                                                                                        altbase=list(altbase)[0],
+                                                                                        vars='\t'.join(variants)))
+    fi.close()
 
 
 
