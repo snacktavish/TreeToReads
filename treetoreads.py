@@ -473,7 +473,6 @@ class TreeToReads(object):
                         if ii > 0:
                             genout.write('\n')
                         genout.write(line.strip()+"_"+self.prefix+seq)
-                        ii = 0
                     else:
                         line = line.strip()
                         for nuc in line:
