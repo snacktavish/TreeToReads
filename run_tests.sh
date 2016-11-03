@@ -15,8 +15,8 @@ python  tests/check_refgenome.py tests/input/mini_ref_multi.fasta tests/multi_in
 rm -r tests/multi_indel
 
 echo "integration"
-python tests/integration_test.py 
+python tests/integration_test.py >> tests/test.log
 
 echo "tree reconstruction from fasta"
-python tests/tree_from_fasta.py
+python tests/tree_from_fasta.py >> tests/test.log
 

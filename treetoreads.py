@@ -738,13 +738,15 @@ def write_vcf(ttrobj):
         refbase = ttrobj.vcf_dict[loc][ttrobj.get_arg('base_name')]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
         altbase = set(base_calls) - set(refbase)
-        assert(len(altbase)==1)
-        trans = {refbase:'0', list(altbase)[0]:'1'}
+        altbase = list(altbase)
+        trans = {refbase:'0'}
+        for i, base in enumerate(altbase):
+            trans[base] = str(i+1)
         variants = [trans[ttrobj.vcf_dict[loc][seq]] for seq in ttrobj.seqnames]
         fi.write("{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\t.\tGT\t{vars}\n".format(chrm=contig,
                                                                                         loc=loc,
                                                                                         refbase=refbase, 
-                                                                                        altbase=list(altbase)[0],
+                                                                                        altbase=",".join(altbase),
                                                                                         vars='\t'.join(variants)))
     fi.close()
 
