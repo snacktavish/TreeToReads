@@ -726,6 +726,7 @@ def write_vcf(ttrobj):
     fi = open("{}/sim.vcf".format(ttrobj.outd),'w')
     print("{}/sim.vcf".format(ttrobj.outd))
     fi.write("##fileformat=VCFv4.0\n")
+    fi.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
     fi.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format('\t'.join(ttrobj.seqnames)))
     mutlocs = ttrobj.vcf_dict.keys()
     mutlocs.sort()
@@ -740,7 +741,7 @@ def write_vcf(ttrobj):
         assert(len(altbase)==1)
         trans = {refbase:'0', list(altbase)[0]:'1'}
         variants = [trans[ttrobj.vcf_dict[loc][seq]] for seq in ttrobj.seqnames]
-        fi.write("{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\tNA\tGT\t{vars}\n".format(chrm=contig,
+        fi.write("{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\t.\tGT\t{vars}\n".format(chrm=contig,
                                                                                         loc=loc,
                                                                                         refbase=refbase, 
                                                                                         altbase=list(altbase)[0],
