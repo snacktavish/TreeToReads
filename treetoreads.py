@@ -428,7 +428,7 @@ class TreeToReads(object):
             self.read_varsites()
         self.mut_genos = {}
         patnuc = {}
-        ri = 0
+        ii = 0
         patnuc['A'] = 0
         patnuc['G'] = 0
         patnuc['T'] = 0
@@ -436,18 +436,22 @@ class TreeToReads(object):
         self.snpdic = {}
         #This next section is to index mutations, and re-simulate if there are not enough of a base
         with open(self.get_arg('genome'), 'r') as in_file:
-            for line in in_file:
-                line = line.strip()
-                if line.startswith('>'):
-                    pass
-                else:
-                    for nuc in line:
-                        ri += 1
-                        if ri in self.mutlocs:
-                            patnuc[nuc] += 1
-                            self.snpdic[ri] = patnuc[nuc]
-                            if len(self.sitepatts[nuc]) <= patnuc[nuc]:
-                                self.add_varsites()
+                for line in in_file:
+                    if line.startswith('>'):
+                        pass
+                    else:
+                        line = line.strip()
+                        for nuc in line:
+                            if ii in self.mutlocs:
+                                patnuc[nuc] += 1
+                                self.snpdic[ii] = patnuc[nuc]
+                                if len(self.sitepatts[nuc]) <= patnuc[nuc]:
+                                    self.add_varsites()
+                                try:
+                                    self.sitepatts[nuc][self.snpdic[ii]]
+                                except:
+                                    self.add_varsites()
+                            ii += 1
         if self.trip_hit:
             sys.stderr.write('''{} variable sites with more than 2 bases out of {} sites.
             Scale down tree length if this is too high.\n'''.format(self.trip_hit, self.var_site))
@@ -526,8 +530,6 @@ class TreeToReads(object):
                         if ii > 0:
                             genout.write('\n')
                         genout.write(line.strip()+"_"+self.prefix+seq)
-                        ii = 0
-                        ali = 0
                     else:
                         line = line.strip()
                         for nuc in line:
@@ -547,9 +549,9 @@ class TreeToReads(object):
                                     if not self.vcf_dict.get(ii):
                                         self.vcf_dict[ii] = {}
                                         self.vcf_dict[ii][self.get_arg('base_name')] = nuc
-                                        for seq in self.seqnames: #default is not deleted
-                                            self.vcf_dict[ii][seq] = nuc
-                                    self.vcf_dict[ii][seq] = '.'
+                                        for nam in self.seqnames: #default is not deleted
+                                            self.vcf_dict[ii][nam] = nuc
+                                    self.vcf_dict[ii][nam] = '.'
                                     ali += 1
                                     ii += 1
                             elif ii in self.mutlocs:
@@ -740,7 +742,6 @@ def read_indelible_aln(outputdir, base_name, genlen):
 
 def write_vcf(ttrobj):
     fi = open("{}/sim.vcf".format(ttrobj.outd),'w')
-    print("{}/sim.vcf".format(ttrobj.outd))
     fi.write("##fileformat=VCFv4.0\n")
     fi.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
     fi.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format('\t'.join(ttrobj.seqnames)))
