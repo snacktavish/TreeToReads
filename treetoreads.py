@@ -507,6 +507,11 @@ class TreeToReads(object):
         insertions, deletions, insertionlocs= read_indelible_aln(self.outd, self.get_arg('base_name'), self.genlen)
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
         alignment_length = self.genlen + len(insertionlocs)
+        self.vcf_dict = {}
+        for loc in self.mutlocs:
+            self.vcf_dict[loc] = {}
+        for loc in insertionlocs:
+            self.vcf_dict[loc] = {}
         for seq in self.seqnames:
             self.mut_genos[seq] = []
             sys.stdout.write("writing genome for {}\n".format(seq))
@@ -532,21 +537,31 @@ class TreeToReads(object):
                                 for pos in insertionlocs[ii]:
                                     if seq == self.get_arg('base_name'):
                                         genout.write("-")
+                                        self.vcf_dict[ii][seq] = '.'
                                     else:
                                         genout.write(insertions[seq][pos])
+                                        self.vcf_dict[ii][seq] = insertions[seq][pos]
                                     ali += 1
-                            if ali in deletions[seq]: #This shoudl be exclusive of the columns considered "insertions". IT ISNT THOUGH.
-                                   genout.write('-')
-                                   ali+=1
-                                   ii += 1
+                            if ali in deletions[seq]: #This should be exclusive of the columns considered "insertions".
+                                    genout.write('-')
+                                    if not self.vcf_dict.get(ii):
+                                        self.vcf_dict[ii] = {}
+                                        self.vcf_dict[ii][self.get_arg('base_name')] = nuc
+                                        for seq in self.seqnames: #default is not deleted
+                                            self.vcf_dict[ii][seq] = nuc
+                                    self.vcf_dict[ii][seq] = '.'
+                                    ali += 1
+                                    ii += 1
                             elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
+                                    self.vcf_dict[ii][seq] = 'N'
                                 else:
                                     patt = self.sitepatts[nuc][self.snpdic[ii]]
                                     genout.write(patt[seq])
                                     self.mut_genos[seq].append(patt[seq])
                                     matout.write("{} {} {}\n".format(seq, patt[seq], ii))
+                                    self.vcf_dict[ii][seq] = patt[seq]
                                 ali += 1
                                 ii += 1
                             else:
@@ -558,6 +573,7 @@ class TreeToReads(object):
             genout.close()
         matout.close()
         self._genmut = 1
+        write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
 
 
