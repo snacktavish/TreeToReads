@@ -537,12 +537,16 @@ class TreeToReads(object):
                                 genout.write('\n')
                             if ii in insertionlocs:
                                 for pos in insertionlocs[ii]:
+                                    print(len(insertionlocs[ii]))
                                     if seq == self.get_arg('base_name'):
                                         genout.write("-")
-                                        self.vcf_dict[ii][seq] = '.'
+                                        self.vcf_dict[ii][seq] = nuc
                                     else:
                                         genout.write(insertions[seq][pos])
-                                        self.vcf_dict[ii][seq] = insertions[seq][pos]
+                                        if self.vcf_dict[ii].get(seq):
+                                            self.vcf_dict[ii][seq] += insertions[seq][pos]
+                                        else:
+                                            self.vcf_dict[ii][seq] = nuc + insertions[seq][pos]
                                     ali += 1
                             if ali in deletions[seq]: #This should be exclusive of the columns considered "insertions".
                                     genout.write('-')
@@ -755,8 +759,10 @@ def write_vcf(ttrobj):
         refbase = ttrobj.vcf_dict[loc][ttrobj.get_arg('base_name')]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
         for i, nuc in enumerate(base_calls):
-            if nuc == '-':
-                base_calls[i] = '.'
+            if '-' in nuc:
+                base_calls[i] = nuc.replace('-', '.')
+            if nuc.replace('-','') == refbase:
+                base_calls[i] = refbase
         altbase = set(base_calls) - set(refbase)
         altbase = list(altbase)
         trans = {refbase:'0'}
