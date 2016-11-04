@@ -482,7 +482,6 @@ class TreeToReads(object):
                         for nuc in line:
                             if ii%70 == 0:
                                 genout.write('\n')
-                            ii += 1
                             if ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
@@ -495,6 +494,7 @@ class TreeToReads(object):
                                     self.vcf_dict[ii][seq] = patt[seq]
                             else:
                                 genout.write(nuc)
+                            ii += 1
             genout.write('\n')
             genout.write('\n')
             genout.close()
