@@ -422,6 +422,7 @@ class TreeToReads(object):
 
     def assign_sites(self):
         """Pulls columns for each mutation"""
+        self.mutations = {}
         if not self._mutlocs:
             self.select_mutsites()
         if not self._siteread:
@@ -445,12 +446,9 @@ class TreeToReads(object):
                             if ii in self.mutlocs:
                                 patnuc[nuc] += 1
                                 self.snpdic[ii] = patnuc[nuc]
-                                if len(self.sitepatts[nuc]) <= patnuc[nuc]:
+                                if len(self.sitepatts[nuc]) <= self.snpdic[ii]:
                                     self.add_varsites()
-                                try:
-                                    self.sitepatts[nuc][self.snpdic[ii]]
-                                except:
-                                    self.add_varsites()
+                                #print("1. ii is {}, base is {}, index is {} , length is {}".format(ii, nuc, self.snpdic[ii], len(self.sitepatts[nuc])))
                             ii += 1
         if self.trip_hit:
             sys.stderr.write('''{} variable sites with more than 2 bases out of {} sites.
@@ -508,13 +506,13 @@ class TreeToReads(object):
         self.assign_sites()
         write_indelible_controlfile(self.outd, self.get_arg('ratmat').replace(',',' '), self.get_arg('freqmat').replace(',',' '), self.get_arg('indel_model'), self.get_arg('indel_rate'), self.scaled_tree_newick[:-20], self.genlen)
         run_indelible(self.outd)
-        insertions, deletions, insertionlocs= read_indelible_aln(self.outd, self.get_arg('base_name'), self.genlen)
+        self.insertions, self.deletions, self.insertionlocs= read_indelible_aln(self)
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
-        alignment_length = self.genlen + len(insertionlocs)
+        alignment_length = self.genlen + len(self.insertionlocs)
         self.vcf_dict = {}
         for loc in self.mutlocs:
             self.vcf_dict[loc] = {}
-        for loc in insertionlocs:
+        for loc in self.insertionlocs:
             self.vcf_dict[loc] = {}
         for seq in self.seqnames:
             self.mut_genos[seq] = []
@@ -533,22 +531,25 @@ class TreeToReads(object):
                     else:
                         line = line.strip()
                         for nuc in line:
+                         #   #print nuc
+                         #   #print ii
                             if ali%70 == 0:
                                 genout.write('\n')
-                            if ii in insertionlocs:
-                                for pos in insertionlocs[ii]:
-                                    print(len(insertionlocs[ii]))
+                            counted = 0
+                            if ii in self.insertionlocs:
+                               # #print "insertion happed at {}".format(ii)
+                                for pos in self.insertionlocs[ii]:
                                     if seq == self.get_arg('base_name'):
                                         genout.write("-")
                                         self.vcf_dict[ii][seq] = nuc
                                     else:
-                                        genout.write(insertions[seq][pos])
+                                        genout.write(self.insertions[seq][pos])
                                         if self.vcf_dict[ii].get(seq):
-                                            self.vcf_dict[ii][seq] += insertions[seq][pos]
+                                            self.vcf_dict[ii][seq] += self.insertions[seq][pos]
                                         else:
-                                            self.vcf_dict[ii][seq] = nuc + insertions[seq][pos]
+                                            self.vcf_dict[ii][seq] = nuc + self.insertions[seq][pos]
                                     ali += 1
-                            if ali in deletions[seq]: #This should be exclusive of the columns considered "insertions".
+                            if ali in self.deletions[seq]: #This should be exclusive of the columns considered "insertions".
                                     genout.write('-')
                                     if not self.vcf_dict.get(ii):
                                         self.vcf_dict[ii] = {}
@@ -556,24 +557,29 @@ class TreeToReads(object):
                                         for nam in self.seqnames: #default is not deleted
                                             self.vcf_dict[ii][nam] = nuc
                                     self.vcf_dict[ii][nam] = '.'
+                                    #print "deletion happed at {}".format(ii)
                                     ali += 1
                                     ii += 1
-                            elif ii in self.mutlocs:
+                                    counted = 1
+                            if ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
                                     self.vcf_dict[ii][seq] = 'N'
                                 else:
+                                    #print("2.ii is {}, base is {}, index is {} , length is {}".format(ii, nuc, self.snpdic[ii], len(self.sitepatts[nuc])))
                                     patt = self.sitepatts[nuc][self.snpdic[ii]]
                                     genout.write(patt[seq])
                                     self.mut_genos[seq].append(patt[seq])
                                     matout.write("{} {} {}\n".format(seq, patt[seq], ii))
                                     self.vcf_dict[ii][seq] = patt[seq]
-                                ali += 1
-                                ii += 1
+                                if not counted: 
+                                    ali += 1
+                                    ii += 1
                             else:
                                 genout.write(nuc)
-                                ali += 1
-                                ii += 1
+                                if not counted:
+                                    ali += 1
+                                    ii += 1
             genout.write('\n')
             genout.write('\n')
             genout.close()
@@ -699,18 +705,20 @@ def run_indelible(outputdir):
     os.chdir(cwd)
 
 
-def read_indelible_aln(outputdir, base_name, genlen):
+def read_indelible_aln(ttrobj):
     '''insertion locs are in terms of the original sequence length,
     but deletions are in terms of alignement length'''
     insertionlocs = {}
     insertionlocs_aln = set()
     insertions = {}
     deletions = {}
-    indel_aln = open("{}/TTRindelible_TRUE.fas".format(outputdir))
+    base_name = ttrobj.get_arg('base_name')
+    indel_aln = open("{}/TTRindelible_TRUE.fas".format(ttrobj.outd))
     for lin in indel_aln:
         if lin.startswith(">"):
-           seqname = lin.strip(">").strip()
-        elif seqname==base_name:
+           seqname = lin.strip(">").strip().strip("'")
+           assert (seqname in ttrobj.seqnames)
+        elif seqname == base_name:
             ref_genome_i = 0
             for i, char in enumerate(lin):
                 if char == '-':
@@ -722,14 +730,15 @@ def read_indelible_aln(outputdir, base_name, genlen):
                         insertionlocs[ref_genome_i].add(i)
                 else:
                     ref_genome_i += 1
-                if ref_genome_i == genlen:
+                if ref_genome_i == ttrobj.genlen:
                     alignment_length = i
-                    sys.stdout.write("Base genome length is  {} and alignement length will be {}\n".format(genlen, i))
+                    sys.stdout.write("Base genome length is  {} and alignement length will be {}\n".format(ttrobj.genlen, i))
                     break
-    indel_aln = open("{}/TTRindelible_TRUE.fas".format(outputdir))
+    indel_aln = open("{}/TTRindelible_TRUE.fas".format(ttrobj.outd))
     for lin in indel_aln:
         if lin.startswith(">"):
-           seqname = lin.strip(">").strip()
+           seqname = lin.strip(">").strip().strip("'")
+           assert (seqname in ttrobj.seqnames)
         elif seqname and seqname != base_name:
             insertions[seqname] = {}
             deletions[seqname] = set()
@@ -756,6 +765,20 @@ def write_vcf(ttrobj):
         if len(ttrobj.contig_breaks) > contig:
             if ttrobj.contig_breaks[contig] < loc:
                 contig += 1
+        #try:
+        assert(set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames))
+        #except:
+            #missing = set(ttrobj.seqnames) - set(ttrobj.vcf_dict[loc].keys())
+            #for seq in missing:
+                #print seq
+            #print("loc is {}".format(loc))
+            #if loc in ttrobj.mutlocs:
+                #print "should be mutation"
+            #if loc in ttrobj.insertionlocs:
+                #print "should be insertion"
+            #if loc in ttrobj.deletions:
+                #print "should be deletion"
+            #print(ttrobj.vcf_dict[loc])
         refbase = ttrobj.vcf_dict[loc][ttrobj.get_arg('base_name')]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
         for i, nuc in enumerate(base_calls):
