@@ -41,7 +41,7 @@ class TreeToReads(object):
         else:
             self.prefix = ''
         if self.run:
-            if (self.no_art == 0) and (int(self.config['coverage']) != 0):
+            if (self.no_art == 0) and (self.config.get('coverage')):
                 self.run_art()
             else:
                 sys.stdout.write("simulating genomes but not reads\n")
@@ -556,7 +556,7 @@ class TreeToReads(object):
                                         self.vcf_dict[ii][self.get_arg('base_name')] = nuc
                                         for nam in self.seqnames: #default is not deleted
                                             self.vcf_dict[ii][nam] = nuc
-                                    self.vcf_dict[ii][nam] = '.'
+                                    self.vcf_dict[ii][seq] = '.'
                                     #print "deletion happed at {}".format(ii)
                                     ali += 1
                                     ii += 1
@@ -591,8 +591,6 @@ class TreeToReads(object):
 
     def run_art(self, coverage=None):
         """Runs ART to simulate reads from the simulated genomes"""
-        if not coverage:
-            coverage = self.get_arg('cov')
         if not self._genmut:
             if self.get_arg("indel_model"):
                 if call(['which', 'indelible'], stdout=open('/dev/null', 'w')) == 1:
@@ -603,6 +601,26 @@ class TreeToReads(object):
                     self.mut_genomes_indels()
             else:
                 self.mut_genomes_no_indels()
+        coverarg = self.get_arg('cov')
+        cov = {}
+        if os.path.isfile(coverarg):
+            with open(coverarg) as infile:
+                for lin in infile:
+                    seqnam = lin.split(',')[0]
+                    try:
+                        assert seqnam in self.seqnames
+                    except:
+                        sys.stderr.write("name {} in coverage file not found in tree\n".format(seqnam))
+                        self._exit_handler()
+                    cov[seqnam] = int(lin.split(',')[1])
+            try:
+                assert(set(cov.keys()) == set(self.seqnames))
+            except:
+                sys.stderr.write("some tips missing from coverage file: {}\n".format(set(self.seqnames) - cov.keys()))
+                self._exit_handler()
+        else:
+            for seqnam in self.seqnames:
+                cov[seqnam] = int(coverarg)
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
         if not self._genmut:
@@ -638,7 +656,7 @@ class TreeToReads(object):
                             '-p', #for paired end reads
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
-                            '-f', coverage,
+                            '-f', str(cov[seq]),
                             '-m', '{}'.format(fragment_size),
                             '-s', '{}'.format(stdev_frag_size),
                             '-o', '{}/fastq/{}{}/{}{}_'.format(self.get_arg('outd'),
@@ -653,7 +671,7 @@ class TreeToReads(object):
                          #   '-sam', #output a sam file
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
-                            '-f', self.get_arg('cov'),
+                            '-f', str(cov[seq]),
                             '-m', '{}'.format(fragment_size),
                             '-s', '{}'.format(stdev_frag_size),
                             '-o', '{}/fastq/{}{}/{}{}_'.format(self.get_arg('outd'),
