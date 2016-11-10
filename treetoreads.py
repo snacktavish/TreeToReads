@@ -469,18 +469,20 @@ class TreeToReads(object):
                 os.mkdir("{}/fasta_files".format(self.outd))
             genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             ii = 0
+            lw = 0 #tracking line wrapping for fasta
             with open(self.get_arg('genome'), 'r') as in_file:
                 for line in in_file:
                     if line.startswith('>'):
                         if ii > 0:
                             genout.write('\n')
-                            genout.write(line.strip()+"_"+self.prefix+seq+"\n")
-                        else:
-                            genout.write(line.strip()+"_"+self.prefix+seq)
+                        #    genout.write(line.strip()+"_"+self.prefix+seq+"\n")
+                            lw = 0
+                        #else:
+                        genout.write(line.strip()+"_"+self.prefix+seq)
                     else:
                         line = line.strip()
                         for nuc in line:
-                            if ii%70 == 0:
+                            if lw%70 == 0:
                                 genout.write('\n')
                             if ii in self.mutlocs:
                                 if nuc == 'N':
@@ -495,6 +497,7 @@ class TreeToReads(object):
                             else:
                                 genout.write(nuc)
                             ii += 1
+                            lw +=1
             genout.write('\n')
             genout.write('\n')
             genout.close()
@@ -524,20 +527,22 @@ class TreeToReads(object):
             genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             ii = 0 #indexing along reference genome
             ali = 0 #indexing along alignement
+            lw = 0 #counting for fasta line wrapping
             with open(self.get_arg('genome'), 'r') as in_file:
                 for line in in_file:
                     if line.startswith('>'):
                         if ii > 0:
                             genout.write('\n')
-                            genout.write(line.strip()+"_"+self.prefix+seq+"\n")
-                        else:
-                            genout.write(line.strip()+"_"+self.prefix+seq)
+                          #  genout.write(line.strip()+"_"+self.prefix+seq+"\n")
+                            lw = 0
+                        #else:
+                        genout.write(line.strip()+"_"+self.prefix+seq)
                     else:
                         line = line.strip()
                         for nuc in line:
                          #   #print nuc
                          #   #print ii
-                            if ali%70 == 0:
+                            if lw%70 == 0:
                                 genout.write('\n')
                             counted = 0
                             if ii in self.insertionlocs:
@@ -553,7 +558,8 @@ class TreeToReads(object):
                                         else:
                                             self.vcf_dict[ii][seq] = nuc + self.insertions[seq][pos]
                                     ali += 1
-                                    if ali%70 == 0:
+                                    lw += 1
+                                    if lw%70 == 0:
                                         genout.write('\n')
                             if ali in self.deletions[seq]: #This should be exclusive of the columns considered "insertions".
                                     genout.write('-')
@@ -565,6 +571,7 @@ class TreeToReads(object):
                                     self.vcf_dict[ii][seq] = '.'
                                     #print "deletion happed at {}".format(ii)
                                     ali += 1
+                                    lw +=1
                                     ii += 1
                                     counted = 1
                             if ii in self.mutlocs:
@@ -580,11 +587,13 @@ class TreeToReads(object):
                                     self.vcf_dict[ii][seq] = patt[seq]
                                 if not counted: 
                                     ali += 1
+                                    lw += 1
                                     ii += 1
                             else:
                                 genout.write(nuc)
                                 if not counted:
                                     ali += 1
+                                    lw += 1
                                     ii += 1
             genout.write('\n')
             genout.write('\n')
