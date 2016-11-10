@@ -474,7 +474,9 @@ class TreeToReads(object):
                     if line.startswith('>'):
                         if ii > 0:
                             genout.write('\n')
-                        genout.write(line.strip()+"_"+self.prefix+seq)
+                            genout.write(line.strip()+"_"+self.prefix+seq+"\n")
+                        else:
+                            genout.write(line.strip()+"_"+self.prefix+seq)
                     else:
                         line = line.strip()
                         for nuc in line:
@@ -527,7 +529,9 @@ class TreeToReads(object):
                     if line.startswith('>'):
                         if ii > 0:
                             genout.write('\n')
-                        genout.write(line.strip()+"_"+self.prefix+seq)
+                            genout.write(line.strip()+"_"+self.prefix+seq+"\n")
+                        else:
+                            genout.write(line.strip()+"_"+self.prefix+seq)
                     else:
                         line = line.strip()
                         for nuc in line:
@@ -549,6 +553,8 @@ class TreeToReads(object):
                                         else:
                                             self.vcf_dict[ii][seq] = nuc + self.insertions[seq][pos]
                                     ali += 1
+                                    if ali%70 == 0:
+                                        genout.write('\n')
                             if ali in self.deletions[seq]: #This should be exclusive of the columns considered "insertions".
                                     genout.write('-')
                                     if not self.vcf_dict.get(ii):
