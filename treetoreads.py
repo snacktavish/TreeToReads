@@ -23,7 +23,6 @@ class TreeToReads(object):
     _genmut = 0
     _genread = 0
     _vargen = 0
-
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
         self.configfi = configfi
@@ -674,7 +673,7 @@ class TreeToReads(object):
                             '-f', str(cov[seq]),
                             '-m', '{}'.format(fragment_size),
                             '-s', '{}'.format(stdev_frag_size),
-                            '-o', '{}/fastq/{}{}/{}{}_'.format(self.get_arg('outd'),
+                            '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
                                                                self.prefix,
                                                                seq,
                                                                self.prefix,
@@ -689,21 +688,22 @@ class TreeToReads(object):
                             '-f', str(cov[seq]),
                             '-m', '{}'.format(fragment_size),
                             '-s', '{}'.format(stdev_frag_size),
-                            '-o', '{}/fastq/{}{}/{}{}_'.format(self.get_arg('outd'),
+                            '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
                                                                self.prefix,
                                                                seq,
                                                                self.prefix,
                                                                seq)]
             call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'), stderr=open('{}/art_log'.format(self.outd), 'a'))
-            assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.get_arg('outd'), self.prefix, seq, self.prefix, seq))
+          #  print("called {}".format(" ".join(artparam)))
+            assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.outd, self.prefix, seq, self.prefix, seq))
             gzippar = ['gzip',
                        '-f',
-                       '{}/fastq/{}{}/{}{}_1.fq'.format(self.get_arg('outd'),
+                       '{}/fastq/{}{}/{}{}_1.fq'.format(self.outd,
                                                         self.prefix,
                                                         seq,
                                                         self.prefix,
                                                         seq),
-                       '{}/fastq/{}{}/{}{}_2.fq'.format(self.get_arg('outd'),
+                       '{}/fastq/{}{}/{}{}_2.fq'.format(self.outd,
                                                         self.prefix,
                                                         seq,
                                                         self.prefix,
@@ -826,7 +826,7 @@ def write_vcf(ttrobj):
             trans[base] = str(i+1)
         variants = [trans[base] for base in base_calls]
         fi.write("{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\t.\tGT\t{vars}\n".format(chrm=contig,
-                                                                                        loc=loc,
+                                                                                        loc=loc+1,
                                                                                         refbase=refbase, 
                                                                                         altbase=",".join(altbase),
                                                                                         vars='\t'.join(variants)))
