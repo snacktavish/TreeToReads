@@ -523,7 +523,7 @@ class TreeToReads(object):
             sys.stdout.write("writing genome for {}\n".format(seq))
             if not os.path.isdir("{}/fasta_files".format(self.outd)):
                 os.mkdir("{}/fasta_files".format(self.outd))
-            genout = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
+            genout = open("{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq), 'w')
             ii = 0 #indexing along reference genome
             ali = 0 #indexing along alignement
             lw = 0 #counting for fasta line wrapping
@@ -548,7 +548,7 @@ class TreeToReads(object):
                                # #print "insertion happed at {}".format(ii)
                                 for pos in self.insertionlocs[ii]:
                                     if seq == self.get_arg('base_name'):
-                                        genout.write("-")
+                                        genout.write('-')
                                         self.vcf_dict[ii][seq] = nuc
                                     else:
                                         genout.write(self.insertions[seq][pos])
@@ -573,7 +573,7 @@ class TreeToReads(object):
                                     lw +=1
                                     ii += 1
                                     counted = 1
-                            if ii in self.mutlocs:
+                            elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
                                     self.vcf_dict[ii][seq] = 'N'
@@ -589,8 +589,8 @@ class TreeToReads(object):
                                     lw += 1
                                     ii += 1
                             else:
-                                genout.write(nuc)
                                 if not counted:
+                                    genout.write(nuc)
                                     ali += 1
                                     lw += 1
                                     ii += 1
@@ -598,6 +598,10 @@ class TreeToReads(object):
             genout.write('\n')
             genout.close()
         matout.close()
+        for seq in self.seqnames:#reomve the gaps for later sim.
+            out_file = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
+            inp = "{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq)
+            sub = call(['sed', 's/-//g', inp], stdout=out_file)
         self._genmut = 1
         write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
