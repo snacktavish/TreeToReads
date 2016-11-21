@@ -7,6 +7,8 @@ import sys
 import argparse
 from subprocess import call
 import dendropy
+from itertools import groupby
+from operator import itemgetter
 
 
 VERSION = "0.0.5"
@@ -510,7 +512,7 @@ class TreeToReads(object):
         self.assign_sites()
         write_indelible_controlfile(self.outd, self.get_arg('ratmat').replace(',',' '), self.get_arg('freqmat').replace(',',' '), self.get_arg('indel_model'), self.get_arg('indel_rate'), self.scaled_tree_newick[:-20], self.genlen)
         run_indelible(self.outd)
-        self.insertions, self.deletions, self.insertionlocs= read_indelible_aln(self)
+        self.insertions, self.deletions, self.insertionlocs, self.deletionlocs = read_indelible_aln(self)
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
         alignment_length = self.genlen + len(self.insertionlocs)
         self.vcf_dict = {}
@@ -518,6 +520,15 @@ class TreeToReads(object):
             self.vcf_dict[loc] = {}
         for loc in self.insertionlocs:
             self.vcf_dict[loc] = {}
+        del_starts = ()
+        translate_deletions = {}
+        startsite_map = {}
+        for i, dele in enumerate(self.deletionlocs):
+            startsite_map[i] = None
+            for x, loc in enumerate(dele):
+                translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x}
+        print(translate_deletions)
+#        print(del_dict)
         for seq in self.seqnames:
             self.mut_genos[seq] = []
             sys.stdout.write("writing genome for {}\n".format(seq))
@@ -562,12 +573,20 @@ class TreeToReads(object):
                                         genout.write('\n')
                             if ali in self.deletions[seq]: #This should be exclusive of the columns considered "insertions".
                                     genout.write('-')
-                                    if not self.vcf_dict.get(ii):
+                                    if not startsite_map[translate_deletions[ali]['delcount']]:
                                         self.vcf_dict[ii] = {}
-                                        self.vcf_dict[ii][self.get_arg('base_name')] = nuc
-                                        for nam in self.seqnames: #default is not deleted
-                                            self.vcf_dict[ii][nam] = nuc
-                                    self.vcf_dict[ii][seq] = '.'
+                                        for subseq in self.seqnames:
+                                            self.vcf_dict[ii][subseq] = prevnuc
+                                        del_starts.append(ii)
+                                        startsite_map[translate_deletions[ali]['delcount']]= ii
+                                        print(ali)
+                                        print(translate_deletions[ali])
+                                       # self.vcf_dict[ii][self.get_arg('base_name')] += translate_deletions[ali]['dellen'] * 'r'
+                                    startsite = startsite_map[translate_deletions[ali]['delcount']]
+                                    delpos = translate_deletions[ali]['delpos']
+                                    if len(self.vcf_dict[startsite][self.get_arg('base_name')]) < delpos:
+                                        self.vcf_dict[startsite][self.get_arg('base_name')] += nuc
+                                    self.vcf_dict[startsite][seq] += 'x'
                                     #print "deletion happed at {}".format(ii)
                                     ali += 1
                                     lw +=1
@@ -594,6 +613,10 @@ class TreeToReads(object):
                                     ali += 1
                                     lw += 1
                                     ii += 1
+                            prevnuc = nuc
+            for loc in delstarts:
+                
+                for seq in self.seqnames()
             genout.write('\n')
             genout.write('\n')
             genout.close()
@@ -772,6 +795,7 @@ def read_indelible_aln(ttrobj):
                     sys.stdout.write("Base genome length is  {} and alignement length will be {}\n".format(ttrobj.genlen, i))
                     break
     indel_aln = open("{}/TTRindelible_TRUE.fas".format(ttrobj.outd))
+    del_locs = set()
     for lin in indel_aln:
         if lin.startswith(">"):
            seqname = lin.strip(">").strip().strip("'")
@@ -784,11 +808,32 @@ def read_indelible_aln(ttrobj):
                     insertions[seqname][i] = char
                 elif char == '-':
                     deletions[seqname].add(i) ##
+                    del_locs.add(i)
                 if i >= alignment_length:
                     break
             seqname=None
         deletions[base_name]={}
-    return insertions, deletions, insertionlocs
+    del_locs=list(del_locs)
+    del_locs.sort()
+    deletionlocs = get_sub_list(del_locs)
+    print(deletionlocs)
+    return insertions, deletions, insertionlocs, deletionlocs
+
+def split_list(n):
+    """will return the list index"""
+    return [(x+1) for x,y in zip(n, n[1:]) if y-x != 1]
+
+def get_sub_list(my_list):
+    """will split the list base on the index"""
+    my_index = split_list(my_list)
+    output = list()
+    prev = 0
+    for index in my_index:
+        new_list = [ x for x in my_list[prev:] if x < index]
+        output.append(new_list)
+        prev += len(new_list)
+    output.append([ x for x in my_list[prev:]])
+    return output
 
 def write_vcf(ttrobj):
     fi = open("{}/sim.vcf".format(ttrobj.outd),'w')
@@ -823,6 +868,7 @@ def write_vcf(ttrobj):
                 base_calls[i] = nuc.replace('-', '.')
             if nuc.replace('-','') == refbase:
                 base_calls[i] = refbase
+        print(base_calls)
         altbase = set(base_calls) - set(refbase)
         altbase = list(altbase)
         trans = {refbase:'0'}
