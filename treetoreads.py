@@ -246,8 +246,9 @@ class TreeToReads(object):
             sys.stderr.write("TTR requires branch lengths. Branch lengths appear to be missing (treelength = 0). Exiting.\n")
             self._exit_handler()
         self.seqnames = taxa.labels()
-        if not self.get_arg('base_name') in self.seqnames:
-            sys.stderr.write("base genome name {} is not in tree. Exiting.\n".format(self.get_arg('base_name')))
+        self.base_name = self.get_arg('base_name')
+        if not self.base_name in self.seqnames:
+            sys.stderr.write("base genome name {} is not in tree. Exiting.\n".format(self.base_name))
             self._exit_handler()
         tree.resolve_polytomies()
         tree_len = tree.length()
@@ -369,7 +370,7 @@ class TreeToReads(object):
             sys.stderr.write("Seqnames don't match simulated keys, seqnames :{} simulated names: {} ".format('\n'.join(self.seqnames), '\n'.join(simseqs.keys())))
             #sys.stderr.write(simseqs.keys())
             self._exit_handler()
-        ref = simseqs[self.get_arg('base_name')]
+        ref = simseqs[self.base_name]
         for i, nuc in enumerate(ref):
             site = {}
             nucs = set()
@@ -520,15 +521,13 @@ class TreeToReads(object):
             self.vcf_dict[loc] = {}
         for loc in self.insertionlocs:
             self.vcf_dict[loc] = {}
-        del_starts = ()
+        del_starts = set()
         translate_deletions = {}
         startsite_map = {}
         for i, dele in enumerate(self.deletionlocs):
             startsite_map[i] = None
             for x, loc in enumerate(dele):
-                translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x}
-        print(translate_deletions)
-#        print(del_dict)
+                translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}
         for seq in self.seqnames:
             self.mut_genos[seq] = []
             sys.stdout.write("writing genome for {}\n".format(seq))
@@ -558,7 +557,7 @@ class TreeToReads(object):
                             if ii in self.insertionlocs:
                                # #print "insertion happed at {}".format(ii)
                                 for pos in self.insertionlocs[ii]:
-                                    if seq == self.get_arg('base_name'):
+                                    if seq == self.base_name:
                                         genout.write('-')
                                         self.vcf_dict[ii][seq] = nuc
                                     else:
@@ -577,15 +576,14 @@ class TreeToReads(object):
                                         self.vcf_dict[ii] = {}
                                         for subseq in self.seqnames:
                                             self.vcf_dict[ii][subseq] = prevnuc
-                                        del_starts.append(ii)
+                                        del_starts.add(ii)
                                         startsite_map[translate_deletions[ali]['delcount']]= ii
-                                        print(ali)
-                                        print(translate_deletions[ali])
-                                       # self.vcf_dict[ii][self.get_arg('base_name')] += translate_deletions[ali]['dellen'] * 'r'
+                                       # self.vcf_dict[ii][self.base_name] += translate_deletions[ali]['dellen'] * 'r'
                                     startsite = startsite_map[translate_deletions[ali]['delcount']]
                                     delpos = translate_deletions[ali]['delpos']
-                                    if len(self.vcf_dict[startsite][self.get_arg('base_name')]) < delpos:
-                                        self.vcf_dict[startsite][self.get_arg('base_name')] += nuc
+                                    if not translate_deletions[ali]['counted']:
+                                        self.vcf_dict[startsite][self.base_name] += nuc
+                                        translate_deletions[ali]['counted'] = 1
                                     self.vcf_dict[startsite][seq] += 'x'
                                     #print "deletion happed at {}".format(ii)
                                     ali += 1
@@ -614,13 +612,22 @@ class TreeToReads(object):
                                     lw += 1
                                     ii += 1
                             prevnuc = nuc
-            for loc in delstarts:
-                
-                for seq in self.seqnames()
             genout.write('\n')
             genout.write('\n')
             genout.close()
         matout.close()
+        for loc in del_starts:
+            refseq = self.vcf_dict[loc][self.base_name]
+           # print(self.vcf_dict[loc])
+            for seqn in self.seqnames:
+                if seqn == self.base_name:
+                    pass
+                else:
+                    if len(self.vcf_dict[loc][seqn]) == 1:
+                        self.vcf_dict[loc][seqn] = refseq
+                    else:
+                        self.vcf_dict[loc][seqn] = self.vcf_dict[loc][seqn].rstrip('x')
+          #  print(self.vcf_dict[loc])
         for seq in self.seqnames:#reomve the gaps for later sim.
             out_file = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             inp = "{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq)
@@ -816,7 +823,6 @@ def read_indelible_aln(ttrobj):
     del_locs=list(del_locs)
     del_locs.sort()
     deletionlocs = get_sub_list(del_locs)
-    print(deletionlocs)
     return insertions, deletions, insertionlocs, deletionlocs
 
 def split_list(n):
@@ -861,16 +867,19 @@ def write_vcf(ttrobj):
             #if loc in ttrobj.deletions:
                 #print "should be deletion"
             #print(ttrobj.vcf_dict[loc])
-        refbase = ttrobj.vcf_dict[loc][ttrobj.get_arg('base_name')]
+        refbase = ttrobj.vcf_dict[loc][ttrobj.base_name]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
+       # print(ttrobj.vcf_dict[loc])
         for i, nuc in enumerate(base_calls):
             if '-' in nuc:
                 base_calls[i] = nuc.replace('-', '.')
             if nuc.replace('-','') == refbase:
                 base_calls[i] = refbase
-        print(base_calls)
-        altbase = set(base_calls) - set(refbase)
-        altbase = list(altbase)
+       # print("base calls is {}".format(base_calls))
+        altbase = set(base_calls) - set([refbase])
+       # print("refbase is {}".format(refbase))
+       # print("altbase is {}".format(altbase))
+       # altbase = list(altbase)
         trans = {refbase:'0'}
         for i, base in enumerate(altbase):
             trans[base] = str(i+1)
