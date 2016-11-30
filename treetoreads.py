@@ -415,7 +415,7 @@ class TreeToReads(object):
             ran = random.sample(range(self.genlen), self.nsnp)
             rands = set(ran)
         while len(rands) < self.nsnp: #deals inelegantly with multiple hits, to make sure there are nsnp-len individual sites
-            ran = random.sample(range(self.genlen), 1+(self.nsnp-len(rands)))
+            ran = random.sample(range(self.genlen), (self.nsnp-len(rands)))
             rands = rands | set(ran)
         for site in rands:
             fi.write(str(site)+'\n')
