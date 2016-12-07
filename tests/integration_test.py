@@ -18,5 +18,5 @@ from treetoreads import TreeToReads
 if __name__ == '__main__':
     ttr=TreeToReads(configfi='tests/input/test1.cfg',run=0)
     ttr.run_art()
-    ttr=TreeToReads(configfi='seqsim.cfg',run=0)
+    ttr=TreeToReads(configfi='example.config',run=0)
     ttr.run_art()
