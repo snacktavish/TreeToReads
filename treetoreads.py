@@ -7,8 +7,6 @@ import sys
 import argparse
 from subprocess import call
 import dendropy
-from itertools import groupby
-from operator import itemgetter
 
 
 VERSION = "0.0.5"
@@ -46,7 +44,15 @@ class TreeToReads(object):
                 self.run_art()
             else:
                 sys.stdout.write("simulating genomes but not reads\n")
-                self.mut_genomes()
+                if self.get_arg("indel_model"):
+                    if call(['which', 'indelible'], stdout=open('/dev/null', 'w')) == 1:
+                        sys.stderr.write('''ERROR: indelible not found. Needs to be installed to simulate insertations
+                                         and deletions. IGNORING indel parameters and continuaing simulation\n''')
+                        self.mut_genomes_no_indels()
+                    else:
+                        self.mut_genomes_indels()
+                else:
+                    self.mut_genomes_no_indels()
     def _exit_handler(self):
         '''makes debugging interactively easier, by not exiting on errors'''
         if self.main:
@@ -69,7 +75,7 @@ class TreeToReads(object):
         else:
             self.no_art = 0
         if not dendropy.__version__.startswith('4'):
-            sys.stderr.write('''ERROR: Please upgrade the python package dendropy to version 4, 
+            sys.stderr.write('''ERROR: Please upgrade the python package dendropy to version 4,
                                 using 'pip install dendropy --upgrade'.
                                 Exiting\n''')
             self._exit_handler()
@@ -160,11 +166,11 @@ class TreeToReads(object):
             sys.stderr.write('''number of variable {} could not be coerced to an integer.
                               Exiting.\n'''.format(self.get_arg('nsnp')))
             self._exit_handler()
-        if not len(self.get_arg('ratmat').split(',')) == 6:
+        if len(self.get_arg('ratmat').split(',')) != 6:
             sys.stderr.write('''{} values in rate matrix, there should be 6.
                               Exiting.\n'''.format(len(self.get_arg('ratmat').split(','))))
             self._exit_handler()
-        if not len(self.get_arg('freqmat').split(',')) == 4:
+        if len(self.get_arg('freqmat').split(',')) != 4:
             sys.stderr.write('''{} values in freq matrix, there should be 4.
                               Exiting.\n'''.format(len(self.get_arg('freqmat').split(','))))
             self._exit_handler()
@@ -247,7 +253,7 @@ class TreeToReads(object):
             self._exit_handler()
         self.seqnames = taxa.labels()
         self.base_name = self.get_arg('base_name')
-        if not self.base_name in self.seqnames:
+        if self.base_name not in self.seqnames:
             sys.stderr.write("base genome name {} is not in tree. Exiting.\n".format(self.base_name))
             self._exit_handler()
         tree.resolve_polytomies()
@@ -258,10 +264,13 @@ class TreeToReads(object):
                 edge.length = 0
             else:
                 edge.length = (float(edge.length)/tree_len) * expected_tree_len
-        assert(-0.001 < expected_tree_len - tree.length() < 0.001)
+        assert -0.001 < expected_tree_len - tree.length() < 0.001
         self.scaledouttree = "{}/scaledtree.tre".format(self.outd)
-        tree.write_to_path(self.scaledouttree, schema='newick', suppress_internal_node_labels=True, suppress_rooting=True)
-        self.scaled_tree_newick =  tree.as_string(schema='newick',  real_value_format_specifier='.15f')
+        tree.write_to_path(self.scaledouttree,
+                           schema='newick',
+                           suppress_internal_node_labels=True,
+                           suppress_rooting=True)
+        self.scaled_tree_newick = tree.as_string(schema='newick', real_value_format_specifier='.15f')
         if expected_tree_len < 0.01:  #scale up tree length so generate mutations in seqgen without a million invariant sites.
             stretch = 0.01/expected_tree_len
             for edge in tree.postorder_edge_iter():
@@ -289,7 +298,7 @@ class TreeToReads(object):
                     self.contig_breaks.append(self.genlen)
                 else:
                     self.genlen += len(line)
-                    if not set(line.upper()).issubset(set(['A', 'T', 'G', 'C','N'])):
+                    if not set(line.upper()).issubset(set(['A', 'T', 'G', 'C', 'N'])):
                         sys.stderr.write('''Your genome appears to have characters other than ATGC,
                                          such as: {} Please check your input genome.\n'''.format(set(line)))
         if self.nsnp > self.genlen:
@@ -329,7 +338,7 @@ class TreeToReads(object):
         self._siteread = 1
         if not self._vargen:
             self.generate_varsites()
-        if add == False:
+        if add is False:
             self.sitepatts = {}
             for nuc in ['A', 'G', 'T', 'C']:
                 self.sitepatts[nuc] = []
@@ -367,7 +376,9 @@ class TreeToReads(object):
         try:
             assert set(self.seqnames) == set(simseqs.keys())
         except:
-            sys.stderr.write("Seqnames don't match simulated keys, seqnames :{} simulated names: {} ".format('\n'.join(self.seqnames), '\n'.join(simseqs.keys())))
+            sys.stderr.write('''Seqnames don't match simulated keys,
+                             seqnames :{} simulated names: {}
+                             '''.format('\n'.join(self.seqnames), '\n'.join(simseqs.keys())))
             #sys.stderr.write(simseqs.keys())
             self._exit_handler()
         ref = simseqs[self.base_name]
@@ -384,7 +395,7 @@ class TreeToReads(object):
         """Simulates more varible sites if there are not enough"""
         sys.stderr.write('simulating additional variable sites\n')
         if self._siteread != 1:
-            self.read_sites()
+            self.read_varsites()
         self.generate_varsites()
         self.read_varsites(add=True)
 
@@ -439,19 +450,18 @@ class TreeToReads(object):
         self.snpdic = {}
         #This next section is to index mutations, and re-simulate if there are not enough of a base
         with open(self.get_arg('genome'), 'r') as in_file:
-                for line in in_file:
-                    if line.startswith('>'):
-                        pass
-                    else:
-                        line = line.strip()
-                        for nuc in line:
-                            if ii in self.mutlocs:
-                                patnuc[nuc] += 1
-                                self.snpdic[ii] = patnuc[nuc]
-                                if len(self.sitepatts[nuc]) <= self.snpdic[ii]:
-                                    self.add_varsites()
-                                #print("1. ii is {}, base is {}, index is {} , length is {}".format(ii, nuc, self.snpdic[ii], len(self.sitepatts[nuc])))
-                            ii += 1
+            for line in in_file:
+                if line.startswith('>'):
+                    pass
+                else:
+                    line = line.strip()
+                    for nuc in line:
+                        if ii in self.mutlocs:
+                            patnuc[nuc] += 1
+                            self.snpdic[ii] = patnuc[nuc]
+                            if len(self.sitepatts[nuc]) <= self.snpdic[ii]:
+                                self.add_varsites()
+                        ii += 1
         if self.trip_hit:
             sys.stderr.write('''{} variable sites with more than 2 bases out of {} sites.
             Scale down tree length if this is too high.\n'''.format(self.trip_hit, self.var_site))
@@ -499,7 +509,7 @@ class TreeToReads(object):
                             else:
                                 genout.write(nuc)
                             ii += 1
-                            lw +=1
+                            lw += 1
             genout.write('\n')
             genout.write('\n')
             genout.close()
@@ -511,11 +521,16 @@ class TreeToReads(object):
     def mut_genomes_indels(self):#TODO does not account for SNPs in indsertions
         """Writes out the simulated genomes with mutations and indels"""
         self.assign_sites()
-        write_indelible_controlfile(self.outd, self.get_arg('ratmat').replace(',',' '), self.get_arg('freqmat').replace(',',' '), self.get_arg('indel_model'), self.get_arg('indel_rate'), self.scaled_tree_newick[:-20], self.genlen)
+        write_indelible_controlfile(self.outd,
+                                    self.get_arg('ratmat').replace(',', ' '),
+                                    self.get_arg('freqmat').replace(',', ' '),
+                                    self.get_arg('indel_model'),
+                                    self.get_arg('indel_rate'),
+                                    self.scaled_tree_newick[:-20],
+                                    self.genlen)
         run_indelible(self.outd)
         self.insertions, self.deletions, self.insertionlocs, self.deletionlocs = read_indelible_aln(self)
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
-        alignment_length = self.genlen + len(self.insertionlocs)
         self.vcf_dict = {}
         for loc in self.mutlocs:
             self.vcf_dict[loc] = {}
@@ -538,19 +553,16 @@ class TreeToReads(object):
             ali = 0 #indexing along alignement
             lw = 0 #counting for fasta line wrapping
             with open(self.get_arg('genome'), 'r') as in_file:
+                prevnuc = '-'
                 for line in in_file:
                     if line.startswith('>'):
                         if ii > 0:
                             genout.write('\n')
-                          #  genout.write(line.strip()+"_"+self.prefix+seq+"\n")
                             lw = 0
-                        #else:
                         genout.write(line.strip()+"_"+self.prefix+seq)
                     else:
                         line = line.strip()
                         for nuc in line:
-                         #   #print nuc
-                         #   #print ii
                             if lw%70 == 0:
                                 genout.write('\n')
                             counted = 0
@@ -571,37 +583,33 @@ class TreeToReads(object):
                                     if lw%70 == 0:
                                         genout.write('\n')
                             if ali in self.deletions[seq]: #This should be exclusive of the columns considered "insertions".
-                                    genout.write('-')
-                                    if not startsite_map[translate_deletions[ali]['delcount']]:
-                                        self.vcf_dict[ii] = {}
-                                        for subseq in self.seqnames:
-                                            self.vcf_dict[ii][subseq] = prevnuc
-                                        del_starts.add(ii)
-                                        startsite_map[translate_deletions[ali]['delcount']]= ii
-                                       # self.vcf_dict[ii][self.base_name] += translate_deletions[ali]['dellen'] * 'r'
-                                    startsite = startsite_map[translate_deletions[ali]['delcount']]
-                                    delpos = translate_deletions[ali]['delpos']
-                                    if not translate_deletions[ali]['counted']:
-                                        self.vcf_dict[startsite][self.base_name] += nuc
-                                        translate_deletions[ali]['counted'] = 1
-                                    self.vcf_dict[startsite][seq] += 'x'
-                                    #print "deletion happed at {}".format(ii)
-                                    ali += 1
-                                    lw +=1
-                                    ii += 1
-                                    counted = 1
+                                genout.write('-')
+                                if not startsite_map[translate_deletions[ali]['delcount']]:
+                                    self.vcf_dict[ii] = {}
+                                    for subseq in self.seqnames:
+                                        self.vcf_dict[ii][subseq] = prevnuc
+                                    del_starts.add(ii)
+                                    startsite_map[translate_deletions[ali]['delcount']] = ii
+                                startsite = startsite_map[translate_deletions[ali]['delcount']]
+                                if not translate_deletions[ali]['counted']:
+                                    self.vcf_dict[startsite][self.base_name] += nuc
+                                    translate_deletions[ali]['counted'] = 1
+                                self.vcf_dict[startsite][seq] += 'x'
+                                ali += 1
+                                lw += 1
+                                ii += 1
+                                counted = 1
                             elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
                                     self.vcf_dict[ii][seq] = 'N'
                                 else:
-                                    #print("2.ii is {}, base is {}, index is {} , length is {}".format(ii, nuc, self.snpdic[ii], len(self.sitepatts[nuc])))
                                     patt = self.sitepatts[nuc][self.snpdic[ii]]
                                     genout.write(patt[seq])
                                     self.mut_genos[seq].append(patt[seq])
                                     matout.write("{} {} {}\n".format(seq, patt[seq], ii))
                                     self.vcf_dict[ii][seq] = patt[seq]
-                                if not counted: 
+                                if not counted:
                                     ali += 1
                                     lw += 1
                                     ii += 1
@@ -618,7 +626,6 @@ class TreeToReads(object):
         matout.close()
         for loc in del_starts:
             refseq = self.vcf_dict[loc][self.base_name]
-           # print(self.vcf_dict[loc])
             for seqn in self.seqnames:
                 if seqn == self.base_name:
                     pass
@@ -627,11 +634,10 @@ class TreeToReads(object):
                         self.vcf_dict[loc][seqn] = refseq
                     else:
                         self.vcf_dict[loc][seqn] = self.vcf_dict[loc][seqn].rstrip('x')
-          #  print(self.vcf_dict[loc])
-        for seq in self.seqnames:#reomve the gaps for later sim.
+        for seq in self.seqnames: #remove the gaps for later sim.
             out_file = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             inp = "{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq)
-            sub = call(['sed', 's/-//g', inp], stdout=out_file)
+            call(['sed', 's/-//g', inp], stdout=out_file)
         self._genmut = 1
         write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
@@ -649,7 +655,10 @@ class TreeToReads(object):
                     self.mut_genomes_indels()
             else:
                 self.mut_genomes_no_indels()
-        coverarg = self.get_arg('cov')
+        if coverage == None:
+            coverarg = self.get_arg('cov')
+        else:
+            coverarg = coverage
         cov = {}
         if os.path.isfile(coverarg):
             with open(coverarg) as infile:
@@ -662,7 +671,7 @@ class TreeToReads(object):
                         self._exit_handler()
                     cov[seqnam] = int(lin.split(',')[1])
             try:
-                assert(set(cov.keys()) == set(self.seqnames))
+                assert set(cov.keys()) == set(self.seqnames)
             except:
                 sys.stderr.write("some tips missing from coverage file: {}\n".format(set(self.seqnames) - cov.keys()))
                 self._exit_handler()
@@ -671,8 +680,6 @@ class TreeToReads(object):
                 cov[seqnam] = int(coverarg)
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
-        if not self._genmut:
-            self.mut_genomes()
         sys.stdout.write("coverage is {}\n".format(self.config['coverage']))
         if 'read_length' in self.config:
             read_length = self.config['read_length']
@@ -700,7 +707,6 @@ class TreeToReads(object):
                             '-1', self.get_arg('error_model1'),
                             '-2', self.get_arg('error_model2'),
                             '-na', #Don't output alignment file
-                        #   '-sam', #output a sam file
                             '-p', #for paired end reads
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
@@ -716,7 +722,6 @@ class TreeToReads(object):
                 artparam = ['art_illumina',
                             '-p', #for paired end reads
                             '-na', #Don't output alignment file
-                         #   '-sam', #output a sam file
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
                             '-f', str(cov[seq]),
@@ -749,7 +754,8 @@ class TreeToReads(object):
 
 
 def write_indelible_controlfile(outputdir, ratmat, freqmat, indelmodel, indelrate, tree, seqlen):
-    fi=open("{}/control.txt".format(outputdir), 'w')
+    """Writes a control file for indelible to run"""
+    fi = open("{}/control.txt".format(outputdir), 'w')
     fi.write("[TYPE] NUCLEOTIDE 1 \n")
     fi.write("[SETTINGS]\n")
     fi.write("[output] FASTA \n")
@@ -766,15 +772,17 @@ def write_indelible_controlfile(outputdir, ratmat, freqmat, indelmodel, indelrat
 
 
 def run_indelible(outputdir):
+    """Calls indelible, and returns to working directory"""
     cwd = os.getcwd()
     os.chdir(outputdir)
-    call(['indelible', "control.txt", ">", "indelible.log" ])
+    call(['indelible', "control.txt", ">", "indelible.log"])
     os.chdir(cwd)
 
 
 def read_indelible_aln(ttrobj):
-    '''insertion locs are in terms of the original sequence length,
-    but deletions are in terms of alignement length'''
+    """Pull steh locations of insertaions and deletions from indelible output.
+    Insertion locs are in terms of the original sequence length,
+    but deletions are in terms of alignement length"""
     insertionlocs = {}
     insertionlocs_aln = set()
     insertions = {}
@@ -783,8 +791,8 @@ def read_indelible_aln(ttrobj):
     indel_aln = open("{}/TTRindelible_TRUE.fas".format(ttrobj.outd))
     for lin in indel_aln:
         if lin.startswith(">"):
-           seqname = lin.strip(">").strip().strip("'")
-           assert (seqname in ttrobj.seqnames)
+            seqname = lin.strip(">").strip().strip("'")
+            assert seqname in ttrobj.seqnames
         elif seqname == base_name:
             ref_genome_i = 0
             for i, char in enumerate(lin):
@@ -805,8 +813,8 @@ def read_indelible_aln(ttrobj):
     del_locs = set()
     for lin in indel_aln:
         if lin.startswith(">"):
-           seqname = lin.strip(">").strip().strip("'")
-           assert (seqname in ttrobj.seqnames)
+            seqname = lin.strip(">").strip().strip("'")
+            assert seqname in ttrobj.seqnames
         elif seqname and seqname != base_name:
             insertions[seqname] = {}
             deletions[seqname] = set()
@@ -818,31 +826,32 @@ def read_indelible_aln(ttrobj):
                     del_locs.add(i)
                 if i >= alignment_length:
                     break
-            seqname=None
-        deletions[base_name]={}
-    del_locs=list(del_locs)
+            seqname = None
+        deletions[base_name] = {}
+    del_locs = list(del_locs)
     del_locs.sort()
     deletionlocs = get_sub_list(del_locs)
     return insertions, deletions, insertionlocs, deletionlocs
 
 def split_list(n):
-    """will return the list index"""
-    return [(x+1) for x,y in zip(n, n[1:]) if y-x != 1]
+    """will return the list index for sequential deletions"""
+    return [(x+1) for x, y in zip(n, n[1:]) if y-x != 1]
 
 def get_sub_list(my_list):
-    """will split the list base on the index"""
+    """will split the list based on the index for splits"""
     my_index = split_list(my_list)
     output = list()
     prev = 0
     for index in my_index:
-        new_list = [ x for x in my_list[prev:] if x < index]
+        new_list = [x for x in my_list[prev:] if x < index]
         output.append(new_list)
         prev += len(new_list)
-    output.append([ x for x in my_list[prev:]])
+    output.append([x for x in my_list[prev:]])
     return output
 
 def write_vcf(ttrobj):
-    fi = open("{}/sim.vcf".format(ttrobj.outd),'w')
+    """Writes out simulated mutations and indels as a vcf file, with anchor genome as reference."""
+    fi = open("{}/sim.vcf".format(ttrobj.outd), 'w')
     fi.write("##fileformat=VCFv4.0\n")
     fi.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
     fi.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format('\t'.join(ttrobj.seqnames)))
@@ -853,42 +862,25 @@ def write_vcf(ttrobj):
         if len(ttrobj.contig_breaks) > contig:
             if ttrobj.contig_breaks[contig] < loc:
                 contig += 1
-        #try:
-        assert(set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames))
-        #except:
-            #missing = set(ttrobj.seqnames) - set(ttrobj.vcf_dict[loc].keys())
-            #for seq in missing:
-                #print seq
-            #print("loc is {}".format(loc))
-            #if loc in ttrobj.mutlocs:
-                #print "should be mutation"
-            #if loc in ttrobj.insertionlocs:
-                #print "should be insertion"
-            #if loc in ttrobj.deletions:
-                #print "should be deletion"
-            #print(ttrobj.vcf_dict[loc])
+        assert set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames)
         refbase = ttrobj.vcf_dict[loc][ttrobj.base_name]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
-       # print(ttrobj.vcf_dict[loc])
         for i, nuc in enumerate(base_calls):
             if '-' in nuc:
                 base_calls[i] = nuc.replace('-', '.')
-            if nuc.replace('-','') == refbase:
+            if nuc.replace('-', '') == refbase:
                 base_calls[i] = refbase
-       # print("base calls is {}".format(base_calls))
         altbase = set(base_calls) - set([refbase])
-       # print("refbase is {}".format(refbase))
-       # print("altbase is {}".format(altbase))
-       # altbase = list(altbase)
         trans = {refbase:'0'}
         for i, base in enumerate(altbase):
             trans[base] = str(i+1)
         variants = [trans[base] for base in base_calls]
-        fi.write("{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\t.\tGT\t{vars}\n".format(chrm=contig,
-                                                                                        loc=loc+1,
-                                                                                        refbase=refbase, 
-                                                                                        altbase=",".join(altbase),
-                                                                                        vars='\t'.join(variants)))
+        fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}
+                 \t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig,
+                                                       loc=loc+1,
+                                                       refbase=refbase,
+                                                       altbase=",".join(altbase),
+                                                       vars='\t'.join(variants)))
     fi.close()
 
 
