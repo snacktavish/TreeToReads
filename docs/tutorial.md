@@ -18,10 +18,10 @@ All the necessary parameters for TTR are specified in a configuration file. In t
 
 * Choose a phylogeny (we will use example/simtree.tre). Include the full path to the tree file in either newick or nexus in the configuration file.  
 ```
-treefile_path = example/simtree.tre
+treefile_path = example/example.tre
 ```
 NOTE: The branch lengths in this tree will be proportional to the branch lengths in your outputs, but not equivalent, as the final branch lengths will depend on the number of variable sites selected. Long branch lengths in the input tree will result in more multiple hit mutations at the same sites.  
-ALSO: TTR cannot handle polytomies, so any polytomies in this tree will be randomly resolved with 0 length branch lengths using dendropy, and saved to the output dir as simtree.tre
+Any polytomies in this tree will be randomly resolved with 0 length branch lengths using dendropy, and saved to the output dir as simtree.tre
 
 * Select a "base genome" and specify the path to this file in the configuration file. This the base genome or 'anchor genome' on which mutations will be placed. 
 One tip in your final tree will have this genome sequence. This tip label should be specified using the parameter "base_genome_name".  
@@ -42,7 +42,7 @@ rate_matrix = 1,1,1,1,1,1
 ```
 where these 6 values are decimal numbers for the relative rates of substitutions from (for nucleotides) A to C, A to G, A to T, C to G, C to T and G to T respectively, separated by commas.
 ```
-freq_matrix =  0.19,0.31,0.29,0.22
+freq_matrix =  0.19,0.31,0.29,0.21
 ```
 where these 4 values are decimal numbers for the frequencies of the nucleotides A, C, G and T
 ```
@@ -97,6 +97,18 @@ percent_clustered = 0.25
 exponential_mean = 10
 ```
 Setting mutation_clustering clustering to OFF will cause these values to be ignored and mutation locations to be drawn from a uniform random distribution.
+
+
+
+* Optional insertion and deletion parameters
+By default no insertions or deletions will be simulated.
+If an indel model and indel rate are specified, inserstions and deltions will be simulated using indelible.
+For information about paramaters, see http://abacus.gene.ucl.ac.uk/software/indelible/manual/model.shtml for more info
+indel_model =  LAV 1.7  541   #  specifies the indel length distribution
+indel_rate  =   0.1       #  rates of insertion and deletion are both 0.i
+
+
+
 
 ## Run the program!
 ```
