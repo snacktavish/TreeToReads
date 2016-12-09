@@ -100,25 +100,24 @@ Setting mutation_clustering clustering to OFF will cause these values to be igno
 
 
 
-* Optional insertion and deletion parameters
+* Optional insertion and deletion parameters.  
 By default no insertions or deletions will be simulated.
 If an indel model and indel rate are specified, inserstions and deltions will be simulated using indelible.
-For information about paramaters, see http://abacus.gene.ucl.ac.uk/software/indelible/manual/model.shtml for more info
+For information about paramaters, see http://abacus.gene.ucl.ac.uk/software/indelible/manual/model.shtml for more information.  
+```
+#Optional Indel Parameters,
 indel_model =  LAV 1.7  541   #  specifies the indel length distribution
 indel_rate  =   0.1       #  rates of insertion and deletion are both 0.i
-
+```
 
 
 
 ## Run the program!
 ```
-python treetoreads.py
+python treetoreads.py example.config
 ```
-TTR will automatically look for and read a configuration file named "ttr.cfg".
-You can also save your configuration under a different name and pass it as an argument, e.g.
-```
-python treetoreads.py ttr_alt.cfg
-```
+
+The only command line argument is your config file.
 
 ## Output files
 By default the sequence files will have the names of the tips in the input tree.
@@ -130,6 +129,7 @@ The key output files consist of:
     * fasta_files - a folder containing the simulated genomes for each tip in the tree  The fasta files in this folder can be used in conjunction with Art for more fine grained read simulation.  
     * fastq - folder containing folders with the names of each tip from the simulation tree. In each of these folders are the simulated reads  in .fastq format and .sam format file of the read alignments.  
     * mutsites.txt - unordered list of the locations of mutations in the genome  
+    * sim.vcf - A vcf file for the simulated mutations with respect to the anchor genome. Includes indels if simulated. Quality scores are all set to 40.
     * var_site_matrix - an unordered list of the base present in each tip at each variable site, in the format "tip_name base genome_location"  
 
 Other files
