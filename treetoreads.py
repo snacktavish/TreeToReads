@@ -46,8 +46,8 @@ class TreeToReads(object):
                 sys.stdout.write("simulating genomes but not reads\n")
                 if self.get_arg("indel_model"):
                     if call(['which', 'indelible'], stdout=open('/dev/null', 'w')) == 1:
-                        sys.stderr.write('''ERROR: indelible not found. Needs to be installed to simulate insertations
-                                         and deletions. IGNORING indel parameters and continuaing simulation\n''')
+                        sys.stderr.write('''ERROR: indelible not found. Needs to be installed to simulate insertions
+                                         and deletions. IGNORING indel parameters and continuing simulation\n''')
                         self.mut_genomes_no_indels()
                     else:
                         self.mut_genomes_indels()
@@ -195,6 +195,7 @@ class TreeToReads(object):
             self.outd = self.get_arg('outd')
         except:
             self.outd = ('ttr_out')
+            sys.stderr.write("Setting output directory to ttr_out\n")
         #optional parameters
         if self.get_arg('gamma_shape') is not None:
             try:
@@ -242,12 +243,14 @@ class TreeToReads(object):
                 tree = dendropy.Tree.get_from_path(self.get_arg('treepath'), self.treetype, taxon_namespace=taxa, preserve_underscores=True)
             except:
                 sys.stderr.write("Problems reading the tree - is it in proper newick or nexus format?\n")
+                self._exit_handler()
         else:
             taxa = dendropy.TaxonSet()
             try:
                 tree = dendropy.Tree.get_from_path(self.get_arg('treepath'), self.treetype, taxon_set=taxa, preserve_underscores=True)
             except:
                 sys.stderr.write("Problems reading the tree - is it in proper newick or nexus format?\n")
+                self._exit_handler()
         if tree.length() == 0:
             sys.stderr.write("TTR requires branch lengths. Branch lengths appear to be missing (treelength = 0). Exiting.\n")
             self._exit_handler()
@@ -379,7 +382,6 @@ class TreeToReads(object):
             sys.stderr.write('''Seqnames don't match simulated keys,
                              seqnames :{} simulated names: {}
                              '''.format('\n'.join(self.seqnames), '\n'.join(simseqs.keys())))
-            #sys.stderr.write(simseqs.keys())
             self._exit_handler()
         ref = simseqs[self.base_name]
         for i, nuc in enumerate(ref):
@@ -655,7 +657,7 @@ class TreeToReads(object):
                     self.mut_genomes_indels()
             else:
                 self.mut_genomes_no_indels()
-        if coverage == None:
+        if coverage is None:
             coverarg = self.get_arg('cov')
         else:
             coverarg = coverage

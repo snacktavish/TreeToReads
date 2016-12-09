@@ -18,10 +18,10 @@ All the necessary parameters for TTR are specified in a configuration file. In t
 
 * Choose a phylogeny (we will use example/simtree.tre). Include the full path to the tree file in either newick or nexus in the configuration file.  
 ```
-treefile_path = example/simtree.tre
+treefile_path = example/example.tre
 ```
 NOTE: The branch lengths in this tree will be proportional to the branch lengths in your outputs, but not equivalent, as the final branch lengths will depend on the number of variable sites selected. Long branch lengths in the input tree will result in more multiple hit mutations at the same sites.  
-ALSO: TTR cannot handle polytomies, so any polytomies in this tree will be randomly resolved with 0 length branch lengths using dendropy, and saved to the output dir as simtree.tre
+Any polytomies in this tree will be randomly resolved with 0 length branch lengths using dendropy, and saved to the output dir as simtree.tre
 
 * Select a "base genome" and specify the path to this file in the configuration file. This the base genome or 'anchor genome' on which mutations will be placed. 
 One tip in your final tree will have this genome sequence. This tip label should be specified using the parameter "base_genome_name".  
@@ -42,7 +42,7 @@ rate_matrix = 1,1,1,1,1,1
 ```
 where these 6 values are decimal numbers for the relative rates of substitutions from (for nucleotides) A to C, A to G, A to T, C to G, C to T and G to T respectively, separated by commas.
 ```
-freq_matrix =  0.19,0.31,0.29,0.22
+freq_matrix =  0.19,0.31,0.29,0.21
 ```
 where these 4 values are decimal numbers for the frequencies of the nucleotides A, C, G and T
 ```
@@ -98,15 +98,26 @@ exponential_mean = 10
 ```
 Setting mutation_clustering clustering to OFF will cause these values to be ignored and mutation locations to be drawn from a uniform random distribution.
 
+
+
+* Optional insertion and deletion parameters.  
+By default no insertions or deletions will be simulated.
+If an indel model and indel rate are specified, inserstions and deltions will be simulated using indelible.
+For information about paramaters, see http://abacus.gene.ucl.ac.uk/software/indelible/manual/model.shtml for more information.  
+```
+#Optional Indel Parameters,
+indel_model =  LAV 1.7  541   #  specifies the indel length distribution
+indel_rate  =   0.1       #  rates of insertion and deletion are both 0.i
+```
+
+
+
 ## Run the program!
 ```
-python treetoreads.py
+python treetoreads.py example.config
 ```
-TTR will automatically look for and read a configuration file named "ttr.cfg".
-You can also save your configuration under a different name and pass it as an argument, e.g.
-```
-python treetoreads.py ttr_alt.cfg
-```
+
+The only command line argument is your config file.
 
 ## Output files
 By default the sequence files will have the names of the tips in the input tree.
@@ -114,13 +125,14 @@ Alternatively, a prefix can be specified using
 ```
 prefix = sim_
 ```
-The key output files consist of:
+The key output files consist of:  
     * fasta_files - a folder containing the simulated genomes for each tip in the tree  The fasta files in this folder can be used in conjunction with Art for more fine grained read simulation.  
     * fastq - folder containing folders with the names of each tip from the simulation tree. In each of these folders are the simulated reads  in .fastq format and .sam format file of the read alignments.  
     * mutsites.txt - unordered list of the locations of mutations in the genome  
+    * sim.vcf - A vcf file for the simulated mutations with respect to the anchor genome. Includes indels if simulated. Quality scores are all set to 40.
     * var_site_matrix - an unordered list of the base present in each tip at each variable site, in the format "tip_name base genome_location"  
 
-Other files
+Other files  
     * analysis_configuration.cfg is a copy of the config file used for the analysis  
     * seq_sim.txt is the seqgen output file from which the variable sites are drawn.  
     * art_log and seqgen_log are the output files of art and seqgen, respectively, and are useful for diagnosing issues.  

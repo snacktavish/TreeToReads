@@ -79,6 +79,52 @@ def perform_analyses(dirstub, num):
 
 
 
+def check_indel_locs(workdir, prefix):
+    os.system("cat {}/fasta_files/*_indel.fasta > {}/sim.aln".format(workdir, workdir))
+    inferred_indel_dict = {}
+    input_indel_dict = {}
+    seqname = ''
+    i = 0
+    with open('{}/sim.aln'.format(workdir), 'r') as in_file:
+        for line in in_file:
+            line = line.strip()
+            if line.startswith('>'):
+                seqname = line.lstrip('>').lstrip(prefix)
+                inferred_indel_dict[seqname] = []
+                i = 0
+            else:
+                for nuc in line:
+                    i+=1
+                    if nuc == '-':
+                      inferred_indel_dict[seqname].append(i)
+    imax = i
+    with open('{}/TTRindelible_TRUE.fas'.format(workdir), 'r') as in_file:
+        for line in in_file:
+            line = line.strip()
+            if line.startswith('>'):
+                seqname = line.lstrip('>')
+                input_indel_dict[seqname] = []
+                i = 0
+            else:
+                for nuc in line:
+                    i+=1
+                    if nuc == '-':
+                        input_indel_dict[seqname].append(i)
+                    if i >= imax:
+                      break
+    if set(input_indel_dict.keys()) != set(inferred_indel_dict.keys()):
+      print  input_indel_dict.keys() - inferred_indel_dict.keys()
+      print  inferred_indel_dict.keys() - input_indel_dict.keys()
+    for key in input_indel_dict:
+        if input_indel_dict[key] == inferred_indel_dict[key]:
+          print key
+          print input_indel_dict[key] 
+          print inferred_indel_dict[key]
+
+
+
+
+
 
 #perform_sims(dirstub = "validation/short_fix/run", refloc = "example/short_ref.fasta")
 #perform_analyses("validation/short_fix/run")
