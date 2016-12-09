@@ -125,14 +125,14 @@ Alternatively, a prefix can be specified using
 ```
 prefix = sim_
 ```
-The key output files consist of:
+The key output files consist of:  
     * fasta_files - a folder containing the simulated genomes for each tip in the tree  The fasta files in this folder can be used in conjunction with Art for more fine grained read simulation.  
     * fastq - folder containing folders with the names of each tip from the simulation tree. In each of these folders are the simulated reads  in .fastq format and .sam format file of the read alignments.  
     * mutsites.txt - unordered list of the locations of mutations in the genome  
     * sim.vcf - A vcf file for the simulated mutations with respect to the anchor genome. Includes indels if simulated. Quality scores are all set to 40.
     * var_site_matrix - an unordered list of the base present in each tip at each variable site, in the format "tip_name base genome_location"  
 
-Other files
+Other files  
     * analysis_configuration.cfg is a copy of the config file used for the analysis  
     * seq_sim.txt is the seqgen output file from which the variable sites are drawn.  
     * art_log and seqgen_log are the output files of art and seqgen, respectively, and are useful for diagnosing issues.  
