@@ -151,7 +151,6 @@ class TreeToReads(object):
                         'base_name':'base_genome_name',
                         'genome':'base_genome_path',
                         'ratmat':'rate_matrix',
-                        'freqmat':'freq_matrix',
                         'cov':'coverage',
                         'outd':'output_dir'
                        }
@@ -169,10 +168,6 @@ class TreeToReads(object):
         if len(self.get_arg('ratmat').split(',')) != 6:
             sys.stderr.write('''{} values in rate matrix, there should be 6.
                               Exiting.\n'''.format(len(self.get_arg('ratmat').split(','))))
-            self._exit_handler()
-        if len(self.get_arg('freqmat').split(',')) != 4:
-            sys.stderr.write('''{} values in freq matrix, there should be 4.
-                              Exiting.\n'''.format(len(self.get_arg('freqmat').split(','))))
             self._exit_handler()
         try:
             tf = open(self.get_arg('treepath'))
@@ -293,6 +288,7 @@ class TreeToReads(object):
         self.genlen = 0
         contigs = 0
         self.contig_breaks = []
+        base_counts = {'A':0, 'C':0, 'G':0, 'T':0}
         with open(self.get_arg('genome'), 'r') as in_file:
             for line in in_file:
                 line = line.strip()
@@ -304,6 +300,9 @@ class TreeToReads(object):
                     if not set(line.upper()).issubset(set(['A', 'T', 'G', 'C', 'N'])):
                         sys.stderr.write('''Your genome appears to have characters other than ATGC,
                                          such as: {} Please check your input genome.\n'''.format(set(line)))
+                    for base in base_counts:
+                        base_counts[base] += line.count(base)
+        self.freqmat = ",".join([str(base_counts[base]/float(self.genlen)) for base in base_counts])
         if self.nsnp > self.genlen:
             sys.stderr.write('''number of variables sites {}
                              is higher than the length
@@ -323,11 +322,11 @@ class TreeToReads(object):
         if self.shape:
             seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
                          '-a{}'.format(self.shape), '-r{}'.format(self.get_arg('ratmat')),
-                         '-f{}'.format(self.get_arg('freqmat')), '-or']
+                         '-f{}'.format(self.freqmat), '-or']
         else:
             seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
                          '-r{}'.format(self.get_arg('ratmat')),
-                         '-f{}'.format(self.get_arg('freqmat')), '-or']
+                         '-f{}'.format(self.freqmat), '-or']
         call(seqgenpar,
              stdout=open('{}'.format(self.simloc), 'w'),
              stderr=open('{}/seqgen_log'.format(self.outd), 'w'),
@@ -525,7 +524,7 @@ class TreeToReads(object):
         self.assign_sites()
         write_indelible_controlfile(self.outd,
                                     self.get_arg('ratmat').replace(',', ' '),
-                                    self.get_arg('freqmat').replace(',', ' '),
+                                    self.freqmat.replace(',', ' '),
                                     self.get_arg('indel_model'),
                                     self.get_arg('indel_rate'),
                                     self.scaled_tree_newick[:-20],
