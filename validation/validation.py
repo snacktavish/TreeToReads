@@ -5,8 +5,8 @@ import os
 import subprocess
 
 
-def perform_sims(config, dirstub, refloc, num):
-    for i in range(5):
+def perform_sims(config, dirstub, num):
+    for i in range(num):
         i+=1
         ttr=TreeToReads(configfi=config,run=0)
         diri = "{}{}".format(dirstub,i)
@@ -14,6 +14,14 @@ def perform_sims(config, dirstub, refloc, num):
           os.makedirs(diri) 
         ttr.outd = diri
         ttr.run_art()
+
+
+
+def run_snppipe(dirstub, refloc, num):
+    for i in range(num):
+        i+=1
+        diri = "{}{}".format(dirstub,i)
+        print "run_snp_pipeline.sh -s {}/fastq -o {} {}".format(diri, diri, refloc)
         os.system("run_snp_pipeline.sh -s {}/fastq -o {} {}".format(diri, diri, refloc)) 
 
 
@@ -36,16 +44,18 @@ def perform_analyses(dirstub, num):
                        'gt':[]}
     for i in range(num):
         i+=1
-        diri = "{}{}".format(dirstub,i)
+        odiri = "{}{}".format(dirstub,i)
+        diri = "{}{}/altref".format(dirstub,i)
         cwd = os.getcwd()
         os.chdir(diri)
-        os.system("raxmlHPC -m ASC_GTRGAMMA --asc-corr=lewis -s snpma.fasta -p 1 -n val")
+#        os.system("raxmlHPC -m ASC_GTRGAMMA --asc-corr=lewis -s snpma.fasta -p 1 -n val")
+        os.system("raxmlHPC -m GTRGAMMA -s snpma.fasta -p 1 -n val_noasc")
         os.chdir(cwd)
         print diri
-        trestr =open("{}/RAxML_bestTree.val".format(diri)).readline().replace('sim_','')
+#        trestr =open("{}/RAxML_bestTree.val".format(diri)).readline().replace('sim_','')
+        trestr =open("{}/RAxML_bestTree.val_noasc".format(diri)).readline().replace('sim_','')
         tns = dendropy.TaxonNamespace()
-       # os.system("java -jar ../jmodeltest2/dist/jModelTest.jar -d {}/snpma.fasta > {}/modeltest.out".format(diri, diri))
-        inputtree = dendropy.Tree.get_from_path("{}/scaledtree.tre".format(diri), 
+        inputtree = dendropy.Tree.get_from_path("{}/scaledtree.tre".format(odiri), 
                                                 schema="newick", 
                                                 taxon_namespace=tns)
         inferred = dendropy.Tree.get_from_string(trestr, 
@@ -55,14 +65,16 @@ def perform_analyses(dirstub, num):
         inferred.encode_bipartitions()
         inf_dict['Euclidean'].append(treecompare.euclidean_distance(inputtree, inferred))
         inf_dict['RF'].append(treecompare.unweighted_robinson_foulds_distance(inputtree, inferred))
-        freqs = subprocess.check_output(["grep", "Base frequencies:","{}/RAxML_info.val".format(diri)]).split()
+#        freqs = subprocess.check_output(["grep", "Base frequencies:","{}/RAxML_info.val".format(diri)]).split()
+        freqs = subprocess.check_output(["grep", "Base frequencies:","{}/RAxML_info.val_noasc".format(diri)]).split()
         print(freqs)
         freqs = [float(val) for val in freqs[2:]]
         inf_dict['freqA'].append(freqs[0])
         inf_dict['freqC'].append(freqs[1])
         inf_dict['freqG'].append(freqs[2])
         inf_dict['freqT'].append(freqs[3])
-        trans = subprocess.check_output(["grep", "ac ag at cg ct gt",  "{}/RAxML_info.val".format(diri)]).split()
+#        trans = subprocess.check_output(["grep", "ac ag at cg ct gt",  "{}/RAxML_info.val".format(diri)]).split()
+        trans = subprocess.check_output(["grep", "ac ag at cg ct gt",  "{}/RAxML_info.val_noasc".format(diri)]).split()
         trans = [float(val) for val in trans[9:]]
         inf_dict['ac'].append(trans[0])
         inf_dict['ag'].append(trans[1])
@@ -71,11 +83,12 @@ def perform_analyses(dirstub, num):
         inf_dict['ct'].append(trans[4])
         inf_dict['gt'].append(trans[5])
         inf_dict['MutsCalled'].append(float(subprocess.check_output(["wc","{}/snplist.txt".format(diri)]).split()[0]))
-        inf_dict['MutsSim'].append(float(subprocess.check_output(["wc","{}/mutsites.txt".format(diri)]).split()[0]))
+        inf_dict['MutsSim'].append(float(subprocess.check_output(["wc","{}/mutsites.txt".format(odiri)]).split()[0]))
     for key in inf_dict:
             mean = sum(inf_dict[key])/len(inf_dict[key])
             print(key)
             print(mean)
+    return(inf_dict)
 
 
 
@@ -123,6 +136,35 @@ def check_indel_locs(workdir, prefix):
 
 
 
+
+def collapse_short_analyses(dirstub, num):
+    inf_dict = {'Euclidean':[],
+                       'RF':[]}
+    for i in range(num):
+        i+=1
+        diri = "{}{}".format(dirstub,i)
+        tns = dendropy.TaxonNamespace()
+        inputtree = dendropy.Tree.get_from_path("{}/scaledtree.tre".format(diri), 
+                                                schema="newick", 
+                                                taxon_namespace=tns)
+        for edge in inputtree.postorder_edge_iter():
+            if edge.length < 0.0000000001:
+                edge.collapse()
+        inferred = dendropy.Tree.get_from_string(trestr, 
+                                               schema="newick",
+                                               taxon_namespace=tns)
+        for edge in inferredtree.postorder_edge_iter():
+            if edge.length < 0.0000000001:
+                edge.collapse()
+        inputtree.encode_bipartitions()
+        inferred.encode_bipartitions()
+        inf_dict['Euclidean'].append(treecompare.euclidean_distance(inputtree, inferred))
+        inf_dict['RF'].append(treecompare.unweighted_robinson_foulds_distance(inputtree, inferred))
+    for key in inf_dict:
+            mean = sum(inf_dict[key])/len(inf_dict[key])
+            print(key)
+            print(mean)
+    return(inf_dict)
 
 
 
