@@ -302,7 +302,7 @@ class TreeToReads(object):
                                          such as: {} Please check your input genome.\n'''.format(set(line)))
                     for base in base_counts:
                         base_counts[base] += line.count(base)
-        self.freqmat = ",".join([str(base_counts[base]/float(self.genlen)) for base in base_counts])
+        self.freqmat = ",".join([str(base_counts[base]/float(self.genlen)) for base in ['A','C','G','T']])
         if self.nsnp > self.genlen:
             sys.stderr.write('''number of variables sites {}
                              is higher than the length
