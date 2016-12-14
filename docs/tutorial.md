@@ -36,15 +36,12 @@ number_of_variable_sites = 20
 output_dir = example_out
 ```
 * Set the parameters of your evolutionary model. These parameters may be generated from real sequence analysis, or a null model. TTR requires a full general time reversible evolutionary model including a rate matrix, state frequencies, and a gamma shape parameter. These parameters are passed to seq-gen (http://bioweb2.pasteur.fr/docs/seq-gen/) and are in seq-gen like format.
-Good ways to estimate these model parameters from your observed SNP data is using Paup (http://paup.csit.fsu.edu/) or jModelTest (http://jmodeltest.org/).
+Good ways to estimate these model parameters from your observed SNP data is using Paup (http://paup.csit.fsu.edu/) or jModelTest (http://jmodeltest.org/).  
+
 ```
 rate_matrix = 1,1,1,1,1,1 
 ```
 where these 6 values are decimal numbers for the relative rates of substitutions from (for nucleotides) A to C, A to G, A to T, C to G, C to T and G to T respectively, separated by commas.
-```
-freq_matrix =  0.19,0.31,0.29,0.21
-```
-where these 4 values are decimal numbers for the frequencies of the nucleotides A, C, G and T
 ```
 gamma_shape = 5
 ```
