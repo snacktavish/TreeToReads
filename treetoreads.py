@@ -150,7 +150,7 @@ class TreeToReads(object):
                         'nsnp':'number_of_variable_sites',
                         'base_name':'base_genome_name',
                         'genome':'base_genome_path',
-                        'ratmat':'rate_matrix',
+                        'ratemat':'rate_matrix',
                         'cov':'coverage',
                         'outd':'output_dir'
                        }
@@ -165,9 +165,11 @@ class TreeToReads(object):
             sys.stderr.write('''number of variable {} could not be coerced to an integer.
                               Exiting.\n'''.format(self.get_arg('nsnp')))
             self._exit_handler()
-        if len(self.get_arg('ratmat').split(',')) != 6:
+        if len(self.get_arg('ratemat').split(',')) == 6:
+            self.ratemat = dict(zip(['ac', 'ag', 'at', 'cg', 'ct', 'gt'],self.get_arg('ratemat').split(',')))
+        else:
             sys.stderr.write('''{} values in rate matrix, there should be 6.
-                              Exiting.\n'''.format(len(self.get_arg('ratmat').split(','))))
+                              Exiting.\n'''.format(len(self.get_arg('ratemat').split(','))))
             self._exit_handler()
         try:
             tf = open(self.get_arg('treepath'))
@@ -302,31 +304,40 @@ class TreeToReads(object):
                                          such as: {} Please check your input genome.\n'''.format(set(line)))
                     for base in base_counts:
                         base_counts[base] += line.count(base)
-        self.freqmat = ",".join([str(base_counts[base]/float(self.genlen)) for base in ['A','C','G','T']])
+        self.freqmat = {base:str(base_counts[base]/float(self.genlen)) for base in ['A','C','G','T']}
+        sys.stdout.write("Base frequencies detected from anchor genome A:{} C:{} G:{} T:{}\n".format(self.freqmat['A'],
+                                                                                             self.freqmat['C'],
+                                                                                             self.freqmat['G'],
+                                                                                             self.freqmat['T']))
         if self.nsnp > self.genlen:
             sys.stderr.write('''number of variables sites {}
                              is higher than the length
                              of the contig or geonme {}.
                              Exiting\n'''.format(self.nsnp, self.genlen))
             self._exit_handler()
-        sys.stdout.write("{} contigs\n".format(len(self.contig_breaks)))
+        sys.stdout.write("genome has {} contigs\n".format(len(self.contig_breaks)))
         sys.stdout.write("Genome has {} bases\n".format(self.genlen))
 
     def generate_varsites(self):
-        """Runs seqgen to generate variable sites on tree"""
+        """Runs seqgen to generate variable sites on tree
+        seqgen GTR specified as : A to C, A to G, A to T, C to G, C to T and G to T
+        and freqs, seqgen uses a,c,g,t UNLIKE INdelible
+        """
         self._vargen = 1
         if not self._treeread:
             self.read_tree()
         self.simloc = "{}/seqs_sim.txt".format(self.outd)
         lenseqgen = 120*self.nsnp
+        freqs = ','.join([self.freqmat[base] for base in ['A','C','G','T']])
+        gtr = ','.join([self.ratemat[rate] for rate in ['ac','ag','at','cg','ct','gt']])
         if self.shape:
             seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
-                         '-a{}'.format(self.shape), '-r{}'.format(self.get_arg('ratmat')),
-                         '-f{}'.format(self.freqmat), '-or']
+                         '-a{}'.format(self.shape), '-r{}'.format(gtr),
+                         '-f{}'.format(freqs), '-or']
         else:
             seqgenpar = ['seq-gen', '-l{}'.format(lenseqgen), '-n1', '-mGTR',
-                         '-r{}'.format(self.get_arg('ratmat')),
-                         '-f{}'.format(self.freqmat), '-or']
+                         '-r{}'.format(gtr),
+                         '-f{}'.format(freqs), '-or']
         call(seqgenpar,
              stdout=open('{}'.format(self.simloc), 'w'),
              stderr=open('{}/seqgen_log'.format(self.outd), 'w'),
@@ -520,11 +531,14 @@ class TreeToReads(object):
         sys.stdout.write("Mutated genomes\n")
 
     def mut_genomes_indels(self):#TODO does not account for SNPs in indsertions
-        """Writes out the simulated genomes with mutations and indels"""
+        """Writes out the simulated genomes with mutations and indels
+         indelible GTR is specified as TC TA TG CT CA CG, CG = 1
+         and indelible base frequencies are specified as 
+         pi_T, pi_C, pi_A, pi_G"""
         self.assign_sites()
         write_indelible_controlfile(self.outd,
-                                    self.get_arg('ratmat').replace(',', ' '),
-                                    self.freqmat.replace(',', ' '),
+                                    self.ratemat,
+                                    self.freqmat,
                                     self.get_arg('indel_model'),
                                     self.get_arg('indel_rate'),
                                     self.scaled_tree_newick[:-20],
@@ -754,17 +768,22 @@ class TreeToReads(object):
 
 
 
-def write_indelible_controlfile(outputdir, ratmat, freqmat, indelmodel, indelrate, tree, seqlen):
-    """Writes a control file for indelible to run"""
+def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelrate, tree, seqlen):
+    """Writes a control file for indelible to run
+         indelible GTR is specified as ct', 'at', 'gt', 'ac', 'cg', 'ag' =1
+         and indelible base frequencies are specified as 
+         pi_T, pi_C, pi_A, pi_G"""
+    reorder_freqs = ' '.join([freqmat[base] for base in ['T','C','A','G']])
+    rescale_rates = ' '.join([str(float(ratemat[rate])/float(ratemat['ag'])) for rate in  ['ct', 'at', 'gt', 'ac', 'cg', 'ag']])
     fi = open("{}/control.txt".format(outputdir), 'w')
     fi.write("[TYPE] NUCLEOTIDE 1 \n")
     fi.write("[SETTINGS]\n")
     fi.write("[output] FASTA \n")
     fi.write("[MODEL] TTRm \n")
-    fi.write("[submodel] GTR {} \n".format(ratmat))
+    fi.write("[submodel] GTR {} \n".format(rescale_rates))
     fi.write("[indelmodel] {} \n".format(indelmodel))
     fi.write("[indelrate]  {} \n".format(indelrate))
-    fi.write("[statefreq]  {} \n".format(freqmat))
+    fi.write("[statefreq]  {} \n".format(reorder_freqs))
     fi.write("[TREE] TTR {};\n".format(tree))
     fi.write("[PARTITIONS] partitionname\n")
     fi.write("[TTR TTRm {}]\n".format(int(seqlen*1.2)))
