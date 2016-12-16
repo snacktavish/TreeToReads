@@ -1,7 +1,7 @@
-from validation import perform_sims, run_snppipe, perform_analyses
+from validation import perform_sims, run_snppipe, perform_analyses, perform_analyses_altref
 import os
 
-dirstub = "validation/barref_full/run"
+dirstub = "validation/barref_full_f/run"
 config = "validation/tree1.config"
 refloc =  "example/barref.fasta"
 altrefloc = 'validation/LT2.fasta'
@@ -17,15 +17,14 @@ num = 5
 
 
 #run_snppipe(dirstub, refloc, num)
-inf_dict = perform_analyses(dirstub, num)
-
-
 
 #alt refreence genome
-'''
-for i in range(num):
-    i+=1
-    diri = "{}{}".format(dirstub,i)
-    os.system("run_snp_pipeline.sh -f -s {}/altref/fastq -o {}/altref {}".format(diri, diri, altrefloc)) 
-'''
+
+#for i in range(num):
+#    i+=1
+#    diri = "{}{}".format(dirstub,i)
+#    os.system("run_snp_pipeline.sh -f -s {}/altref/fastq -o {}/altref {}".format(diri, diri, altrefloc)) 
+
+inf_dict = perform_analyses(dirstub, num)
+alt_inf_dict = perform_analyses_altref(dirstub, num)
 
