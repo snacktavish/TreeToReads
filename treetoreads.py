@@ -8,7 +8,6 @@ import argparse
 from subprocess import call
 import dendropy
 
-
 VERSION = "0.0.5"
 
 class TreeToReads(object):
@@ -25,6 +24,8 @@ class TreeToReads(object):
     _vargen = 0
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
+        self.seed = (1)
+        random.seed(self.seed)
         self.configfi = configfi
         self.run = run
         self.main = main
@@ -530,19 +531,21 @@ class TreeToReads(object):
         write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
 
-    def mut_genomes_indels(self):#TODO does not account for SNPs in indsertions
+    def mut_genomes_indels(self):#TODO does not account for SNPs in insertions
         """Writes out the simulated genomes with mutations and indels
          indelible GTR is specified as TC TA TG CT CA CG, CG = 1
          and indelible base frequencies are specified as 
          pi_T, pi_C, pi_A, pi_G"""
         self.assign_sites()
+        tmpout = open("tmpdels.txt","w")
         write_indelible_controlfile(self.outd,
                                     self.ratemat,
                                     self.freqmat,
                                     self.get_arg('indel_model'),
                                     self.get_arg('indel_rate'),
                                     self.scaled_tree_newick[:-20],
-                                    self.genlen)
+                                    self.genlen,
+                                    self.seed)
         run_indelible(self.outd)
         self.insertions, self.deletions, self.insertionlocs, self.deletionlocs = read_indelible_aln(self)
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
@@ -554,6 +557,7 @@ class TreeToReads(object):
         del_starts = set()
         translate_deletions = {}
         startsite_map = {}
+        doublehit = set()
         for i, dele in enumerate(self.deletionlocs):
             startsite_map[i] = None
             for x, loc in enumerate(dele):
@@ -599,13 +603,20 @@ class TreeToReads(object):
                                         genout.write('\n')
                             if ali in self.deletions[seq]: #This should be exclusive of the columns considered "insertions".
                                 genout.write('-')
-                                if not startsite_map[translate_deletions[ali]['delcount']]:
-                                    self.vcf_dict[ii] = {}
+                                if not startsite_map[translate_deletions[ali]['delcount']]: #if we haven't already mapped this deletion to the alignemnet and base genome
+                                    self.vcf_dict[ii] = {} #then create a vfc dict entry for it
                                     for subseq in self.seqnames:
-                                        self.vcf_dict[ii][subseq] = prevnuc
+                                        self.vcf_dict[ii][subseq] = prevnuc # and start that entry with the anchor base for each sequence
                                     del_starts.add(ii)
-                                    startsite_map[translate_deletions[ali]['delcount']] = ii
+                                    tmpout.write("DELSTART {},{}, {}, {}, count {}\n".format(seq,ii,ali,translate_deletions[ali]['dellen'], translate_deletions[ali]['delcount']))
+                                    startsite_map[translate_deletions[ali]['delcount']] = ii #map the location of the dleetion in the alignemnt to the base in the anchor genome.
+                                    for sit in range(ii, ii + translate_deletions[ali]['dellen'] + 1):
+                                        tmpout.write("{}\n".format(sit))
+                                        if sit in self.mutlocs:
+                                                doublehit.add(sit)
+                                                tmpout.write("DH {}\n".format(sit))
                                 startsite = startsite_map[translate_deletions[ali]['delcount']]
+                                tmpout.write("ali {} is in {} deletions,  located at ii {}, count {}\n".format(ali, seq, ii, translate_deletions[ali]['delcount']))
                                 if not translate_deletions[ali]['counted']:
                                     self.vcf_dict[startsite][self.base_name] += nuc
                                     translate_deletions[ali]['counted'] = 1
@@ -614,6 +625,11 @@ class TreeToReads(object):
                                 lw += 1
                                 ii += 1
                                 counted = 1
+                                if ii in self.mutlocs:
+                                    if ii in doublehit:
+                                        tmpout.write("DHcounted {}, {}\n".format(ali, ii))
+                                    else:
+                                        tmpout.write("DHMissed {},{}\n".format(ali, ii))
                             elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
@@ -648,7 +664,10 @@ class TreeToReads(object):
                     if len(self.vcf_dict[loc][seqn]) == 1:
                         self.vcf_dict[loc][seqn] = refseq
                     else:
-                        self.vcf_dict[loc][seqn] = self.vcf_dict[loc][seqn].rstrip('x')
+                        self.vcf_dict[loc][seqn] = self.vcf_dict[loc][seqn].rstrip('x')     
+        for hit in doublehit:
+            del self.vcf_dict[hit]  
+        print(doublehit)                       
         for seq in self.seqnames: #remove the gaps for later sim.
             out_file = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             inp = "{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq)
@@ -768,7 +787,7 @@ class TreeToReads(object):
 
 
 
-def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelrate, tree, seqlen):
+def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelrate, tree, seqlen, seed):
     """Writes a control file for indelible to run
          indelible GTR is specified as ct', 'at', 'gt', 'ac', 'cg', 'ag' =1
          and indelible base frequencies are specified as 
@@ -779,6 +798,7 @@ def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelra
     fi.write("[TYPE] NUCLEOTIDE 1 \n")
     fi.write("[SETTINGS]\n")
     fi.write("[output] FASTA \n")
+    fi.write("[randomseed]  {}\n".format(seed))
     fi.write("[MODEL] TTRm \n")
     fi.write("[submodel] GTR {} \n".format(rescale_rates))
     fi.write("[indelmodel] {} \n".format(indelmodel))
@@ -794,9 +814,9 @@ def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelra
 def run_indelible(outputdir):
     """Calls indelible, and returns to working directory"""
     cwd = os.getcwd()
-    os.chdir(outputdir)
-    call(['indelible', "control.txt", ">", "indelible.log"])
-    os.chdir(cwd)
+   # os.chdir(outputdir)
+   # call(['indelible', "control.txt", ">", "indelible.log"])
+   # os.chdir(cwd)
 
 
 def read_indelible_aln(ttrobj):
@@ -882,7 +902,10 @@ def write_vcf(ttrobj):
         if len(ttrobj.contig_breaks) > contig:
             if ttrobj.contig_breaks[contig] < loc:
                 contig += 1
-        assert set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames)
+        #assert set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames)
+        if set(ttrobj.vcf_dict[loc].keys()) != set(ttrobj.seqnames):
+            print(loc)
+            print(ttrobj.vcf_dict[loc])
         refbase = ttrobj.vcf_dict[loc][ttrobj.base_name]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
         for i, nuc in enumerate(base_calls):
