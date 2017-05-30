@@ -7,6 +7,7 @@ import sys
 import argparse
 from subprocess import call
 import dendropy
+import itertools
 
 VERSION = "0.0.5"
 
@@ -561,7 +562,8 @@ class TreeToReads(object):
         for i, dele in enumerate(self.deletionlocs):
             startsite_map[i] = None
             for x, loc in enumerate(dele):
-                translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}
+                translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}### THIS DOES NOT CONSIDRE POSSIBILITY OF OVERLAPPING DELETIONS!!!
+            tmpout.write("deletion count {} starts at {}\n".format(i, dele[0]))
         for seq in self.seqnames:
             self.mut_genos[seq] = []
             sys.stdout.write("writing genome for {}\n".format(seq))
@@ -850,7 +852,7 @@ def read_indelible_aln(ttrobj):
                     sys.stdout.write("Base genome length is  {} and alignement length will be {}\n".format(ttrobj.genlen, i))
                     break
     indel_aln = open("{}/TTRindelible_TRUE.fas".format(ttrobj.outd))
-    del_locs = set()
+    del_locs = {}
     for lin in indel_aln:
         if lin.startswith(">"):
             seqname = lin.strip(">").strip().strip("'")
@@ -863,15 +865,25 @@ def read_indelible_aln(ttrobj):
                     insertions[seqname][i] = char
                 elif char == '-':
                     deletions[seqname].add(i) ##
-                    del_locs.add(i)
+                    if seqname in del_locs:
+                        del_locs[seqname].add(i)
+                    else:
+                        del_locs[seqname] = set()
+                        del_locs[seqname].add(i)
                 if i >= alignment_length:
                     break
             seqname = None
         deletions[base_name] = {}
-    del_locs = list(del_locs)
-    del_locs.sort()
-    deletionlocs = get_sub_list(del_locs)
-    return insertions, deletions, insertionlocs, deletionlocs
+    total_dellocs = []
+    for seqname in del_locs:
+        sub_del_locs = list(del_locs[seqname])
+        sub_del_locs.sort()
+        sub_deletionlocs = get_sub_list(sub_del_locs)
+        total_dellocs.append(sub_deletionlocs)
+    total_dellocs.sort()
+    deletionlocs = list(total_dellocs for total_dellocs,_ in itertools.groupby(total_dellocs))
+    print deletionlocs[0]
+    return insertions, deletions, insertionlocs, deletionlocs[0]
 
 def split_list(n):
     """will return the list index for sequential deletions"""
