@@ -25,6 +25,8 @@ class TreeToReads(object):
     _vargen = 0
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
+        self.seed = (1)
+        random.seed(self.seed)
         self.configfi = configfi
         self.run = run
         self.main = main
@@ -542,7 +544,8 @@ class TreeToReads(object):
                                     self.get_arg('indel_model'),
                                     self.get_arg('indel_rate'),
                                     self.scaled_tree_newick[:-20],
-                                    self.genlen)
+                                    self.genlen,
+                                    self.seed)
         run_indelible(self.outd)
         self.insertions, self.deletions, self.insertionlocs, self.deletionlocs = read_indelible_aln(self)
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
@@ -779,6 +782,7 @@ def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelra
     fi.write("[TYPE] NUCLEOTIDE 1 \n")
     fi.write("[SETTINGS]\n")
     fi.write("[output] FASTA \n")
+    fi.write("[randomseed]  {}\n".format(seed))
     fi.write("[MODEL] TTRm \n")
     fi.write("[submodel] GTR {} \n".format(rescale_rates))
     fi.write("[indelmodel] {} \n".format(indelmodel))
