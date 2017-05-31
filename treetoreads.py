@@ -657,7 +657,7 @@ class TreeToReads(object):
             inp = "{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq)
             call(['sed', 's/-//g', inp], stdout=out_file)
         self._genmut = 1
-        write_vcf(self)
+       # write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
 
 
