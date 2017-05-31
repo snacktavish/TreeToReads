@@ -559,11 +559,16 @@ class TreeToReads(object):
         translate_deletions = {}
         startsite_map = {}
         doublehit = set()
+        del_DH = []
         for i, dele in enumerate(self.deletionlocs):
             startsite_map[i] = None
+           # if (int(dele[0]) <= int(self.deletionlocs[i-1][-1])) and (i > 0):
+           #     del_DH.append(self.deletionlocs[i-1])
+           #     del_DH.append(dele)
             for x, loc in enumerate(dele):
                 translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}### THIS DOES NOT CONSIDRE POSSIBILITY OF OVERLAPPING DELETIONS!!!
             tmpout.write("deletion count {} starts at {}\n".format(i, dele[0]))
+        print(del_DH)
         for seq in self.seqnames:
             self.mut_genos[seq] = []
             sys.stdout.write("writing genome for {}\n".format(seq))
@@ -669,7 +674,7 @@ class TreeToReads(object):
                         self.vcf_dict[loc][seqn] = self.vcf_dict[loc][seqn].rstrip('x')     
         for hit in doublehit:
             del self.vcf_dict[hit]  
-        print(doublehit)                       
+#        print(doublehit)                       
         for seq in self.seqnames: #remove the gaps for later sim.
             out_file = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             inp = "{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq)
@@ -816,9 +821,9 @@ def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelra
 def run_indelible(outputdir):
     """Calls indelible, and returns to working directory"""
     cwd = os.getcwd()
-   # os.chdir(outputdir)
-   # call(['indelible', "control.txt", ">", "indelible.log"])
-   # os.chdir(cwd)
+    os.chdir(outputdir)
+    call(['indelible', "control.txt", ">", "indelible.log"])
+    os.chdir(cwd)
 
 
 def read_indelible_aln(ttrobj):
@@ -882,7 +887,7 @@ def read_indelible_aln(ttrobj):
         total_dellocs.append(sub_deletionlocs)
     total_dellocs.sort()
     deletionlocs = list(total_dellocs for total_dellocs,_ in itertools.groupby(total_dellocs))
-    print deletionlocs[0]
+    print deletionlocs[0][0]
     return insertions, deletions, insertionlocs, deletionlocs[0]
 
 def split_list(n):
