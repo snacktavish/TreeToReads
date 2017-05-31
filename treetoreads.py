@@ -25,7 +25,8 @@ class TreeToReads(object):
     _vargen = 0
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
-        self.seed = (1)
+        self.seed = random.randint(0, sys.maxint)
+        sys.stdout.write("Random seed is {}\n".format(self.seed))
         random.seed(self.seed)
         self.configfi = configfi
         self.run = run
