@@ -771,7 +771,7 @@ class TreeToReads(object):
 
 
 
-def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelrate, tree, seqlen):
+def write_indelible_controlfile(outputdir, ratemat, freqmat, indelmodel, indelrate, tree, seqlen, seed):
     """Writes a control file for indelible to run
          indelible GTR is specified as ct', 'at', 'gt', 'ac', 'cg', 'ag' =1
          and indelible base frequencies are specified as 
@@ -806,7 +806,7 @@ def run_indelible(outputdir):
 def read_indelible_aln(ttrobj):
     """Pull steh locations of insertaions and deletions from indelible output.
     Insertion locs are in terms of the original sequence length,
-    but deletions are in terms of alignement length"""
+    but deletions are in terms of alignment length"""
     insertionlocs = {}
     insertionlocs_aln = set()
     insertions = {}
@@ -831,7 +831,7 @@ def read_indelible_aln(ttrobj):
                     ref_genome_i += 1
                 if ref_genome_i == ttrobj.genlen:
                     alignment_length = i
-                    sys.stdout.write("Base genome length is  {} and alignement length will be {}\n".format(ttrobj.genlen, i))
+                    sys.stdout.write("Base genome length is  {} and alignment length will be {}\n".format(ttrobj.genlen, i))
                     break
     indel_aln = open("{}/TTRindelible_TRUE.fas".format(ttrobj.outd))
     del_locs = set()
