@@ -310,8 +310,6 @@ class TreeToReads(object):
                     for base in base_counts:
                         base_counts[base] += line.count(base)
         self.contig_breaks.append(self.genlen)
-        print(self.contig_names)
-        print(self.contig_breaks)
         self.freqmat = {base:str(base_counts[base]/float(self.genlen)) for base in ['A','C','G','T']}
         sys.stdout.write("Base frequencies detected from anchor genome A:{} C:{} G:{} T:{}\n".format(self.freqmat['A'],
                                                                                              self.freqmat['C'],
@@ -448,9 +446,18 @@ class TreeToReads(object):
         while len(rands) < self.nsnp: #deals inelegantly with multiple hits, to make sure there are nsnp-len individual sites
             ran = random.sample(range(self.genlen), (self.nsnp-len(rands)))
             rands = rands | set(ran)
-        for site in rands:
-            fi.write(str(site)+'\n')
-        self.mutlocs = rands
+        self.mutlocs = list(rands)
+        self.mutlocs.sort()
+        contig = 0
+        self.mut_trans = {}
+        for loc in self.mutlocs:
+            adjusted_loc = loc - self.contig_breaks[contig]
+            if self.contig_breaks[contig+1] < loc:
+                contig += 1
+            adjusted_loc = loc - self.contig_breaks[contig]
+            contig_name = self.contig_names[contig]
+            self.mut_trans[loc] = (contig_name, str(adjusted_loc))
+            fi.write("{} {}\n".format(contig_name, str(adjusted_loc)+'\n'))
         self._mutlocs = 1
 
     def assign_sites(self):
@@ -517,6 +524,7 @@ class TreeToReads(object):
                             if lw%70 == 0:
                                 genout.write('\n')
                             if ii in self.mutlocs:
+                                contig_name, adjusted_loc = self.mut_trans[ii]
                                 if nuc == 'N':
                                     genout.write('N')
                                     self.vcf_dict[ii][seq] = 'N'
@@ -524,7 +532,7 @@ class TreeToReads(object):
                                     patt = self.sitepatts[nuc][self.snpdic[ii]]
                                     genout.write(patt[seq])
                                     self.mut_genos[seq].append(patt[seq])
-                                    matout.write("{} {} {}\n".format(seq, patt[seq], ii))
+                                    matout.write("{} {} {} {} {}\n".format(seq, patt[seq], ii, contig_name, adjusted_loc))
                                     self.vcf_dict[ii][seq] = patt[seq]
                             else:
                                 genout.write(nuc)
@@ -887,16 +895,10 @@ def write_vcf(ttrobj):
     fi.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format('\t'.join(ttrobj.seqnames)))
     mutlocs = ttrobj.vcf_dict.keys()
     mutlocs.sort()
+    assert mutlocs == ttrobj.mutlocs
     contig = 0
     for loc in mutlocs:
-        print(ttrobj.contig_breaks)
-        print("mutation loc is {}".format(loc))
-        adjusted_loc = loc - ttrobj.contig_breaks[contig]
-        print("comtig is {}".format(contig))
-        if ttrobj.contig_breaks[contig+1] < loc:
-                contig += 1
-        adjusted_loc = loc - ttrobj.contig_breaks[contig]
-        contig_name = ttrobj.contig_names[contig]
+        contig_name, adjusted_loc = ttrobj.mut_trans[loc]
         assert set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames)
         refbase = ttrobj.vcf_dict[loc][ttrobj.base_name]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
@@ -912,7 +914,7 @@ def write_vcf(ttrobj):
         variants = [trans[base] for base in base_calls]
         fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}
                  \t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig_name,
-                                                       loc=adjusted_loc+1,
+                                                       loc=int(adjusted_loc)+1,
                                                        refbase=refbase,
                                                        altbase=",".join(altbase),
                                                        vars='\t'.join(variants)))
