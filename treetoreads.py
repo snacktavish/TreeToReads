@@ -293,6 +293,7 @@ class TreeToReads(object):
         self.genlen = 0
         contigs = 0
         self.contig_breaks = []
+        self.contig_names = []
         base_counts = {'A':0, 'C':0, 'G':0, 'T':0}
         with open(self.get_arg('genome'), 'r') as in_file:
             for line in in_file:
@@ -300,6 +301,7 @@ class TreeToReads(object):
                 if line.startswith('>'):
                     contigs += 1
                     self.contig_breaks.append(self.genlen)
+                    self.contig_names.append(line.strip('>'))
                 else:
                     self.genlen += len(line)
                     if not set(line.upper()).issubset(set(['A', 'T', 'G', 'C', 'N'])):
@@ -307,6 +309,9 @@ class TreeToReads(object):
                                          such as: {} Please check your input genome.\n'''.format(set(line)))
                     for base in base_counts:
                         base_counts[base] += line.count(base)
+        self.contig_breaks.append(self.genlen)
+        print(self.contig_names)
+        print(self.contig_breaks)
         self.freqmat = {base:str(base_counts[base]/float(self.genlen)) for base in ['A','C','G','T']}
         sys.stdout.write("Base frequencies detected from anchor genome A:{} C:{} G:{} T:{}\n".format(self.freqmat['A'],
                                                                                              self.freqmat['C'],
@@ -884,9 +889,14 @@ def write_vcf(ttrobj):
     mutlocs.sort()
     contig = 0
     for loc in mutlocs:
-        if len(ttrobj.contig_breaks) > contig:
-            if ttrobj.contig_breaks[contig] < loc:
+        print(ttrobj.contig_breaks)
+        print("mutation loc is {}".format(loc))
+        adjusted_loc = loc - ttrobj.contig_breaks[contig]
+        print("comtig is {}".format(contig))
+        if ttrobj.contig_breaks[contig+1] < loc:
                 contig += 1
+        adjusted_loc = loc - ttrobj.contig_breaks[contig]
+        contig_name = ttrobj.contig_names[contig]
         assert set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames)
         refbase = ttrobj.vcf_dict[loc][ttrobj.base_name]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
@@ -901,8 +911,8 @@ def write_vcf(ttrobj):
             trans[base] = str(i+1)
         variants = [trans[base] for base in base_calls]
         fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}
-                 \t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig,
-                                                       loc=loc+1,
+                 \t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig_name,
+                                                       loc=adjusted_loc+1,
                                                        refbase=refbase,
                                                        altbase=",".join(altbase),
                                                        vars='\t'.join(variants)))
