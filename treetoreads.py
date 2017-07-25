@@ -457,7 +457,7 @@ class TreeToReads(object):
             adjusted_loc = loc - self.contig_breaks[contig]
             contig_name = self.contig_names[contig]
             self.mut_trans[loc] = (contig_name, str(adjusted_loc))
-            fi.write("{} {}\n".format(contig_name, str(adjusted_loc)+'\n'))
+            fi.write("{} {}\n".format(contig_name, str(adjusted_loc)))
         self._mutlocs = 1
 
     def assign_sites(self):
