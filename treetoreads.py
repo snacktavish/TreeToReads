@@ -26,6 +26,7 @@ class TreeToReads(object):
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
         self.seed = (1)
+        sys.stdout.write("Random seed is {}\n".format(self.seed))
         random.seed(self.seed)
         self.configfi = configfi
         self.run = run
@@ -680,7 +681,7 @@ class TreeToReads(object):
             inp = "{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq)
             call(['sed', 's/-//g', inp], stdout=out_file)
         self._genmut = 1
-        write_vcf(self)
+       # write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
 
 
@@ -829,7 +830,7 @@ def run_indelible(outputdir):
 def read_indelible_aln(ttrobj):
     """Pull steh locations of insertaions and deletions from indelible output.
     Insertion locs are in terms of the original sequence length,
-    but deletions are in terms of alignement length"""
+    but deletions are in terms of alignment length"""
     insertionlocs = {}
     insertionlocs_aln = set()
     insertions = {}
@@ -854,7 +855,7 @@ def read_indelible_aln(ttrobj):
                     ref_genome_i += 1
                 if ref_genome_i == ttrobj.genlen:
                     alignment_length = i
-                    sys.stdout.write("Base genome length is  {} and alignement length will be {}\n".format(ttrobj.genlen, i))
+                    sys.stdout.write("Base genome length is  {} and alignment length will be {}\n".format(ttrobj.genlen, i))
                     break
     indel_aln = open("{}/TTRindelible_TRUE.fas".format(ttrobj.outd))
     del_locs = {}
