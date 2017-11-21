@@ -8,8 +8,11 @@ import argparse
 from subprocess import call
 import dendropy
 import itertools
+from operator import itemgetter
 
 VERSION = "0.0.5"
+
+tmpout = open("tmpdels.txt","w")
 
 class TreeToReads(object):
     """A tree to reads object that holds the input tree and base genome,
@@ -25,7 +28,9 @@ class TreeToReads(object):
     _vargen = 0
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
-        self.seed = (1)
+        #self.seed = (5)
+        self.seed = random.randint(0, sys.maxint)
+        self.seed = (4871050314122165556)
         sys.stdout.write("Random seed is {}\n".format(self.seed))
         random.seed(self.seed)
         self.configfi = configfi
@@ -236,6 +241,8 @@ class TreeToReads(object):
         self._treeread = 1
         if not self._madeout:
             self.make_output()
+        if not self._genread:
+            self.read_genome
         #import tree from path
         if dendropy.__version__.startswith('4'):
             taxa = dendropy.TaxonNamespace()
@@ -539,7 +546,6 @@ class TreeToReads(object):
          and indelible base frequencies are specified as 
          pi_T, pi_C, pi_A, pi_G"""
         self.assign_sites()
-        tmpout = open("tmpdels.txt","w")
         write_indelible_controlfile(self.outd,
                                     self.ratemat,
                                     self.freqmat,
@@ -563,14 +569,19 @@ class TreeToReads(object):
         del_DH = []
         for i, dele in enumerate(self.deletionlocs):
             startsite_map[i] = None
-           # if (int(dele[0]) <= int(self.deletionlocs[i-1][-1])) and (i > 0):
-           #     del_DH.append(self.deletionlocs[i-1])
-           #     del_DH.append(dele)
+            if (int(dele[0]) <= int(self.deletionlocs[i-1][-1])) and (i > 0):
+                del_DH.append(self.deletionlocs[i-1])
+                del_DH.append(dele)
             for x, loc in enumerate(dele):
                 translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}### THIS DOES NOT CONSIDRE POSSIBILITY OF OVERLAPPING DELETIONS!!!
             tmpout.write("deletion count {} starts at {}\n".format(i, dele[0]))
-        print(del_DH)
+        tmpout.write("double hits\n")
+        tmpout.write(", ".join(del_DH))
+        if len(del_DH) > 1:
+            print "DOUBLEHIT----------------------------------------------------------------------"
         for seq in self.seqnames:
+            tmpout.write(seq+"\n")
+            tmpout.write(", ".join([str(i) for i in self.deletions[seq]]))
             self.mut_genos[seq] = []
             sys.stdout.write("writing genome for {}\n".format(seq))
             if not os.path.isdir("{}/fasta_files".format(self.outd)):
@@ -611,13 +622,15 @@ class TreeToReads(object):
                                         genout.write('\n')
                             if ali in self.deletions[seq]: #This should be exclusive of the columns considered "insertions".
                                 genout.write('-')
-                                if not startsite_map[translate_deletions[ali]['delcount']]: #if we haven't already mapped this deletion to the alignemnet and base genome
+                                if not startsite_map[translate_deletions[ali]['delcount']]: 
+                                #if we haven't already mapped this deletion to the alignment and base genome
                                     self.vcf_dict[ii] = {} #then create a vfc dict entry for it
                                     for subseq in self.seqnames:
                                         self.vcf_dict[ii][subseq] = prevnuc # and start that entry with the anchor base for each sequence
                                     del_starts.add(ii)
                                     tmpout.write("DELSTART {},{}, {}, {}, count {}\n".format(seq,ii,ali,translate_deletions[ali]['dellen'], translate_deletions[ali]['delcount']))
-                                    startsite_map[translate_deletions[ali]['delcount']] = ii #map the location of the dleetion in the alignemnt to the base in the anchor genome.
+                                    startsite_map[translate_deletions[ali]['delcount']] = ii 
+                                    #map the location of the dleetion in the alignemnt to the base in the anchor genome.
                                     for sit in range(ii, ii + translate_deletions[ali]['dellen'] + 1):
                                         tmpout.write("{}\n".format(sit))
                                         if sit in self.mutlocs:
@@ -862,7 +875,8 @@ def read_indelible_aln(ttrobj):
     for lin in indel_aln:
         if lin.startswith(">"):
             seqname = lin.strip(">").strip().strip("'")
-            assert seqname in ttrobj.seqnames
+            del_locs[seqname]=set()
+            #assert seqname in ttrobj.seqnames
         elif seqname and seqname != base_name:
             insertions[seqname] = {}
             deletions[seqname] = set()
@@ -878,18 +892,45 @@ def read_indelible_aln(ttrobj):
                         del_locs[seqname].add(i)
                 if i >= alignment_length:
                     break
-            seqname = None
         deletions[base_name] = {}
-    total_dellocs = []
+    print del_locs
+    total_dellocs = set()
     for seqname in del_locs:
         sub_del_locs = list(del_locs[seqname])
         sub_del_locs.sort()
+        tmpout.write("\n"+seqname+"ln893\n")
+        tmpout.write(", ".join([str(i) for i in sub_del_locs]))
+        tmpout.write("\n")
+        print sub_del_locs
         sub_deletionlocs = get_sub_list(sub_del_locs)
-        total_dellocs.append(sub_deletionlocs)
-    total_dellocs.sort()
-    deletionlocs = list(total_dellocs for total_dellocs,_ in itertools.groupby(total_dellocs))
-    print deletionlocs[0][0]
-    return insertions, deletions, insertionlocs, deletionlocs[0]
+        print "sublist looks like"
+        print sub_deletionlocs
+        tmpout.write(", ".join([str(i) for i in sub_deletionlocs]))
+        fixed_dels = [tuple(i) for i in sub_deletionlocs]
+        for deletion in fixed_dels:
+            if len(deletion) >= 1:
+                total_dellocs.add(deletion)
+    list_of_deletions = list(total_dellocs)
+    list_of_deletions = sorted(list_of_deletions,key=itemgetter(0))
+    print "list of deeltion"
+    print list_of_deletions
+    doublehit = set()
+    del_DH = []
+    translate_deletions = {}
+    deletionlocs = []
+    for i, dele in enumerate(list_of_deletions):
+        for base in dele:
+            if base in deletionlocs:
+               print "DOUBLEHIT {}".format(base)
+            else:
+                deletionlocs.append(base)
+        #for x, loc in enumerate(dele):
+        #    translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}### THIS DOES NOT CONSIDRE POSSIBILITY OF OVERLAPPING DELETIONS!!!
+    tmpout.write("double hits\n")
+    tmpout.write(", ".join(del_DH))
+    if len(del_DH) > 1:
+        print "DOUBLEHIT----------------------------------------------------------------------"
+    return insertions, deletions, insertionlocs, deletionlocs
 
 def split_list(n):
     """will return the list index for sequential deletions"""
