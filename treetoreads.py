@@ -30,7 +30,7 @@ class TreeToReads(object):
         """initialized object, most attributes generated through self._check_args using config file."""
         #self.seed = (5)
         self.seed = random.randint(0, sys.maxint)
-        self.seed = (4871050314122165556)
+       # self.seed = (4871050314122165556)
         sys.stdout.write("Random seed is {}\n".format(self.seed))
         random.seed(self.seed)
         self.configfi = configfi
@@ -562,10 +562,10 @@ class TreeToReads(object):
             self.vcf_dict[loc] = {}
         for loc in self.insertionlocs:
             self.vcf_dict[loc] = {}
-            print loc
-        for seq in self.insertions:
-            print seq
-            print self.insertions[seq].keys()
+         #   print loc
+       # for seq in self.insertions:
+       #     print seq
+       #     print self.insertions[seq].keys()
         deletion_ids={}
         self.del_location_dict = {}
         self.vcf_dict_deletions = {}
@@ -584,20 +584,6 @@ class TreeToReads(object):
 #            del_starts.add(loc_tuple[0])
       #  translate_deletions = {}
         crossmap_dict = {}
-       # startsite_map = {}
-        doublehit = set()
-        del_DH = []
-        # i, dele in enumerate(self.deletionlist):
-            #startsite_map[i] = None
-           # if (int(dele[0]) <= int(self.deletions[i-1][-1])) and (i > 0):
-           #     del_DH.append(self.deletions[i-1])
-           #     del_DH.append(dele)
-            #for x, loc in enumerate(dele):
-            #    translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}
-                ### THIS DOES NOT CONSIDRE POSSIBILITY OF OVERLAPPING DELETIONS!!!
-            #tmpout.write("deletion count {} starts at {}\n".format(i, dele[0]))
-        tmpout.write("double hits\n")
-        tmpout.write(", ".join(del_DH))
         for seq in self.seqnames:
             tmpout.write(seq+"\n")
             tmpout.write(", ".join([str(i) for i in self.deletions[seq]]))
@@ -651,14 +637,11 @@ class TreeToReads(object):
                                     #map the location of the dleetion in the alignemnt to the base in the anchor genome.
                                 self.vcf_dict_deletions[current_del_tuple][self.base_name] += nuc
                                 self.vcf_dict_deletions[current_del_tuple][seq] += 'x'
+                                if ii in self.mutlocs:
+                                    self.vcf_dict[ii][seq] = '*' #Deletion at a SNP site
                                 ali += 1
                                 lw += 1
                                 ii += 1
-                                if ii in self.mutlocs:
-                                    if ii in doublehit:
-                                        tmpout.write("mutation overlap with deletion counted {}, {}\n".format(ali, ii))
-                                    else:
-                                        tmpout.write("mutation overlap with deletion missed {},{}\n".format(ali, ii))
                             elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
@@ -686,27 +669,55 @@ class TreeToReads(object):
         matout.close()
         #print self.vcf_dict_deletions
         #print crossmap_dict
+        overlapping_deletions = {}
+        last_dele = (0,)
+        for dele in self.deletionlist:
+            if (set(dele).intersection(last_dele)):
+                if len(set(dele).union(last_dele)) == len(last_dele): #second del is subset
+                    seq = self.vcf_dict_deletions[last_dele][self.base_name]
+                    dele_pos =  [i for i,x in enumerate(last_dele) if x in set(dele).intersection(last_dele)]
+                    dele_seq = ''.join([seq[i] for i in xrange(len(seq)) if i not in dele_pos])
+                    assert len(dele_seq) < len(seq)
+                    for seqname in self.seqnames:
+                        if dele in self.deletions[seqname]:
+                            self.vcf_dict_deletions[last_dele][seqname] = dele_seq
+                    del self.vcf_dict_deletions[dele] # This means cannot currently cope with 3 overlapping deletions
+                else: #second del is subset
+                    sys.stderr.write('''Too many overlapping deletions for sensical VCF\n''')
+                    exit()
+                #    overlap_len = len(set(dele).intersection(last_dele))
+                #    combined_seq = self.vcf_dict_deletions[last_dele][self.base_name] + self.vcf_dict_deletions[dele][self.base_name][-overlap_len:]
+                #    assert len(seq) == len(set(dele).union(last_dele))
+                #    self.vcf_dict_deletions[last_dele][self.base_name] = combined_seq
+                #    dele_pos =  [i for i,x in enumerate(last_dele) if x in set(dele).intersection(last_dele)]
+                #    dele_seq = ''.join([seq[i] for i in xrange(len(seq)) if i not in dele_pos])
+                #    assert len(dele_seq) < len(seq)
+                #    for seqname in self.seqnames:
+                #        if dele in self.deletions[seqname]:
+                #            self.vcf_dict_deletions[last_dele][seqname] = dele_seq
+                #        if last_dele in self.deletions[seqname]:
+                #            self.vcf_dict_deletions[last_dele][seqname] = dele_seq
+
+                # self.vcf_dict_deletions[dele][self.base_name]
+            last_dele = dele
         for dele in self.vcf_dict_deletions:
             refseq = self.vcf_dict_deletions[dele][self.base_name]
             loc = crossmap_dict[dele]['refloc']
             self.vcf_dict[loc] = {}
             for seqn in self.seqnames:
                 if seqn == self.base_name:
-                    pass
+                    self.vcf_dict[loc][seqn] = self.vcf_dict_deletions[dele][seqn]
                 else:
                     if len(self.vcf_dict_deletions[dele][seqn]) == 1:
                         self.vcf_dict[loc][seqn] = refseq
                     else:
-                        self.vcf_dict[loc][seqn] = self.vcf_dict_deletions[dele][seqn].rstrip('x')     
-        for hit in doublehit:
-            del self.vcf_dict[hit]  
-#        print(doublehit)                       
+                        self.vcf_dict[loc][seqn] = self.vcf_dict_deletions[dele][seqn].rstrip('x')                          
         for seq in self.seqnames: #remove the gaps for later sim.
             out_file = open("{}/fasta_files/{}{}.fasta".format(self.outd, self.prefix, seq), 'w')
             inp = "{}/fasta_files/{}{}_indel.fasta".format(self.outd, self.prefix, seq)
             call(['sed', 's/-//g', inp], stdout=out_file)
         self._genmut = 1
-       # write_vcf(self)
+        write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
 
 
@@ -934,7 +945,7 @@ def read_indelible_aln(ttrobj):
     for i, dele in enumerate(list_of_deletions):
         for base in dele:
             if base in deletionlocs:
-               print "DOUBLEHIT {}".format(base)
+               print "DOUBLEHIT deletion {}".format(base)
                del_DH.append(base)
             else:
                 deletionlocs.append(base)
@@ -969,10 +980,7 @@ def write_vcf(ttrobj):
         if len(ttrobj.contig_breaks) > contig:
             if ttrobj.contig_breaks[contig] < loc:
                 contig += 1
-        #assert set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames)
-        if set(ttrobj.vcf_dict[loc].keys()) != set(ttrobj.seqnames):
-            print(loc)
-            print(ttrobj.vcf_dict[loc])
+        assert set(ttrobj.vcf_dict[loc].keys()) == set(ttrobj.seqnames)
         refbase = ttrobj.vcf_dict[loc][ttrobj.base_name]
         base_calls = [ttrobj.vcf_dict[loc][seq] for seq in ttrobj.seqnames]
         for i, nuc in enumerate(base_calls):
@@ -985,18 +993,15 @@ def write_vcf(ttrobj):
         for i, base in enumerate(altbase):
             trans[base] = str(i+1)
         variants = [trans[base] for base in base_calls]
-        fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}
-                 \t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig,
-                                                       loc=loc+1,
-                                                       refbase=refbase,
-                                                       altbase=",".join(altbase),
-                                                       vars='\t'.join(variants)))
+        fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig,
+                                                                                                loc=loc+1,
+                                                                                                refbase=refbase,
+                                                                                                altbase=",".join(altbase),
+                                                                                                vars='\t'.join(variants)))
     fi.close()
 
 
 
-
-#def gappify alignemnet()
 
 
 if __name__ == "__main__":
