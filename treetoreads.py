@@ -555,30 +555,49 @@ class TreeToReads(object):
                                     self.genlen,
                                     self.seed)
         run_indelible(self.outd)
-        self.insertions, self.deletions, self.insertionlocs, self.deletionlocs = read_indelible_aln(self)
+        self.insertions, self.deletions, self.insertionlocs, self.deletionlist = read_indelible_aln(self)
         matout = open("{}/var_site_matrix".format(self.outd), 'w')
         self.vcf_dict = {}
         for loc in self.mutlocs:
             self.vcf_dict[loc] = {}
         for loc in self.insertionlocs:
             self.vcf_dict[loc] = {}
-        del_starts = set()
-        translate_deletions = {}
-        startsite_map = {}
+            print loc
+        for seq in self.insertions:
+            print seq
+            print self.insertions[seq].keys()
+        deletion_ids={}
+        self.del_location_dict = {}
+        self.vcf_dict_deletions = {}
+        for seqname in self.deletions:
+            self.del_location_dict[seqname] = {}
+            for deletion in self.deletions[seqname]:
+                for i in deletion:
+                    self.del_location_dict[seqname][i] = deletion
+               # if not self.vcf_dict_deletions.get(deletion, None):
+               #     self.vcf_dict_deletions[deletion] = {}
+               #     self.vcf_dict_deletions[deletion][self.base_name] = ""
+               # self.vcf_dict_deletions[deletion][seqname] = ""
+     #   for i, loc_tuple in enumerate(self.deletionlist):
+     #       self.vcf_dict[loc_tuple[0]] = {}
+     #       deletion_ids[loc_tuple] = i
+#            del_starts.add(loc_tuple[0])
+      #  translate_deletions = {}
+        crossmap_dict = {}
+       # startsite_map = {}
         doublehit = set()
         del_DH = []
-        for i, dele in enumerate(self.deletionlocs):
-            startsite_map[i] = None
-            if (int(dele[0]) <= int(self.deletionlocs[i-1][-1])) and (i > 0):
-                del_DH.append(self.deletionlocs[i-1])
-                del_DH.append(dele)
-            for x, loc in enumerate(dele):
-                translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}### THIS DOES NOT CONSIDRE POSSIBILITY OF OVERLAPPING DELETIONS!!!
-            tmpout.write("deletion count {} starts at {}\n".format(i, dele[0]))
+        # i, dele in enumerate(self.deletionlist):
+            #startsite_map[i] = None
+           # if (int(dele[0]) <= int(self.deletions[i-1][-1])) and (i > 0):
+           #     del_DH.append(self.deletions[i-1])
+           #     del_DH.append(dele)
+            #for x, loc in enumerate(dele):
+            #    translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}
+                ### THIS DOES NOT CONSIDRE POSSIBILITY OF OVERLAPPING DELETIONS!!!
+            #tmpout.write("deletion count {} starts at {}\n".format(i, dele[0]))
         tmpout.write("double hits\n")
         tmpout.write(", ".join(del_DH))
-        if len(del_DH) > 1:
-            print "DOUBLEHIT----------------------------------------------------------------------"
         for seq in self.seqnames:
             tmpout.write(seq+"\n")
             tmpout.write(", ".join([str(i) for i in self.deletions[seq]]))
@@ -620,37 +639,26 @@ class TreeToReads(object):
                                     lw += 1
                                     if lw%70 == 0:
                                         genout.write('\n')
-                            if ali in self.deletions[seq]: #This should be exclusive of the columns considered "insertions".
+                            if ali in self.del_location_dict[seq]: #This should be exclusive of the columns considered "insertions".
                                 genout.write('-')
-                                if not startsite_map[translate_deletions[ali]['delcount']]: 
-                                #if we haven't already mapped this deletion to the alignment and base genome
-                                    self.vcf_dict[ii] = {} #then create a vfc dict entry for it
+                                current_del_tuple =self.del_location_dict[seq][ali]
+                                if not self.vcf_dict_deletions.get(current_del_tuple, None):
+                                    self.vcf_dict_deletions[current_del_tuple] = {} #then create a vfc dict entry for it
                                     for subseq in self.seqnames:
-                                        self.vcf_dict[ii][subseq] = prevnuc # and start that entry with the anchor base for each sequence
-                                    del_starts.add(ii)
-                                    tmpout.write("DELSTART {},{}, {}, {}, count {}\n".format(seq,ii,ali,translate_deletions[ali]['dellen'], translate_deletions[ali]['delcount']))
-                                    startsite_map[translate_deletions[ali]['delcount']] = ii 
+                                        self.vcf_dict_deletions[current_del_tuple][subseq] = prevnuc # and start that entry with the anchor base for each sequence
+                                if current_del_tuple not in crossmap_dict: #This should just be the startsite
+                                    crossmap_dict[current_del_tuple] = {"alignemntstart":ali, "refloc":ii}
                                     #map the location of the dleetion in the alignemnt to the base in the anchor genome.
-                                    for sit in range(ii, ii + translate_deletions[ali]['dellen'] + 1):
-                                        tmpout.write("{}\n".format(sit))
-                                        if sit in self.mutlocs:
-                                                doublehit.add(sit)
-                                                tmpout.write("DH {}\n".format(sit))
-                                startsite = startsite_map[translate_deletions[ali]['delcount']]
-                                tmpout.write("ali {} is in {} deletions,  located at ii {}, count {}\n".format(ali, seq, ii, translate_deletions[ali]['delcount']))
-                                if not translate_deletions[ali]['counted']:
-                                    self.vcf_dict[startsite][self.base_name] += nuc
-                                    translate_deletions[ali]['counted'] = 1
-                                self.vcf_dict[startsite][seq] += 'x'
+                                self.vcf_dict_deletions[current_del_tuple][self.base_name] += nuc
+                                self.vcf_dict_deletions[current_del_tuple][seq] += 'x'
                                 ali += 1
                                 lw += 1
                                 ii += 1
-                                counted = 1
                                 if ii in self.mutlocs:
                                     if ii in doublehit:
-                                        tmpout.write("DHcounted {}, {}\n".format(ali, ii))
+                                        tmpout.write("mutation overlap with deletion counted {}, {}\n".format(ali, ii))
                                     else:
-                                        tmpout.write("DHMissed {},{}\n".format(ali, ii))
+                                        tmpout.write("mutation overlap with deletion missed {},{}\n".format(ali, ii))
                             elif ii in self.mutlocs:
                                 if nuc == 'N':
                                     genout.write('N')
@@ -676,16 +684,20 @@ class TreeToReads(object):
             genout.write('\n')
             genout.close()
         matout.close()
-        for loc in del_starts:
-            refseq = self.vcf_dict[loc][self.base_name]
+        #print self.vcf_dict_deletions
+        #print crossmap_dict
+        for dele in self.vcf_dict_deletions:
+            refseq = self.vcf_dict_deletions[dele][self.base_name]
+            loc = crossmap_dict[dele]['refloc']
+            self.vcf_dict[loc] = {}
             for seqn in self.seqnames:
                 if seqn == self.base_name:
                     pass
                 else:
-                    if len(self.vcf_dict[loc][seqn]) == 1:
+                    if len(self.vcf_dict_deletions[dele][seqn]) == 1:
                         self.vcf_dict[loc][seqn] = refseq
                     else:
-                        self.vcf_dict[loc][seqn] = self.vcf_dict[loc][seqn].rstrip('x')     
+                        self.vcf_dict[loc][seqn] = self.vcf_dict_deletions[dele][seqn].rstrip('x')     
         for hit in doublehit:
             del self.vcf_dict[hit]  
 #        print(doublehit)                       
@@ -892,8 +904,9 @@ def read_indelible_aln(ttrobj):
                         del_locs[seqname].add(i)
                 if i >= alignment_length:
                     break
+            seqname = None
         deletions[base_name] = {}
-    print del_locs
+  #  print del_locs
     total_dellocs = set()
     for seqname in del_locs:
         sub_del_locs = list(del_locs[seqname])
@@ -901,19 +914,19 @@ def read_indelible_aln(ttrobj):
         tmpout.write("\n"+seqname+"ln893\n")
         tmpout.write(", ".join([str(i) for i in sub_del_locs]))
         tmpout.write("\n")
-        print sub_del_locs
+   #     print sub_del_locs
         sub_deletionlocs = get_sub_list(sub_del_locs)
-        print "sublist looks like"
-        print sub_deletionlocs
+    #    print "sublist looks like"
+     #   print sub_deletionlocs
         tmpout.write(", ".join([str(i) for i in sub_deletionlocs]))
-        fixed_dels = [tuple(i) for i in sub_deletionlocs]
+        fixed_dels = [tuple(i) for i in sub_deletionlocs if len(i) >= 1]
+        deletions[seqname] = fixed_dels
         for deletion in fixed_dels:
-            if len(deletion) >= 1:
-                total_dellocs.add(deletion)
+            total_dellocs.add(deletion)
     list_of_deletions = list(total_dellocs)
     list_of_deletions = sorted(list_of_deletions,key=itemgetter(0))
-    print "list of deeltion"
-    print list_of_deletions
+   # print "list of deeltion"
+   # print list_of_deletions
     doublehit = set()
     del_DH = []
     translate_deletions = {}
@@ -922,15 +935,10 @@ def read_indelible_aln(ttrobj):
         for base in dele:
             if base in deletionlocs:
                print "DOUBLEHIT {}".format(base)
+               del_DH.append(base)
             else:
                 deletionlocs.append(base)
-        #for x, loc in enumerate(dele):
-        #    translate_deletions[loc] = {'delcount': i, 'dellen':len(dele), 'delpos':x, 'counted':0}### THIS DOES NOT CONSIDRE POSSIBILITY OF OVERLAPPING DELETIONS!!!
-    tmpout.write("double hits\n")
-    tmpout.write(", ".join(del_DH))
-    if len(del_DH) > 1:
-        print "DOUBLEHIT----------------------------------------------------------------------"
-    return insertions, deletions, insertionlocs, deletionlocs
+    return insertions, deletions, insertionlocs, list_of_deletions
 
 def split_list(n):
     """will return the list index for sequential deletions"""
