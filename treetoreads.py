@@ -26,6 +26,7 @@ class TreeToReads(object):
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
         self.seed = random.randint(0, sys.maxint)
+        self.seed = 9196831708325737605
         sys.stdout.write("Random seed is {}\n".format(self.seed))
         random.seed(self.seed)
         self.configfi = configfi
@@ -484,9 +485,9 @@ class TreeToReads(object):
                     line = line.strip()
                     for nuc in line:
                         if ii in self.mutlocs:
-                            patnuc[nuc] += 1
                             self.snpdic[ii] = patnuc[nuc]
-                            if len(self.sitepatts[nuc]) <= self.snpdic[ii]:
+                            patnuc[nuc] += 1
+                            while len(self.sitepatts[nuc]) <= self.snpdic[ii]:
                                 self.add_varsites()
                         ii += 1
         if self.trip_hit:
