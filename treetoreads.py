@@ -447,7 +447,7 @@ class TreeToReads(object):
             ran = random.sample(range(self.genlen), (self.nsnp-len(rands)))
             rands = rands | set(ran)
         self.mutlocs = list(rands)
-        self.mutlocs.sort()
+        self.mutlocs = sorted(self.mutlocs)
         contig = 0
         self.mut_trans = {}
         for loc in self.mutlocs:
@@ -867,7 +867,7 @@ def read_indelible_aln(ttrobj):
             seqname = None
         deletions[base_name] = {}
     del_locs = list(del_locs)
-    del_locs.sort()
+    del_locs = sorted(del_locs)
     deletionlocs = get_sub_list(del_locs)
     return insertions, deletions, insertionlocs, deletionlocs
 
@@ -894,7 +894,7 @@ def write_vcf(ttrobj):
     fi.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
     fi.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format('\t'.join(ttrobj.seqnames)))
     mutlocs = ttrobj.vcf_dict.keys()
-    mutlocs.sort()
+    mutlocs = sorted(mutlocs)
     assert mutlocs == ttrobj.mutlocs
     contig = 0
     for loc in mutlocs:
