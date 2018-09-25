@@ -1,6 +1,6 @@
 #! bin/python
 
-## This script is intended to accompany my Snakefile for TreeToReads – it should take inline arguments and write them into a *.config file
+## This script is intended to accompany my Snakefile for TreeToReads -- it should take inline arguments and write them into a *.config file
 
 import sys
 
