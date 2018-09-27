@@ -75,12 +75,20 @@ rule list_isolates:
     input:
         job_name + "/var_site_matrix"
     output:
-        "isolates.tab"
+        job_name + "/isolates.tab"
     shell:
         "bash make_isolates_list.sh %s" % job_name
 
 rule run_nullarbor:
     input:
+    	"isolates.tab"
+    output:
+    	"nullarbor/core.vcf"
+    shell:
+    	"""
+    	cd %s
+    	nullarbor.pl --input %s/{input} --outdir %s/nullarbor --name %s --ref Reference.fasta
+    	""" % job_name, job_name, job_name
 
 
 

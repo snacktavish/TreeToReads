@@ -11,6 +11,6 @@ ls -d fastq/* | cut -d'/' -f 2 > isolist
 ls fastq/*/*1.fq.gz > read1
 ls fastq/*/*2.fq.gz > read2
 
-paste isolist read1 read2 > ../isolates.tab 
+paste isolist read1 read2 > isolates.tab 
 
 rm isolist read1 read2
