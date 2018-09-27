@@ -4,7 +4,7 @@
 
 # move to TTS output directory
 TTS_outdir=$1 
-cd TTS_outdir
+cd ${TTS_outdir}
 
 # prepare isolates.tab
 ls -d fastq/* | cut -d'/' -f 2 > isolist

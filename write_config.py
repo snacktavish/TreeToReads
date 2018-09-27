@@ -8,8 +8,8 @@ genome_file = sys.argv[1]
 job_name = sys.argv[2]
 job_tree = sys.argv[3]
 
-N_var_sites = 20
-coverage = 20
+N_var_sites = 10
+coverage = 60
 
 
 REQUIRED_PARAMS = \

@@ -71,5 +71,20 @@ rule run_TTR:
     shell:
         "python treetoreads.py {input}"
 
+rule list_isolates:
+    input:
+        job_name + "/var_site_matrix"
+    output:
+        "isolates.tab"
+    shell:
+        "bash make_isolates_list.sh %s" % job_name
+
+rule run_nullarbor:
+    input:
+
+
+
+
+
 
 
