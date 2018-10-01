@@ -103,6 +103,17 @@ rule make_GT_tab:
     shell:
         f"bcftools query -Hf '%CHROM\t%POS\t%REF[\t%TGT]\n'  {job_name}/nullarbor/core.vcf > {job_name}/nullarbor/core.vcf.tab"
 
+rule test_detection:
+    input:
+        f"{job_name}/nullarbor/core.vcf.tab"
+    output:
+        f"{job_name}/SNP_comparison_notebook.nb.html"
+    shell:
+        """
+        cp SNP_comparison_notebook.Rmd %s
+        cd %s 
+        Rscript -e "rmarkdown::render('SNP_comparison_notebook.Rmd')"
+        """ % (job_name, job_name)
 
 
 
