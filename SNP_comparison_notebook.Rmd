@@ -13,6 +13,10 @@ output:
 require( tidyverse )
 require( data.table )
 
+dir_name <- (getwd() %>% str_split( "/" ))[[1]] %>% tail( 1 )
+ref_name <- dir( pattern = "*.fasta" )
+nwk_name <- dir( pattern = "*.newick" )
+
 var_mat <- fread( "var_site_matrix", sep = " " )
 
 sim_GT <- var_mat %>% transmute( ID=V1, GT=V2, locus=V3 ) %>% spread( ID, GT ) %>% mutate_all( factor ) %>% rename_all( function(x) paste0( "sim_", x )) %>% mutate( n_locus=as.numeric( as.character( sim_locus ))) %>% arrange( n_locus ) %>% data.table()
@@ -21,6 +25,13 @@ detect_GT <- fread( "nullarbor/core.vcf.tab" ) %>% rename_all( str_replace, "\\[
 
 ```
 
+### This analysis name -- ``r dir_name ``
+
+### Using reference -- ``r ref_name `` 
+
+### Using tree -- ``r nwk_name ``
+
+---
 
 **Test 1** -- Do SNP matrices have the same IDs?
 
