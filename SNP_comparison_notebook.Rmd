@@ -36,24 +36,38 @@ detect_GT <- fread( "nullarbor/core.vcf.tab" ) %>% rename_all( str_replace, "\\[
 
 ```{r}
 
-sim_loci <- as.numeric( as.character( sim_GT$sim_locus )) %>% data.table()
+sim_loci <- as.numeric( as.character( sim_GT$sim_locus )) #%>% data.table()
   setattr( sim_loci, "sorted", "sim" )
   setkey( sim_loci ) 
 
-det_loci <- as.numeric( as.character( detect_GT$sim_locus )) %>% data.table()
+det_loci <- as.numeric( as.character( detect_GT$sim_locus )) #%>% data.table()
   setattr( det_loci, "sorted", "det" )
   setkey( det_loci ) 
 
-closest_match <- det_loci[ J( sim_loci ), roll = "nearest"]
+# closest_match <- cbind( sim_loci, sim_loci[ J( det_loci ), roll = "nearest"])
+# 
+# sim_loci[ J( det_loci ), roll = "nearest"]
+# 
+# CoordTable <- sim_loci %>% rename( sim_coord="." ) %>% mutate( best_match=det_loci[ J( sim_loci ), roll = "nearest"]$. )
+# 
+# 
+#   names( CoordTable ) <- c("sim_coord", "call_coord", "best_match", "n_mismatch")
 
-CoordTable <- data.frame( cbind( sim=sim_loci, det=det_loci, match=closest_match )) %>% mutate( mismatch=det_loci-closest_match )
-  names( CoordTable ) <- c("sim_coord", "call_coord", "best_match", "n_mismatch")
-  cum_mismatch <- sum( CoordTable$n_mismatch ) / nrow( sim_GT )
 
+mymatch <- rep( NA, nrow( sim_GT ))
+
+for( i in 1:nrow( sim_GT )) {
+  mymatch[i] <- det_loci[ which.min( abs( sim_loci[i] - det_loci ))]
+  if( min( abs( sim_loci[i] - det_loci )) >= 100 ) { mymatch[i] <- NA }
+}
+
+CoordTable <- cbind( sim_coord=sim_loci, best_match=mymatch ) %>% as_data_frame() %>% mutate( n_mismatch=abs( sim_coord - best_match ))
+
+cum_mismatch <- sum( CoordTable$n_mismatch, na.rm = TRUE ) / nrow( detect_GT )
 
 ```
 
-The SNP loci are mis-located by a mean of `r cum_mismatch` base-pairs per locus:
+The SNP loci are mis-located by a mean of `r cum_mismatch` base-pairs per locus, with `r sum(is.na(mymatch))` SNP not detected:
 
 `r knitr::kable( CoordTable )`
 
