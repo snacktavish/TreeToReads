@@ -34,7 +34,7 @@ detect_GT <- fread( "nullarbor/core.vcf.tab" ) %>% rename_all( str_replace, "\\[
 
 **Test 3** -- Are SNPs detected in the correct positions?
 
-```{r}
+```{r coord table}
 
 sim_loci <- as.numeric( as.character( sim_GT$sim_locus )) #%>% data.table()
   setattr( sim_loci, "sorted", "sim" )
@@ -43,16 +43,6 @@ sim_loci <- as.numeric( as.character( sim_GT$sim_locus )) #%>% data.table()
 det_loci <- as.numeric( as.character( detect_GT$sim_locus )) #%>% data.table()
   setattr( det_loci, "sorted", "det" )
   setkey( det_loci ) 
-
-# closest_match <- cbind( sim_loci, sim_loci[ J( det_loci ), roll = "nearest"])
-# 
-# sim_loci[ J( det_loci ), roll = "nearest"]
-# 
-# CoordTable <- sim_loci %>% rename( sim_coord="." ) %>% mutate( best_match=det_loci[ J( sim_loci ), roll = "nearest"]$. )
-# 
-# 
-#   names( CoordTable ) <- c("sim_coord", "call_coord", "best_match", "n_mismatch")
-
 
 mymatch <- rep( NA, nrow( sim_GT ))
 
