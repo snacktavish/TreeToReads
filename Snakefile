@@ -19,8 +19,10 @@ job_tree = config['tree']
 genome_path, tree_path = Path( genome_file ), Path( job_tree )
 
 genome_local = Path( job_name, genome_path.name )
-tree_local = Path( job_name, "Reference.fasta" )
+tree_local = Path( job_name, tree_path.name )
 config_local = Path( job_name, job_name + ".config" )
+
+isolist = Path( job_name + "/isolates.tab" )
 
 
 def check_genome( Gfile ):
@@ -60,19 +62,22 @@ rule write_config:
     output:
         str( config_local )
     shell:
-        "python write_config.py {input[1]} %s {input[0]}" % job_name
+        "python3 write_config.py {input[1]} %s {input[0]}" % job_name
 
 rule run_TTR:
     input:
         config_local
     output:
         job_name + "/fastq/sim_Reference/sim_Reference_1.fq.gz",
-        job_name + "/fastq/sim_Reference/sim_Reference_2.fq.gz"
+        job_name + "/fastq/sim_Reference/sim_Reference_2.fq.gz",
+        job_name + "/var_site_matrix"
     shell:
         "python treetoreads.py {input}"
 
 rule list_isolates:
     input:
+        job_name + "/fastq/sim_Reference/sim_Reference_1.fq.gz",
+        job_name + "/fastq/sim_Reference/sim_Reference_2.fq.gz",
         job_name + "/var_site_matrix"
     output:
         job_name + "/isolates.tab"
@@ -81,15 +86,22 @@ rule list_isolates:
 
 rule run_nullarbor:
     input:
-    	"isolates.tab"
+        job_name + "/isolates.tab"
     output:
-    	"nullarbor/core.vcf"
+    	job_name + "/nullarbor/core.vcf"
     shell:
     	"""
-    	cd %s
-    	nullarbor.pl --input %s/{input} --outdir %s/nullarbor --name %s --ref Reference.fasta
-    	""" % job_name, job_name, job_name
+        cd %s
+        nullarbor.pl --input isolates.tab --outdir nullarbor --name %s --ref %s --force --run
+        """ % (job_name, job_name, str( genome_local.name ))
 
+rule make_GT_tab:
+    input:
+        job_name + "/nullarbor/core.vcf"
+    output:
+        job_name + "/nullarbor/core.vcf.tab"
+    shell:
+        f"bcftools query -Hf '%CHROM\t%POS\t%REF[\t%TGT]\n'  {job_name}/nullarbor/core.vcf > {job_name}/nullarbor/core.vcf.tab"
 
 
 

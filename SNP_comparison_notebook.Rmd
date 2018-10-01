@@ -46,9 +46,10 @@ det_loci <- as.numeric( as.character( detect_GT$sim_locus )) %>% data.table()
 
 closest_match <- det_loci[ J( sim_loci ), roll = "nearest"]
 
-CoordTable <- data.frame( cbind( sim=sim_loci, det=det_loci, match=closest_match, mismatch=det_loci-closest_match ))
+CoordTable <- data.frame( cbind( sim=sim_loci, det=det_loci, match=closest_match )) %>% mutate( mismatch=det_loci-closest_match )
   names( CoordTable ) <- c("sim_coord", "call_coord", "best_match", "n_mismatch")
   cum_mismatch <- sum( CoordTable$n_mismatch ) / nrow( sim_GT )
+
 
 ```
 
