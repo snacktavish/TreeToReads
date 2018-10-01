@@ -1,0 +1,91 @@
+---
+title: "SNP comparison notebook"
+output: 
+  html_notebook: 
+    code_folding: hide
+    highlight: pygments
+    theme: cerulean
+---
+
+
+```{r setup, include=FALSE}
+
+require( tidyverse )
+require( data.table )
+
+var_mat <- fread( "var_site_matrix", sep = " " )
+
+sim_GT <- var_mat %>% transmute( ID=V1, GT=V2, locus=V3 ) %>% spread( ID, GT ) %>% mutate_all( factor ) %>% rename_all( function(x) paste0( "sim_", x )) %>% mutate( n_locus=as.numeric( as.character( sim_locus ))) %>% arrange( n_locus ) %>% data.table()
+
+detect_GT <- fread( "nullarbor/core.vcf.tab" ) %>% rename_all( str_replace, "\\[[0-9]+\\]", '' ) %>% rename_all( str_replace, ':GT', '') %>% select( -`# CHROM`, -REF ) %>% mutate_all( factor ) %>% rename( sim_locus=POS ) %>% mutate( n_locus=as.numeric( as.character( sim_locus ))) %>% arrange( n_locus ) %>% data.table()
+
+```
+
+
+**Test 1** -- Do SNP matrices have the same IDs?
+
+``r all.equal( names( sim_GT ), names( detect_GT )) ``
+
+
+**Test 2** -- Are the SNP lists of the same length?
+
+``r length( sim_GT$sim_locus ) == length( detect_GT$sim_locus ) ``
+
+
+**Test 3** -- Are SNPs detected in the correct positions?
+
+```{r}
+
+sim_loci <- as.numeric( as.character( sim_GT$sim_locus )) %>% data.table()
+  setattr( sim_loci, "sorted", "sim" )
+  setkey( sim_loci ) 
+
+det_loci <- as.numeric( as.character( detect_GT$sim_locus )) %>% data.table()
+  setattr( det_loci, "sorted", "det" )
+  setkey( det_loci ) 
+
+closest_match <- det_loci[ J( sim_loci ), roll = "nearest"]
+
+CoordTable <- data.frame( cbind( sim=sim_loci, det=det_loci, match=closest_match, mismatch=det_loci-closest_match ))
+  names( CoordTable ) <- c("sim_coord", "call_coord", "best_match", "n_mismatch")
+  cum_mismatch <- sum( CoordTable$n_mismatch ) / nrow( sim_GT )
+
+```
+
+The SNP loci are mis-located by a mean of `r cum_mismatch` base-pairs per locus:
+
+`r knitr::kable( CoordTable )`
+
+
+**Visual Check** -- Genotypes at SNP loci
+
+```{r SNP visualization, fig.height=6, fig.width=6}
+
+n_sim_GT <- sim_GT %>% select( starts_with( "sim" ), -sim_locus ) %>% 
+            mutate_all( function(x) case_when( x=="A" ~ 1, x=="C" ~ 2, x=="G" ~ 3, x=="T" ~ 4, x!="A" & x!="C" & x!="G" & x!="T" ~ NA_real_ ))
+
+n_det_GT <- detect_GT %>% select( starts_with( "sim" ), -sim_locus ) %>% 
+            mutate_all( function(x) case_when( x=="A" ~ 1, x=="C" ~ 2, x=="G" ~ 3, x=="T" ~ 4, x!="A" & x!="C" & x!="G" & x!="T" ~ NA_real_ ))
+
+ACGTcols <- paletteer::paletteer_d( "wesanderson", "Zissou1" )[-5]
+
+par( mfrow=c(2,1), mar=c(3,5,1,1) )
+
+image( 1:nrow(n_sim_GT), 1:ncol(n_sim_GT), as.matrix(n_sim_GT), col=ACGTcols, xaxt='n', yaxt='n', xlab="", ylab="" )
+  title( main="Simulated SNPs" )
+  text( 0, 1:ncol(n_sim_GT), labels=names(n_sim_GT), cex=0.5, adj=1, xpd=TRUE )
+  text( 1:nrow(n_sim_GT), 0, labels=sim_GT$sim_locus, cex=0.8, srt=45, adj=1, xpd=TRUE )
+  abline(h=0:ncol(n_sim_GT)+.5, col="grey")
+	abline(v=0:nrow(n_sim_GT)+.5, col="grey")
+
+image( 1:nrow(n_det_GT), 1:ncol(n_det_GT), as.matrix(n_det_GT), col=ACGTcols, xaxt='n', yaxt='n', xlab="", ylab="" )
+  title( main="Detected SNPs" )
+  text( 0, 1:ncol(n_det_GT), labels=names(n_det_GT), cex=0.5, adj=1, xpd=TRUE )
+  text( 1:nrow(n_det_GT), 0, labels=detect_GT$sim_locus, cex=0.8, srt=45, adj=1, xpd=TRUE )
+  abline(h=0:ncol(n_det_GT)+.5, col="grey")
+	abline(v=0:nrow(n_det_GT)+.5, col="grey")
+
+```
+
+
+
