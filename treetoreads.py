@@ -912,8 +912,7 @@ def write_vcf(ttrobj):
         for i, base in enumerate(altbase):
             trans[base] = str(i+1)
         variants = [trans[base] for base in base_calls]
-        fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}
-                 \t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig_name,
+        fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig_name,
                                                        loc=int(adjusted_loc)+1,
                                                        refbase=refbase,
                                                        altbase=",".join(altbase),
