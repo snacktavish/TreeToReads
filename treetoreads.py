@@ -25,7 +25,7 @@ class TreeToReads(object):
     _vargen = 0
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
-        self.seed = random.randint(0, sys.maxint)
+        self.seed = random.randint(0, sys.maxsize)
         sys.stdout.write("Random seed is {}\n".format(self.seed))
         random.seed(self.seed)
         self.configfi = configfi
@@ -447,7 +447,7 @@ class TreeToReads(object):
             ran = random.sample(range(self.genlen), (self.nsnp-len(rands)))
             rands = rands | set(ran)
         self.mutlocs = list(rands)
-        self.mutlocs.sort()
+        self.mutlocs = sorted(self.mutlocs)
         contig = 0
         self.mut_trans = {}
         for loc in self.mutlocs:
@@ -867,7 +867,7 @@ def read_indelible_aln(ttrobj):
             seqname = None
         deletions[base_name] = {}
     del_locs = list(del_locs)
-    del_locs.sort()
+    del_locs = sorted( del_locs )
     deletionlocs = get_sub_list(del_locs)
     return insertions, deletions, insertionlocs, deletionlocs
 
@@ -894,7 +894,7 @@ def write_vcf(ttrobj):
     fi.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
     fi.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n".format('\t'.join(ttrobj.seqnames)))
     mutlocs = ttrobj.vcf_dict.keys()
-    mutlocs.sort()
+    mutlocs = sorted(mutlocs)
     assert mutlocs == ttrobj.mutlocs
     contig = 0
     for loc in mutlocs:
@@ -912,8 +912,7 @@ def write_vcf(ttrobj):
         for i, base in enumerate(altbase):
             trans[base] = str(i+1)
         variants = [trans[base] for base in base_calls]
-        fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}
-                 \t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig_name,
+        fi.write('''{chrm}\t{loc}\t.\t{refbase}\t{altbase}\t40\tPASS\t.\tGT\t{vars}\n'''.format(chrm=contig_name,
                                                        loc=int(adjusted_loc)+1,
                                                        refbase=refbase,
                                                        altbase=",".join(altbase),
