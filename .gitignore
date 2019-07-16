@@ -1,3 +1,7 @@
 sim_*
 *.cfg
 RAxML*
+example_out
+*.egg-info
+build
+dist
