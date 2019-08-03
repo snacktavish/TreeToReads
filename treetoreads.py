@@ -321,7 +321,7 @@ class TreeToReads(object):
                              of the contig or geonme {}.
                              Exiting\n'''.format(self.nsnp, self.genlen))
             self._exit_handler()
-        sys.stdout.write("genome has {} contigs\n".format(len(self.contig_breaks)))
+        sys.stdout.write("genome has {} contigs\n".format(len(self.contig_names)))
         sys.stdout.write("Genome has {} bases\n".format(self.genlen))
 
     def generate_varsites(self):
