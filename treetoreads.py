@@ -43,7 +43,7 @@ class TreeToReads(object):
         else:
             self.prefix = ''
         if self.run:
-            if (self.no_art == 0) and (self.config.get('coverage')):
+            if (self.no_art == 0) and all([self.config.get(x) for x in ['coverage_low', 'coverage_high', 'coverage_step']]):
                 self.run_art()
             else:
                 sys.stdout.write("simulating genomes but not reads\n")
@@ -98,7 +98,9 @@ class TreeToReads(object):
                      'base_genome_path',
                      'rate_matrix',
                      'freq_matrix',
-                     'coverage',
+                     'coverage_low',
+                     'coverage_high',
+                     'coverage_step',
                      'prefix',
                      'output_dir',
                      'mutation_clustering',
@@ -106,10 +108,16 @@ class TreeToReads(object):
                      'exponential_mean',
                      'gamma_shape',
                      'read_length',
-                     'fragment_size',
-                     'stdev_frag_size',
-                     'error_model1',
-                     'error_model2',
+                     'frag_low',
+                     'frag_high',
+                     'frag_step',
+                     'stdev_frag_low',
+                     'stdev_frag_high',
+                     'stdev_frag_step',
+                     'qs2_low',
+                     'qs2_high',
+                     'qs2_step',
+                     'MiSeqVersions',
                      'indel_model',
                      'indel_rate']
         for lin in config:
@@ -154,9 +162,21 @@ class TreeToReads(object):
                         'base_name':'base_genome_name',
                         'genome':'base_genome_path',
                         'ratemat':'rate_matrix',
-                        'cov':'coverage',
-                        'outd':'output_dir'
-                       }
+                        'outd':'output_dir',
+                        'coverage_low' : 'coverage_low',
+                        'coverage_high' : 'coverage_high',
+                        'coverage_step' : 'coverage_step',
+                        'read_length' : 'read_length',
+                        'frag_low' : 'frag_low',
+                        'frag_high' : 'frag_high',
+                        'frag_step' : 'frag_step',
+                        'stdev_frag_low' : 'stdev_frag_low',
+                        'stdev_frag_high' : 'stdev_frag_high',
+                        'stdev_frag_step' : 'stdev_frag_step',
+                        'qs2_low' : 'qs2_low',
+                        'qs2_high' : 'qs2_high',
+                        'qs2_step' : 'qs2_step',
+                        }
         for arg in self.argdict:
             if self.argdict[arg] not in self.config:
                 sys.stderr.write("{} is missing from the config file".format(self.argdict[arg]))
@@ -688,11 +708,26 @@ class TreeToReads(object):
             else:
                 self.mut_genomes_no_indels()
         if coverage is None:
-            coverarg = self.get_arg('cov')
+            cov_low = int(self.get_arg('coverage_low'))
+            cov_hi = int(self.get_arg('coverage_high'))
+            cov_step = int(self.get_arg('coverage_step'))
+            frag_low = int(self.get_arg('frag_low'))
+            frag_hi = int(self.get_arg('frag_high'))
+            frag_step = int(self.get_arg('frag_step'))
+            stdev_low = int(self.get_arg('stdev_frag_low'))
+            stdev_hi = int(self.get_arg('stdev_frag_high'))
+            stdev_step = int(self.get_arg('stdev_frag_step'))
+            qs2_low = int(self.get_arg('qs2_low'))
+            qs2_hi = int(self.get_arg('qs2_high'))
+            qs2_step = int(self.get_arg('qs2_step'))
+            miseq_v = list()
+            [miseq_v.append(int(x.strip())) for x in self.get_arg('MiSeqVersions').split(",")]
+            coverarg = None
+            
         else:
             coverarg = coverage
-        cov = {}
-        if os.path.isfile(coverarg):
+        read_spec = {}
+        if coverarg is not None and os.path.isfile(coverarg):
             with open(coverarg) as infile:
                 for lin in infile:
                     seqnam = lin.split(',')[0]
@@ -701,34 +736,44 @@ class TreeToReads(object):
                     except:
                         sys.stderr.write("name {} in coverage file not found in tree\n".format(seqnam))
                         self._exit_handler()
-                    cov[seqnam] = int(lin.split(',')[1])
+                    read_spec[seqnam] = int(lin.split(',')[1])
             try:
                 assert set(cov.keys()) == set(self.seqnames)
             except:
-                sys.stderr.write("some tips missing from coverage file: {}\n".format(set(self.seqnames) - cov.keys()))
+                sys.stderr.write("some tips missing from coverage file: {}\n".format(set(self.seqnames) - read_spec.keys()))
                 self._exit_handler()
         else:
             for seqnam in self.seqnames:
-                cov[seqnam] = int(coverarg)
+                real_cov = random.sample(range(cov_low, cov_hi, cov_step), 1)[0]
+                real_frag = random.sample(range(frag_low, frag_hi, frag_step), 1)[0]
+                real_stdev = random.sample(range(stdev_low, stdev_hi, stdev_step), 1)[0]
+                real_qs2 = random.sample(range(qs2_low, qs2_hi, qs2_step), 1)[0]
+                real_miseq = random.sample(miseq_v, 1)[0]
+                read_spec[seqnam] = {'cov' : real_cov, 'frag' : real_frag, "stdev" : real_stdev, 'qs2' : real_qs2, 'ver' : real_miseq}
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
-        sys.stdout.write("coverage is {}\n".format(self.config['coverage']))
         if 'read_length' in self.config:
             read_length = self.config['read_length']
+            if ',' in read_length:
+                r_l = list()
+                [r_l.append(x.strip()) for x in read_length.split(',')]
+                for seqnam in self.seqnames:
+                    read_spec[seqnam]['rl'] = random.sample(r_l, 1)[0] 
+                # read_length = random.sample(r_l, 1)
+            else:
+                for seqnam in self.seqnames:
+                    read_spec[seqnam]['rl'] = read_length
         else:
             read_length = 150
-        sys.stdout.write("read length is {}\n".format(read_length))
-        if 'fragment_size' in self.config:
-            fragment_size = self.config['fragment_size']
-        else:
-            fragment_size = 350
-        sys.stdout.write("fragment size is {}\n".format(fragment_size))
-        if 'stdev_frag_size' in self.config:
-            stdev_frag_size = self.config['stdev_frag_size']
-        else:
-            stdev_frag_size = 130
-        sys.stdout.write("stdev of frag size is {}\n".format(stdev_frag_size))
+            for seqname in self.seqnames:
+                read_spec[seqnam]['rl'] = read_length
         for seq in self.seqnames:
+            sys.stdout.write("Coverage is {}\n".format(read_spec[seq]['cov']))
+            sys.stdout.write("read length is {}\n".format(read_spec[seq]['rl']))
+            sys.stdout.write("fragment size is {}\n".format(read_spec[seq]['frag']))
+            sys.stdout.write("stdev of frag size is {}\n".format(read_spec[seq]['stdev']))
+            sys.stdout.write("MiSeq Version is {}\n".format(read_spec[seq]['ver']))
+            sys.stdout.write("QS2 shift {}\n".format(read_spec[seq]['qs2']))
             sys.stdout.write("Generating reads for {}\n".format(seq))
             if not os.path.isdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq)):
                 os.mkdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq))
@@ -741,10 +786,12 @@ class TreeToReads(object):
                             '-na', #Don't output alignment file
                             '-p', #for paired end reads
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
-                            '-l', '{}'.format(read_length),
-                            '-f', str(cov[seq]),
-                            '-m', '{}'.format(fragment_size),
-                            '-s', '{}'.format(stdev_frag_size),
+                            '-l', '{}'.format(read_spec[seq]['rl']),
+                            '-f', str(read_spec[seq]['cov']),
+                            '-m', '{}'.format(read_spec[seq]['frag']),
+                            '-s', '{}'.format(read_spec[seq]['stdev']),
+                            '-qs2', '-{}'.format(read_spec[seq]['qs2']),
+                            '-ss', 'MSv{}'.format(read_spec[seq]['ver']),
                             '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
                                                                self.prefix,
                                                                seq,
@@ -755,10 +802,12 @@ class TreeToReads(object):
                             '-p', #for paired end reads
                             '-na', #Don't output alignment file
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
-                            '-l', '{}'.format(read_length),
-                            '-f', str(cov[seq]),
-                            '-m', '{}'.format(fragment_size),
-                            '-s', '{}'.format(stdev_frag_size),
+                            '-l', '{}'.format(read_spec[seq]['rl']),
+                            '-f', str(read_spec[seq]['cov']),
+                            '-m', '{}'.format(read_spec[seq]['frag']),
+                            '-s', '{}'.format(read_spec[seq]['stdev']),
+                            '-qs2', '-{}'.format(read_spec[seq]['qs2']),
+                            '-ss', 'MSv{}'.format(read_spec[seq]['ver']),
                             '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
                                                                self.prefix,
                                                                seq,
