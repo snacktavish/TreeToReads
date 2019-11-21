@@ -9,7 +9,7 @@ from subprocess import call
 import dendropy
 
 
-VERSION = "0.0.5"
+VERSION = "0.0.6-atc"
 
 class TreeToReads(object):
     """A tree to reads object that holds the input tree and base genome,
@@ -43,7 +43,7 @@ class TreeToReads(object):
         else:
             self.prefix = ''
         if self.run:
-            if (self.no_art == 0) and all([self.config.get(x) for x in ['coverage_low', 'coverage_high', 'coverage_step']]):
+            if (self.no_art == 0) and (all([self.config.get(x) for x in ['coverage_low', 'coverage_high', 'coverage_step']]) or (self.argdict['coverage'] is not None and int(self.argdict['coverage']) > 0 )):
                 self.run_art()
             else:
                 sys.stdout.write("simulating genomes but not reads\n")
@@ -98,6 +98,7 @@ class TreeToReads(object):
                      'base_genome_path',
                      'rate_matrix',
                      'freq_matrix',
+                     'coverage',
                      'coverage_low',
                      'coverage_high',
                      'coverage_step',
@@ -111,9 +112,11 @@ class TreeToReads(object):
                      'frag_low',
                      'frag_high',
                      'frag_step',
+                     'fragment_size',
                      'stdev_frag_low',
                      'stdev_frag_high',
                      'stdev_frag_step',
+                     'stdev_frag_size',
                      'qs2_low',
                      'qs2_high',
                      'qs2_step',
@@ -121,6 +124,8 @@ class TreeToReads(object):
                      'indel_model',
                      'indel_rate']
         for lin in config:
+            if lin.startswith("#"):
+                continue
             lii = lin.split('=')
             self.config[lii[0].strip()] = lii[-1].split('#')[0].strip()
             if (lii[0].strip() != '') and (not lii[0].strip().startswith("#")) and (lii[0].strip() not in poss_args):
@@ -163,19 +168,7 @@ class TreeToReads(object):
                         'genome':'base_genome_path',
                         'ratemat':'rate_matrix',
                         'outd':'output_dir',
-                        'coverage_low' : 'coverage_low',
-                        'coverage_high' : 'coverage_high',
-                        'coverage_step' : 'coverage_step',
-                        'read_length' : 'read_length',
-                        'frag_low' : 'frag_low',
-                        'frag_high' : 'frag_high',
-                        'frag_step' : 'frag_step',
-                        'stdev_frag_low' : 'stdev_frag_low',
-                        'stdev_frag_high' : 'stdev_frag_high',
-                        'stdev_frag_step' : 'stdev_frag_step',
-                        'qs2_low' : 'qs2_low',
-                        'qs2_high' : 'qs2_high',
-                        'qs2_step' : 'qs2_step',
+                        'read_length' : 'read_length'
                         }
         for arg in self.argdict:
             if self.argdict[arg] not in self.config:
@@ -249,7 +242,58 @@ class TreeToReads(object):
         else:
             sys.stdout.write('Mutation clustering is OFF\n')
             self.clustering = 0
-
+        read_args_list = ['coverage_low', 'coverage_high', 'coverage_step', 'read_length',
+                         'frag_low', 'frag_high', 'frag_step', 'stdev_frag_low', 'stdev_frag_high',
+                         'stdev_frag_step', 'qs2_low', 'qs2_high', 'qs2_step'
+                        ]
+        for read_arg in read_args_list:
+            try:
+                self.argdict[read_arg] = self.get_arg(read_arg)
+            except:
+                pass
+        if all([self.argdict[x] is not None for x in ['coverage_low', 'coverage_high', 'coverage_step']]):
+            self.argdict['coverage'] = None
+            sys.stderr.write("Coverage ranges provided, using ({}, {}, {})\n".format(
+                            self.argdict['coverage_low'],
+                            self.argdict['coverage_high'],
+                            self.argdict['coverage_step']))
+        else:
+            self.argdict['coverage'] = self.get_arg('coverage')
+            sys.stderr.write("Using basic coverage mode, coverage = {}\n".format(self.argdict['coverage']))
+        if all([self.argdict[x] is not None for x in ['frag_low', 'frag_high', 'frag_step']]):
+            self.argdict['fragment_size'] = None
+            sys.stderr.write("Fragment size ranges provided, using ({}, {}, {})\n".format(
+                            self.argdict['frag_low'],
+                            self.argdict['frag_high'],
+                            self.argdict['frag_step']))
+        else:
+            self.argdict['fragment_size'] = self.get_arg('fragment_size')
+            sys.stderr.write("Using basic fragment size mode\n")
+        if all([self.argdict[x] is not None for x in ['stdev_frag_low', 'stdev_frag_high', 'stdev_frag_step']]):
+            self.argdict['stdev_frag_size'] = None
+            sys.stderr.write("Fragment size stdev ranges provided, using ({}, {}, {})\n".format(
+                            self.argdict['stdev_frag_low'],
+                            self.argdict['stdev_frag_high'],
+                            self.argdict['stdev_frag_step']))
+        else:
+            self.argdict['stdev_frag_size'] = self.get_arg('stdev_frag_size')
+            sys.stderr.write("Using basic fragment size stdev mode\n")
+        if all([self.argdict[x] is not None for x in ['qs2_low', 'qs2_high', 'qs2_step']]):
+            sys.stderr.write("QS2 ranges provided, using ({}, {}, {})\n".format(
+                            self.argdict['qs2_low'],
+                            self.argdict['qs2_high'],
+                            self.argdict['qs2_step']))
+        else:
+            self.argdict['qs2'] = None
+            sys.stderr.write("No QS2 bias applied\n")
+        if self.get_arg('MiSeqVersions') is None:
+            self.argdict['MiSeqVersions'] = [3]
+        elif "," in self.argdict['MiSeqVersions']:
+                    miseq_v = list()
+                    [miseq_v.append(int(x.strip())) for x in self.argdict['MiSeqVersions'].split(",")]
+                    self.argdict['MiSeqVersions'] = miseq_v
+        else:
+            self.argdict['MiSeqVersions'] = [self.argdict['MiSeqVersions']]
     def read_tree(self):
         """Reads in a tree from a file, arbitrarily resolves poltomies if present,
         strips leading [&U] and writes out to outputdir/simtree.tre"""
@@ -707,49 +751,50 @@ class TreeToReads(object):
                     self.mut_genomes_indels()
             else:
                 self.mut_genomes_no_indels()
-        if coverage is None:
+        read_spec = {}
+        if self.argdict['coverage'] is None:
             cov_low = int(self.get_arg('coverage_low'))
             cov_hi = int(self.get_arg('coverage_high'))
             cov_step = int(self.get_arg('coverage_step'))
+            for seqnam in self.seqnames:
+                real_cov = random.sample(range(cov_low, cov_hi, cov_step), 1)[0]
+                read_spec[seqnam] = {'cov' : real_cov}
+        else:
+            for seqnam in self.seqnames:
+                read_spec[seqnam] = {'cov' : self.argdict['coverage']}
+        if self.argdict['fragment_size'] is None:
             frag_low = int(self.get_arg('frag_low'))
             frag_hi = int(self.get_arg('frag_high'))
             frag_step = int(self.get_arg('frag_step'))
+            for seqnam in self.seqnames:
+                real_frag = random.sample(range(frag_low, frag_hi, frag_step), 1)[0]
+                read_spec[seqnam].update({'frag' : real_frag})
+        else:
+            for seqnam in self.seqnames:
+                read_spec[seqnam].update({'frag' : self.argdict['fragment_size']})
+        if self.argdict['stdev_frag_size'] is None:
             stdev_low = int(self.get_arg('stdev_frag_low'))
             stdev_hi = int(self.get_arg('stdev_frag_high'))
             stdev_step = int(self.get_arg('stdev_frag_step'))
-            qs2_low = int(self.get_arg('qs2_low'))
-            qs2_hi = int(self.get_arg('qs2_high'))
-            qs2_step = int(self.get_arg('qs2_step'))
-            miseq_v = list()
-            [miseq_v.append(int(x.strip())) for x in self.get_arg('MiSeqVersions').split(",")]
-            coverarg = None
-            
-        else:
-            coverarg = coverage
-        read_spec = {}
-        if coverarg is not None and os.path.isfile(coverarg):
-            with open(coverarg) as infile:
-                for lin in infile:
-                    seqnam = lin.split(',')[0]
-                    try:
-                        assert seqnam in self.seqnames
-                    except:
-                        sys.stderr.write("name {} in coverage file not found in tree\n".format(seqnam))
-                        self._exit_handler()
-                    read_spec[seqnam] = int(lin.split(',')[1])
-            try:
-                assert set(cov.keys()) == set(self.seqnames)
-            except:
-                sys.stderr.write("some tips missing from coverage file: {}\n".format(set(self.seqnames) - read_spec.keys()))
-                self._exit_handler()
+            for seqnam in self.seqnames:
+                real_stdev = random.sample(range(stdev_low, stdev_hi, stdev_step), 1)[0]
+                read_spec[seqnam].update({"stdev" : real_stdev})
         else:
             for seqnam in self.seqnames:
-                real_cov = random.sample(range(cov_low, cov_hi, cov_step), 1)[0]
-                real_frag = random.sample(range(frag_low, frag_hi, frag_step), 1)[0]
-                real_stdev = random.sample(range(stdev_low, stdev_hi, stdev_step), 1)[0]
+                read_spec[seqnam].update({'stdev' : self.argdict['stdev_frag_size']})
+        if self.argdict['qs2'] is not None:
+            qs2_low = int(self.argdict['qs2_low'])
+            qs2_hi = int(self.argdict['qs2_high'])
+            qs2_step = int(self.argdict['qs2_step'])
+            for seqnam in self.seqnames:
                 real_qs2 = random.sample(range(qs2_low, qs2_hi, qs2_step), 1)[0]
-                real_miseq = random.sample(miseq_v, 1)[0]
-                read_spec[seqnam] = {'cov' : real_cov, 'frag' : real_frag, "stdev" : real_stdev, 'qs2' : real_qs2, 'ver' : real_miseq}
+                read_spec[seqnam].update({'qs2' : real_qs2,})
+        else:
+            for seqnam in self.seqnames:
+                read_spec[seqnam].update({'qs2' : 0})
+        for seqnam in self.seqnames:
+            real_miseq = random.sample(self.argdict['MiSeqVersions'], 1)[0]
+            read_spec[seqnam].update({'ver' : real_miseq})
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
         if 'read_length' in self.config:
