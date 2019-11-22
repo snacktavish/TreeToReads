@@ -28,6 +28,10 @@ class TreeToReads(object):
         self.seed = random.randint(0, sys.maxsize)
         sys.stdout.write("Random seed is {}\n".format(self.seed))
         random.seed(self.seed)
+        self.validProfiles = {"GA1" : 44, "GA2" : 75, "HS10" : 100,
+                              "HS20" : 100, "HS25" : 150, "HSXn" : 150,
+                              "HSXt" : 150, "MinS" : 50, "MSv1" : 250,
+                              "MSv3" : 250, "NS50" : 75}
         self.configfi = configfi
         self.run = run
         self.main = main
@@ -43,7 +47,7 @@ class TreeToReads(object):
         else:
             self.prefix = ''
         if self.run:
-            if (self.no_art == 0) and (all([self.config.get(x) for x in ['coverage_low', 'coverage_high', 'coverage_step']]) or (self.argdict['coverage'] is not None and int(self.argdict['coverage']) > 0 )):
+            if (not self.no_art and self.generate_reads) and (all([self.config.get(x) for x in ['coverage_low', 'coverage_high', 'coverage_step']]) or (self.argdict['coverage'] is not None and int(self.argdict['coverage']) > 0 )):
                 self.run_art()
             else:
                 sys.stdout.write("simulating genomes but not reads\n")
@@ -74,9 +78,9 @@ class TreeToReads(object):
                              and in your path for TreeToReads to
                              generate reads. Art not found.
                              TTR will only generate mutated genomes. \n''')
-            self.no_art = 1
+            self.no_art = True
         else:
-            self.no_art = 0
+            self.no_art = False
         if not dendropy.__version__.startswith('4'):
             sys.stderr.write('''ERROR: Please upgrade the python package dendropy to version 4,
                                 using 'pip install dendropy --upgrade'.
@@ -120,7 +124,7 @@ class TreeToReads(object):
                      'qs2_low',
                      'qs2_high',
                      'qs2_step',
-                     'MiSeqVersions',
+                     'readProfile',
                      'indel_model',
                      'indel_rate']
         for lin in config:
@@ -244,13 +248,15 @@ class TreeToReads(object):
             self.clustering = 0
         read_args_list = ['coverage_low', 'coverage_high', 'coverage_step', 'read_length',
                          'frag_low', 'frag_high', 'frag_step', 'stdev_frag_low', 'stdev_frag_high',
-                         'stdev_frag_step', 'qs2_low', 'qs2_high', 'qs2_step'
+                         'stdev_frag_step', 'qs2_low', 'qs2_high', 'qs2_step', 'readProfile'
                         ]
+
         for read_arg in read_args_list:
             try:
                 self.argdict[read_arg] = self.get_arg(read_arg)
             except:
                 pass
+        
         if all([self.argdict[x] is not None for x in ['coverage_low', 'coverage_high', 'coverage_step']]):
             self.argdict['coverage'] = None
             sys.stderr.write("Coverage ranges provided, using ({}, {}, {})\n".format(
@@ -260,6 +266,7 @@ class TreeToReads(object):
         else:
             self.argdict['coverage'] = self.get_arg('coverage')
             sys.stderr.write("Using basic coverage mode, coverage = {}\n".format(self.argdict['coverage']))
+        
         if all([self.argdict[x] is not None for x in ['frag_low', 'frag_high', 'frag_step']]):
             self.argdict['fragment_size'] = None
             sys.stderr.write("Fragment size ranges provided, using ({}, {}, {})\n".format(
@@ -269,6 +276,7 @@ class TreeToReads(object):
         else:
             self.argdict['fragment_size'] = self.get_arg('fragment_size')
             sys.stderr.write("Using basic fragment size mode\n")
+        
         if all([self.argdict[x] is not None for x in ['stdev_frag_low', 'stdev_frag_high', 'stdev_frag_step']]):
             self.argdict['stdev_frag_size'] = None
             sys.stderr.write("Fragment size stdev ranges provided, using ({}, {}, {})\n".format(
@@ -278,6 +286,7 @@ class TreeToReads(object):
         else:
             self.argdict['stdev_frag_size'] = self.get_arg('stdev_frag_size')
             sys.stderr.write("Using basic fragment size stdev mode\n")
+        
         if all([self.argdict[x] is not None for x in ['qs2_low', 'qs2_high', 'qs2_step']]):
             sys.stderr.write("QS2 ranges provided, using ({}, {}, {})\n".format(
                             self.argdict['qs2_low'],
@@ -286,14 +295,49 @@ class TreeToReads(object):
         else:
             self.argdict['qs2'] = None
             sys.stderr.write("No QS2 bias applied\n")
-        if self.get_arg('MiSeqVersions') is None:
-            self.argdict['MiSeqVersions'] = [3]
-        elif "," in self.argdict['MiSeqVersions']:
-                    miseq_v = list()
-                    [miseq_v.append(int(x.strip())) for x in self.argdict['MiSeqVersions'].split(",")]
-                    self.argdict['MiSeqVersions'] = miseq_v
+
+        if self.argdict['readProfile'] is None:
+            self.argdict['readProfile'] = 'MSv3'
+        elif "," in self.argdict['readProfile']:
+                    profList = list()
+                    [profList.append(x.strip()) for x in self.argdict['readProfile'].split(",")]
+                    self.argdict['readProfile'] = profList
         else:
-            self.argdict['MiSeqVersions'] = [self.argdict['MiSeqVersions']]
+            self.argdict['readProfile'] = [self.argdict['readProfile']]
+
+        for profile in self.argdict['readProfile']:
+            if profile is not None and profile not in self.validProfiles:
+                sys.stderr.write("Invalid read profile provided, {}, setting to MSv3\n".format(profile))
+                self.argdict['readProfile'][self.argdict['readProfile'].index(profile)] = 'MSv3'
+        
+        read_length_flag = True
+        self.generate_reads = True
+        if self.argdict['read_length'] is not None:
+            read_length = self.config['read_length']
+            if ',' in read_length:
+                r_l = list()
+                [r_l.append(int(x.strip())) for x in read_length.split(',')]
+                read_length = r_l
+            else:
+                read_length = [int(read_length)]
+            for rl in read_length:
+                if rl == 0:
+                    self.generate_reads = False
+                    sys.stderr.write("Read length of 0 provided, will not generate reads\n".format(profile))
+                    break
+                if rl < 0:
+                    sys.stderr.write("Read length <0 specified, cannot generate negative reads\n")
+                    self._exit_handler()
+                for profile in self.argdict['readProfile']:
+                    if rl > self.validProfiles[profile]:
+                        read_length[read_length.index(rl)] = validProfiles[profile]
+                        read_length_flag = True
+        self.argdict['read_length'] = read_length
+        
+        if read_length_flag:
+            sys.stderr.write("Read length greater than allowed by profile, setting to profile max\n".format(profile))
+
+        
     def read_tree(self):
         """Reads in a tree from a file, arbitrarily resolves poltomies if present,
         strips leading [&U] and writes out to outputdir/simtree.tre"""
@@ -758,7 +802,8 @@ class TreeToReads(object):
             cov_step = int(self.get_arg('coverage_step'))
             for seqnam in self.seqnames:
                 real_cov = random.sample(range(cov_low, cov_hi, cov_step), 1)[0]
-                read_spec[seqnam] = {'cov' : real_cov}
+                real_len = random.sample(self.argdict['read_length'], 1)[0] 
+                read_spec[seqnam] = {'cov' : real_cov, 'rl' : real_len}
         else:
             for seqnam in self.seqnames:
                 read_spec[seqnam] = {'cov' : self.argdict['coverage']}
@@ -793,21 +838,16 @@ class TreeToReads(object):
             for seqnam in self.seqnames:
                 read_spec[seqnam].update({'qs2' : 0})
         for seqnam in self.seqnames:
-            real_miseq = random.sample(self.argdict['MiSeqVersions'], 1)[0]
-            read_spec[seqnam].update({'ver' : real_miseq})
+            real_platform = random.sample(self.argdict['readProfile'], 1)[0]
+            read_spec[seqnam].update({'ver' : real_platform})
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
-        if 'read_length' in self.config:
-            read_length = self.config['read_length']
-            if ',' in read_length:
-                r_l = list()
-                [r_l.append(x.strip()) for x in read_length.split(',')]
-                for seqnam in self.seqnames:
-                    read_spec[seqnam]['rl'] = random.sample(r_l, 1)[0] 
-                # read_length = random.sample(r_l, 1)
-            else:
-                for seqnam in self.seqnames:
-                    read_spec[seqnam]['rl'] = read_length
+        # for seqnam in self.seqnames:
+            # read_spec[seqnam]['rl'] = random.sample(r_l, 1)[0] 
+            #     # read_length = random.sample(r_l, 1)
+            # else:
+            #     for seqnam in self.seqnames:
+            #         read_spec[seqnam]['rl'] = read_length
         else:
             read_length = 150
             for seqname in self.seqnames:
@@ -852,7 +892,7 @@ class TreeToReads(object):
                             '-m', '{}'.format(read_spec[seq]['frag']),
                             '-s', '{}'.format(read_spec[seq]['stdev']),
                             '-qs2', '-{}'.format(read_spec[seq]['qs2']),
-                            '-ss', 'MSv{}'.format(read_spec[seq]['ver']),
+                            '-ss', '{}'.format(read_spec[seq]['ver']),
                             '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
                                                                self.prefix,
                                                                seq,
