@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 """Tree to Reads - A python script to to read a tree,
     resolve polytomies, generate mutations and simulate reads."""
-import random
-import os
-import sys
 import argparse
+import os
+import random
+import sys
+from multiprocessing import Pool
 from subprocess import call
+
 import dendropy
 
-
-VERSION = "0.0.6-atc"
+VERSION = "0.0.6"
 
 class TreeToReads(object):
     """A tree to reads object that holds the input tree and base genome,
@@ -86,6 +87,10 @@ class TreeToReads(object):
                                 using 'pip install dendropy --upgrade'.
                                 Exiting\n''')
             self._exit_handler()
+        if call(['which', 'pigz'], stdout=open('/dev/null', 'w')) == 1:
+            self.gzipProg = "pigz"
+        else:
+            self.gzipProg = "gzip"
 
     def read_args(self):
         """reads arguments from config file"""
@@ -126,7 +131,8 @@ class TreeToReads(object):
                      'qs2_step',
                      'readProfile',
                      'indel_model',
-                     'indel_rate']
+                     'indel_rate',
+                     'threads']
         for lin in config:
             if lin.startswith("#"):
                 continue
@@ -178,6 +184,17 @@ class TreeToReads(object):
             if self.argdict[arg] not in self.config:
                 sys.stderr.write("{} is missing from the config file".format(self.argdict[arg]))
                 self._exit_handler()
+        thread_cnt = self.get_arg('threads')
+        if thread_cnt is None or thread_cnt == '0' or thread_cnt == '1':
+            self.threads = None
+            sys.stderr.write("Using 1 thread for read simulation\n")
+        else:
+            try:
+                self.threads = int(self.get_arg('threads'))
+                sys.stderr.write("Using {} threads for read simulation\n".format(self.threads))
+            except TypeError:
+                sys.stderr.write("Non-integer thread argument provided")
+                self._exit_handler  
         try:
             self.nsnp = int(self.get_arg('nsnp'))
             sys.stdout.write('Number of variable sites is {}\n'.format(self.nsnp))
@@ -259,13 +276,15 @@ class TreeToReads(object):
         
         if all([self.argdict[x] is not None for x in ['coverage_low', 'coverage_high', 'coverage_step']]):
             self.argdict['coverage'] = None
+            self.generate_reads = True
             sys.stderr.write("Coverage ranges provided, using ({}, {}, {})\n".format(
                             self.argdict['coverage_low'],
                             self.argdict['coverage_high'],
                             self.argdict['coverage_step']))
         else:
             self.argdict['coverage'] = self.get_arg('coverage')
-            sys.stderr.write("Using basic coverage mode, coverage = {}\n".format(self.argdict['coverage']))
+            self.generate_reads = True
+            sys.stderr.write("Using uniform coverage, coverage = {}\n".format(self.argdict['coverage']))
         
         if all([self.argdict[x] is not None for x in ['frag_low', 'frag_high', 'frag_step']]):
             self.argdict['fragment_size'] = None
@@ -275,7 +294,7 @@ class TreeToReads(object):
                             self.argdict['frag_step']))
         else:
             self.argdict['fragment_size'] = self.get_arg('fragment_size')
-            sys.stderr.write("Using basic fragment size mode\n")
+            sys.stderr.write("Using uniform fragment size\n")
         
         if all([self.argdict[x] is not None for x in ['stdev_frag_low', 'stdev_frag_high', 'stdev_frag_step']]):
             self.argdict['stdev_frag_size'] = None
@@ -285,7 +304,7 @@ class TreeToReads(object):
                             self.argdict['stdev_frag_step']))
         else:
             self.argdict['stdev_frag_size'] = self.get_arg('stdev_frag_size')
-            sys.stderr.write("Using basic fragment size stdev mode\n")
+            sys.stderr.write("Using fixed-size stdev\n")
         
         if all([self.argdict[x] is not None for x in ['qs2_low', 'qs2_high', 'qs2_step']]):
             sys.stderr.write("QS2 ranges provided, using ({}, {}, {})\n".format(
@@ -782,6 +801,61 @@ class TreeToReads(object):
        # write_vcf(self)
         sys.stdout.write("Mutated genomes\n")
 
+    def simulate_reads(self, seq):
+        if not os.path.isdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq)):
+            os.mkdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq))
+        if  self.get_arg('error_model1') and self.get_arg('error_model2'):
+            assert os.path.exists(self.get_arg('error_model1'))
+            assert os.path.exists(self.get_arg('error_model2'))
+            artparam = ['art_illumina',
+                        '-1', self.get_arg('error_model1'),
+                        '-2', self.get_arg('error_model2'),
+                        '-na', #Don't output alignment file
+                        '-p', #for paired end reads
+                        '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
+                        '-l', '{}'.format(self.read_spec[seq]['rl']),
+                        '-f', str(self.read_spec[seq]['cov']),
+                        '-m', '{}'.format(self.read_spec[seq]['frag']),
+                        '-s', '{}'.format(self.read_spec[seq]['stdev']),
+                        '-qs2', '-{}'.format(self.read_spec[seq]['qs2']),
+                        '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
+                                                           self.prefix,
+                                                           seq,
+                                                           self.prefix,
+                                                           seq)]
+        else:
+            artparam = ['art_illumina',
+                        '-p', #for paired end reads
+                        '-na', #Don't output alignment file
+                        '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
+                        '-l', '{}'.format(self.read_spec[seq]['rl']),
+                        '-f', str(self.read_spec[seq]['cov']),
+                        '-m', '{}'.format(self.read_spec[seq]['frag']),
+                        '-s', '{}'.format(self.read_spec[seq]['stdev']),
+                        '-qs2', '-{}'.format(self.read_spec[seq]['qs2']),
+                        '-ss', '{}'.format(self.read_spec[seq]['ver']),
+                        '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
+                                                           self.prefix,
+                                                           seq,
+                                                           self.prefix,
+                                                           seq)]
+        call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'), stderr=open('{}/art_log'.format(self.outd), 'a'))
+      #  print("called {}".format(" ".join(artparam)))
+        assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.outd, self.prefix, seq, self.prefix, seq))
+        if self.gzip:
+            gzippar = [self.gzipProg,
+                       '-f',
+                       '{}/fastq/{}{}/{}{}_1.fq'.format(self.outd,
+                                                        self.prefix,
+                                                        seq,
+                                                        self.prefix,
+                                                        seq),
+                       '{}/fastq/{}{}/{}{}_2.fq'.format(self.outd,
+                                                        self.prefix,
+                                                        seq,
+                                                        self.prefix,
+                                                        seq)]
+            call(gzippar)
 
     def run_art(self, coverage=None):
         """Runs ART to simulate reads from the simulated genomes"""
@@ -795,127 +869,72 @@ class TreeToReads(object):
                     self.mut_genomes_indels()
             else:
                 self.mut_genomes_no_indels()
-        read_spec = {}
+        self.read_spec = {}
         if self.argdict['coverage'] is None:
-            cov_low = int(self.get_arg('coverage_low'))
-            cov_hi = int(self.get_arg('coverage_high'))
-            cov_step = int(self.get_arg('coverage_step'))
+            cov_low = int(self.argdict['coverage_low'])
+            cov_hi = int(self.argdict['coverage_high'])
+            cov_step = int(self.argdict['coverage_step'])
             for seqnam in self.seqnames:
                 real_cov = random.sample(range(cov_low, cov_hi, cov_step), 1)[0]
                 real_len = random.sample(self.argdict['read_length'], 1)[0] 
-                read_spec[seqnam] = {'cov' : real_cov, 'rl' : real_len}
+                self.read_spec[seqnam] = {'cov' : real_cov, 'rl' : real_len}
         else:
             for seqnam in self.seqnames:
-                read_spec[seqnam] = {'cov' : self.argdict['coverage']}
+                self.read_spec[seqnam] = {'cov' : self.argdict['coverage']}
         if self.argdict['fragment_size'] is None:
-            frag_low = int(self.get_arg('frag_low'))
-            frag_hi = int(self.get_arg('frag_high'))
-            frag_step = int(self.get_arg('frag_step'))
+            frag_low = int(self.argdict['frag_low'])
+            frag_hi = int(self.argdict['frag_high'])
+            frag_step = int(self.argdict['frag_step'])
             for seqnam in self.seqnames:
                 real_frag = random.sample(range(frag_low, frag_hi, frag_step), 1)[0]
-                read_spec[seqnam].update({'frag' : real_frag})
+                self.read_spec[seqnam].update({'frag' : real_frag})
         else:
             for seqnam in self.seqnames:
-                read_spec[seqnam].update({'frag' : self.argdict['fragment_size']})
+                self.read_spec[seqnam].update({'frag' : self.argdict['fragment_size']})
         if self.argdict['stdev_frag_size'] is None:
-            stdev_low = int(self.get_arg('stdev_frag_low'))
-            stdev_hi = int(self.get_arg('stdev_frag_high'))
-            stdev_step = int(self.get_arg('stdev_frag_step'))
+            stdev_low = int(self.argdict['stdev_frag_low'])
+            stdev_hi = int(self.argdict['stdev_frag_high'])
+            stdev_step = int(self.argdict['stdev_frag_step'])
             for seqnam in self.seqnames:
                 real_stdev = random.sample(range(stdev_low, stdev_hi, stdev_step), 1)[0]
-                read_spec[seqnam].update({"stdev" : real_stdev})
+                self.read_spec[seqnam].update({"stdev" : real_stdev})
         else:
             for seqnam in self.seqnames:
-                read_spec[seqnam].update({'stdev' : self.argdict['stdev_frag_size']})
+                self.read_spec[seqnam].update({'stdev' : self.argdict['stdev_frag_size']})
         if self.argdict['qs2'] is not None:
             qs2_low = int(self.argdict['qs2_low'])
             qs2_hi = int(self.argdict['qs2_high'])
             qs2_step = int(self.argdict['qs2_step'])
             for seqnam in self.seqnames:
                 real_qs2 = random.sample(range(qs2_low, qs2_hi, qs2_step), 1)[0]
-                read_spec[seqnam].update({'qs2' : real_qs2,})
+                self.read_spec[seqnam].update({'qs2' : real_qs2,})
         else:
             for seqnam in self.seqnames:
-                read_spec[seqnam].update({'qs2' : 0})
+                self.read_spec[seqnam].update({'qs2' : 0})
         for seqnam in self.seqnames:
             real_platform = random.sample(self.argdict['readProfile'], 1)[0]
-            read_spec[seqnam].update({'ver' : real_platform})
+            self.read_spec[seqnam].update({'ver' : real_platform})
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
-        # for seqnam in self.seqnames:
-            # read_spec[seqnam]['rl'] = random.sample(r_l, 1)[0] 
-            #     # read_length = random.sample(r_l, 1)
-            # else:
-            #     for seqnam in self.seqnames:
-            #         read_spec[seqnam]['rl'] = read_length
         else:
             read_length = 150
             for seqname in self.seqnames:
-                read_spec[seqnam]['rl'] = read_length
-        for seq in self.seqnames:
-            sys.stdout.write("Coverage is {}\n".format(read_spec[seq]['cov']))
-            sys.stdout.write("read length is {}\n".format(read_spec[seq]['rl']))
-            sys.stdout.write("fragment size is {}\n".format(read_spec[seq]['frag']))
-            sys.stdout.write("stdev of frag size is {}\n".format(read_spec[seq]['stdev']))
-            sys.stdout.write("MiSeq Version is {}\n".format(read_spec[seq]['ver']))
-            sys.stdout.write("QS2 shift {}\n".format(read_spec[seq]['qs2']))
-            sys.stdout.write("Generating reads for {}\n".format(seq))
-            if not os.path.isdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq)):
-                os.mkdir("{}/fastq/{}{}".format(self.outd, self.prefix, seq))
-            if  self.get_arg('error_model1') and self.get_arg('error_model2'):
-                assert os.path.exists(self.get_arg('error_model1'))
-                assert os.path.exists(self.get_arg('error_model2'))
-                artparam = ['art_illumina',
-                            '-1', self.get_arg('error_model1'),
-                            '-2', self.get_arg('error_model2'),
-                            '-na', #Don't output alignment file
-                            '-p', #for paired end reads
-                            '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
-                            '-l', '{}'.format(read_spec[seq]['rl']),
-                            '-f', str(read_spec[seq]['cov']),
-                            '-m', '{}'.format(read_spec[seq]['frag']),
-                            '-s', '{}'.format(read_spec[seq]['stdev']),
-                            '-qs2', '-{}'.format(read_spec[seq]['qs2']),
-                            '-ss', 'MSv{}'.format(read_spec[seq]['ver']),
-                            '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
-                                                               self.prefix,
-                                                               seq,
-                                                               self.prefix,
-                                                               seq)]
-            else:
-                artparam = ['art_illumina',
-                            '-p', #for paired end reads
-                            '-na', #Don't output alignment file
-                            '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
-                            '-l', '{}'.format(read_spec[seq]['rl']),
-                            '-f', str(read_spec[seq]['cov']),
-                            '-m', '{}'.format(read_spec[seq]['frag']),
-                            '-s', '{}'.format(read_spec[seq]['stdev']),
-                            '-qs2', '-{}'.format(read_spec[seq]['qs2']),
-                            '-ss', '{}'.format(read_spec[seq]['ver']),
-                            '-o', '{}/fastq/{}{}/{}{}_'.format(self.outd,
-                                                               self.prefix,
-                                                               seq,
-                                                               self.prefix,
-                                                               seq)]
-            call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'), stderr=open('{}/art_log'.format(self.outd), 'a'))
-          #  print("called {}".format(" ".join(artparam)))
-            assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.outd, self.prefix, seq, self.prefix, seq))
-            gzippar = ['gzip',
-                       '-f',
-                       '{}/fastq/{}{}/{}{}_1.fq'.format(self.outd,
-                                                        self.prefix,
-                                                        seq,
-                                                        self.prefix,
-                                                        seq),
-                       '{}/fastq/{}{}/{}{}_2.fq'.format(self.outd,
-                                                        self.prefix,
-                                                        seq,
-                                                        self.prefix,
-                                                        seq)]
-            call(gzippar)
+                self.read_spec[seqnam]['rl'] = read_length
+        if self.threads is None:
+            for seq in self.seqnames:
+                    sys.stdout.write("Coverage is {}\n".format(self.read_spec[seq]['cov']))
+                    sys.stdout.write("read length is {}\n".format(self.read_spec[seq]['rl']))
+                    sys.stdout.write("fragment size is {}\n".format(self.read_spec[seq]['frag']))
+                    sys.stdout.write("stdev of frag size is {}\n".format(self.read_spec[seq]['stdev']))
+                    sys.stdout.write("MiSeq Version is {}\n".format(self.read_spec[seq]['ver']))
+                    sys.stdout.write("QS2 shift {}\n".format(self.read_spec[seq]['qs2']))
+                    sys.stdout.write("Generating reads for {}\n".format(seq))
+                    self.simulate_reads(seq)
+        else:
+            sys.stdout.write("Simulating FASTQ reads")
+            with Pool(processes=self.threads) as pool:
+                results = pool.map(self.simulate_reads, self.seqnames)
         sys.stdout.write("TreeToReads completed successfully!\n")
-
 
 
 
@@ -1070,5 +1089,3 @@ if __name__ == "__main__":
                         version='Tree to reads version {}'.format(VERSION))
     args = parser.parse_args()
     ttr = TreeToReads(configfi=args.config_file, main=1)
-
-
