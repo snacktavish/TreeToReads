@@ -182,7 +182,7 @@ class TreeToReads(object):
                         }
         for arg in self.argdict:
             if self.argdict[arg] not in self.config:
-                sys.stderr.write("{} is missing from the config file".format(self.argdict[arg]))
+                sys.stderr.write("{} is missing from the config file\n".format(self.argdict[arg]))
                 self._exit_handler()
         thread_cnt = self.get_arg('threads')
         if thread_cnt is None or thread_cnt == '0' or thread_cnt == '1':
@@ -316,7 +316,7 @@ class TreeToReads(object):
             sys.stderr.write("No QS2 bias applied\n")
 
         if self.argdict['readProfile'] is None:
-            self.argdict['readProfile'] = 'MSv3'
+            self.argdict['readProfile'] = ['MSv3']
         elif "," in self.argdict['readProfile']:
                     profList = list()
                     [profList.append(x.strip()) for x in self.argdict['readProfile'].split(",")]
@@ -334,8 +334,7 @@ class TreeToReads(object):
         if self.argdict['read_length'] is not None:
             read_length = self.config['read_length']
             if ',' in read_length:
-                r_l = list()
-                [r_l.append(int(x.strip())) for x in read_length.split(',')]
+                r_l = [int(x.strip()) for x in read_length.split(',')]
                 read_length = r_l
             else:
                 read_length = [int(read_length)]
@@ -351,7 +350,9 @@ class TreeToReads(object):
                     if rl > self.validProfiles[profile]:
                         read_length[read_length.index(rl)] = validProfiles[profile]
                         read_length_flag = True
-        self.argdict['read_length'] = read_length
+            self.argdict['read_length'] = read_length
+        else:
+            self.generate_reads
         
         if read_length_flag:
             sys.stderr.write("Read length greater than allowed by profile, setting to profile max\n".format(profile))
@@ -842,20 +843,19 @@ class TreeToReads(object):
         call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'), stderr=open('{}/art_log'.format(self.outd), 'a'))
       #  print("called {}".format(" ".join(artparam)))
         assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.outd, self.prefix, seq, self.prefix, seq))
-        if self.gzip:
-            gzippar = [self.gzipProg,
-                       '-f',
-                       '{}/fastq/{}{}/{}{}_1.fq'.format(self.outd,
-                                                        self.prefix,
-                                                        seq,
-                                                        self.prefix,
-                                                        seq),
-                       '{}/fastq/{}{}/{}{}_2.fq'.format(self.outd,
-                                                        self.prefix,
-                                                        seq,
-                                                        self.prefix,
-                                                        seq)]
-            call(gzippar)
+        gzippar = [self.gzipProg,
+                   '-f',
+                   '{}/fastq/{}{}/{}{}_1.fq'.format(self.outd,
+                                                    self.prefix,
+                                                    seq,
+                                                    self.prefix,
+                                                    seq),
+                   '{}/fastq/{}{}/{}{}_2.fq'.format(self.outd,
+                                                    self.prefix,
+                                                    seq,
+                                                    self.prefix,
+                                                    seq)]
+        call(gzippar)
 
     def run_art(self, coverage=None):
         """Runs ART to simulate reads from the simulated genomes"""
@@ -880,7 +880,8 @@ class TreeToReads(object):
                 self.read_spec[seqnam] = {'cov' : real_cov, 'rl' : real_len}
         else:
             for seqnam in self.seqnames:
-                self.read_spec[seqnam] = {'cov' : self.argdict['coverage']}
+                real_len = random.sample(self.argdict['read_length'], 1)[0] 
+                self.read_spec[seqnam] = {'cov' : self.argdict['coverage'], 'rl' : real_len}
         if self.argdict['fragment_size'] is None:
             frag_low = int(self.argdict['frag_low'])
             frag_hi = int(self.argdict['frag_high'])
@@ -916,10 +917,6 @@ class TreeToReads(object):
             self.read_spec[seqnam].update({'ver' : real_platform})
         if not os.path.isdir("{}/fastq".format(self.outd)):
             os.mkdir("{}/fastq".format(self.outd))
-        else:
-            read_length = 150
-            for seqname in self.seqnames:
-                self.read_spec[seqnam]['rl'] = read_length
         if self.threads is None:
             for seq in self.seqnames:
                     sys.stdout.write("Coverage is {}\n".format(self.read_spec[seq]['cov']))
