@@ -67,6 +67,8 @@ class TreeToReads(object):
             sys.exit()
         else:
             pass
+    def __call__(self, x):
+        return self.simulate_reads(x)
     def test_deps(self):
         "Check that seq-gen and ART are installed,"
         if call(['which', 'seq-gen'], stdout=open('/dev/null', 'w')) == 1:
@@ -87,7 +89,7 @@ class TreeToReads(object):
                                 using 'pip install dendropy --upgrade'.
                                 Exiting\n''')
             self._exit_handler()
-        if call(['which', 'pigz'], stdout=open('/dev/null', 'w')) == 1:
+        if call(['which', 'pigz'], stdout=open('/dev/null', 'w')) == 0:
             self.gzipProg = "pigz"
         else:
             self.gzipProg = "gzip"
@@ -928,9 +930,9 @@ class TreeToReads(object):
                     sys.stdout.write("Generating reads for {}\n".format(seq))
                     self.simulate_reads(seq)
         else:
-            sys.stdout.write("Simulating FASTQ reads")
-            with Pool(processes=self.threads) as pool:
-                results = pool.map(self.simulate_reads, self.seqnames)
+            sys.stdout.write("Simulating FASTQ reads\n")
+            pool = Pool(processes=self.threads)
+            results = pool.map(self, self.seqnames)
         sys.stdout.write("TreeToReads completed successfully!\n")
 
 
