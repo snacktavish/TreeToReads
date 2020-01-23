@@ -15,4 +15,4 @@ for item in inputseq:
   assert(inputseq[i].symbols_as_string() == outputseq[i].symbols_as_string().replace('-',''))
   i+=1
 
-print "test passed\n"
+print("check refgenome test passed\n")
