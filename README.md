@@ -67,7 +67,7 @@ on Mac or linux (using homebrew, http://brew.sh/):
 
 on ubuntu:
 
-  sudo apt install art-nextgen-simulation-tools
+    sudo apt install art-nextgen-simulation-tools
 
 on Mac (using homebrew):
 
