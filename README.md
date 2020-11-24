@@ -67,10 +67,7 @@ on Mac or linux (using homebrew, http://brew.sh/):
 
 on ubuntu:
 
-    wget http://www.niehs.nih.gov/research/resources/assets/docs/artbingreatsmokymountains041716linux64tgz.tgz
-    tar -xzvf artbingreatsmokymountains041716linux64tgz.tgz
-
-add art_illumina to path (see http://askubuntu.com/questions/60218/how-to-add-a-directory-to-my-path)
+  sudo apt install art-nextgen-simulation-tools
 
 on Mac (using homebrew):
 
