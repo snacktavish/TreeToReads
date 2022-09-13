@@ -1,0 +1,9 @@
+name: TTR_env
+channels:
+  - bioconda
+  - bioconda/label/cf201901
+  - defaults
+dependencies:
+  - art
+  - dendropy
+  - seq-gen
