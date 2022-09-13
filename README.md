@@ -42,10 +42,22 @@ python packages
 
 -------------------------
 
-## To install requirements
-### Install TTR as a python module
+## To install using conda:
+```
+git clone https://github.com/snacktavish/TreeToReads
+cd TreeToReads
+conda env create -f environment.yml
+conda activate TTR_env
+```
 
+
+
+### To install TTR as a python module
+
+    git clone https://github.com/snacktavish/TreeToReads
+    cd TreeToReads
     python setup.py install
+
 
 #### Install Dendropy (requires dendropy4)
 (This step is not necessary if you installed TTR as a module)
