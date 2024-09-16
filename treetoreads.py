@@ -5,6 +5,7 @@ import random
 import os
 import sys
 import argparse
+import subprocess
 from subprocess import call
 import dendropy
 
@@ -25,9 +26,6 @@ class TreeToReads(object):
     _vargen = 0
     def __init__(self, configfi, run=1, main=None):
         """initialized object, most attributes generated through self._check_args using config file."""
-        self.seed = random.randint(0, sys.maxsize)
-        sys.stdout.write("Random seed is {}\n".format(self.seed))
-        random.seed(self.seed)
         self.configfi = configfi
         self.run = run
         self.main = main
@@ -42,6 +40,13 @@ class TreeToReads(object):
             self.prefix = self.config['prefix']
         else:
             self.prefix = ''
+        if 'random_seed' in self.config:
+            self.seed = self.config['random_seed']
+            random.seed(self.seed)
+        else:
+            self.seed = random.randint(0, sys.maxsize)
+            sys.stdout.write("Random seed is {}\n".format(self.seed))
+            random.seed(self.seed)
         if self.run:
             if (self.no_art == 0) and (self.config.get('coverage')):
                 self.run_art()
@@ -111,7 +116,8 @@ class TreeToReads(object):
                      'error_model1',
                      'error_model2',
                      'indel_model',
-                     'indel_rate']
+                     'indel_rate',
+                     'random_seed']
         for lin in config:
             lii = lin.split('=')
             self.config[lii[0].strip()] = lii[-1].split('#')[0].strip()
@@ -677,6 +683,7 @@ class TreeToReads(object):
 
     def run_art(self, coverage=None):
         """Runs ART to simulate reads from the simulated genomes"""
+
         if not self._genmut:
             if self.get_arg("indel_model"):
                 if call(['which', 'indelible'], stdout=open('/dev/null', 'w')) == 1:
@@ -687,6 +694,9 @@ class TreeToReads(object):
                     self.mut_genomes_indels()
             else:
                 self.mut_genomes_no_indels()
+        if call(['which', 'art_illumina'], stdout=open('/dev/null', 'w')) == 1:
+            sys.stderr.write('''ERROR: Art not found. install and add to path. Exiting\n''')
+            sys.exit()
         if coverage is None:
             coverarg = self.get_arg('cov')
         else:
@@ -740,6 +750,7 @@ class TreeToReads(object):
                             '-2', self.get_arg('error_model2'),
                             '-na', #Don't output alignment file
                             '-p', #for paired end reads
+                            '-rs', str(self.seed),
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
                             '-f', str(cov[seq]),
@@ -756,6 +767,7 @@ class TreeToReads(object):
                             '-na', #Don't output alignment file
                             '-i', '{}/fasta_files/{}{}.fasta'.format(self.outd, self.prefix, seq),
                             '-l', '{}'.format(read_length),
+                            '-rs', str(self.seed),
                             '-f', str(cov[seq]),
                             '-m', '{}'.format(fragment_size),
                             '-s', '{}'.format(stdev_frag_size),
@@ -764,7 +776,8 @@ class TreeToReads(object):
                                                                seq,
                                                                self.prefix,
                                                                seq)]
-            call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'), stderr=open('{}/art_log'.format(self.outd), 'a'))
+            #sys.stdout.write("Running: "+" ".join(artparam))
+            process = subprocess.check_call(artparam, stdout=open('{}/art_log'.format(self.outd), 'w'), stderr=open('{}/art_log'.format(self.outd), 'a'))
           #  print("called {}".format(" ".join(artparam)))
             assert os.path.exists('{}/fastq/{}{}/{}{}_1.fq'.format(self.outd, self.prefix, seq, self.prefix, seq))
             gzippar = ['gzip',
